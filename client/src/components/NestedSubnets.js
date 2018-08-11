@@ -1,14 +1,16 @@
 import React from "react";
+import PropTypes from "prop-types";
 import debounce from "debounce";
 import { Flex, Box } from "reflexbox";
 import { Tooltip, Tree } from "@blueprintjs/core";
+import isEqual from "react-fast-compare";
 
 export class NestedSubnets extends React.Component {
 	constructor() {
 		super();
 		this.state = {
-			rootTreeNodes: [],
-			selectedNodes: []
+			formattedNodes: [],
+			selectedNode: {}
 		};
 	}
 
@@ -30,23 +32,17 @@ export class NestedSubnets extends React.Component {
 	};
 
 	handleNodeClick = (nodeData, nodePath, ev) => {
-		let newSelections = [];
-		let oldSelections = this.state.selectedNodes;
-		for (let i in oldSelections) {
-			if (oldSelections[i].id === nodeData.id) {
-				continue;
-			}
-			if (!ev.shiftKey) {
-				oldSelections[i].isSelected = false;
-			}
+		let oldSelection = this.state.selectedNode;
+		if (nodeData.id !== oldSelection.id) {
+			oldSelection.isSelected = false;
 		}
 		nodeData.isSelected = true;
 		nodeData.isExpanded = true;
-		newSelections.push(nodeData);
 		this.setState({
-			rootTreeNodes: this.state.rootTreeNodes,
-			selectedNodes: newSelections
+			formattedNodes: this.state.formattedNodes,
+			selectedNode: nodeData
 		});
+		this.props.hostDetailsRequester(nodeData.net);
 	};
 
 	handleNodeCollapse = nodeData => {
@@ -61,7 +57,20 @@ export class NestedSubnets extends React.Component {
 
 	componentDidMount = () => {
 		this.setState({
-			rootTreeNodes: this.constructTreeNodes(mockServerData)
+			formattedNodes: this.constructTreeNodes(this.props.subnets)
+		});
+	};
+
+	shouldComponentUpdate = (nextProps, nextState) => {
+		if (isEqual(this.props, nextProps) && isEqual(this.state, nextState)) {
+			return false;
+		}
+		return true;
+	};
+
+	componentDidUpdate = () => {
+		this.setState({
+			formattedNodes: this.constructTreeNodes(this.props.subnets)
 		});
 	};
 
@@ -70,7 +79,7 @@ export class NestedSubnets extends React.Component {
 			<Box auto w={1 / 3} style={{ paddingTop: "10px", paddingRight: "10px", backgroundColor: "#30404D" }}>
 				<Tree
 					className="bp3-dark"
-					contents={this.state.rootTreeNodes}
+					contents={this.state.formattedNodes}
 					onNodeClick={this.handleNodeClick}
 					onNodeCollapse={this.handleNodeCollapse}
 					onNodeExpand={this.handleNodeExpand}
@@ -80,42 +89,7 @@ export class NestedSubnets extends React.Component {
 	}
 }
 
-const mockServerData = [
-	{
-		id: 0,
-		net: "255.255.255.255/18",
-		desc: "alpha"
-	},
-	{
-		id: 1,
-		net: "255.255.255.255/18",
-		desc: "bravo",
-		childNodes: [
-			{
-				id: 2,
-				net: "255.255.255.255/18",
-				desc: "charlie"
-			},
-			{
-				id: 3,
-				net: "255.255.255.255/18",
-				desc: "delta"
-			},
-			{
-				id: 4,
-				net: "255.255.255.255/18",
-				desc: "echo"
-			},
-			{
-				id: 5,
-				net: "255.255.255.255/18",
-				desc: "foxtrot"
-			},
-			{
-				id: 6,
-				net: "255.255.255.255/18",
-				desc: "golf"
-			}
-		]
-	}
-];
+NestedSubnets.propTypes = {
+	subnets: PropTypes.array,
+	hostDetailsRequester: PropTypes.func
+};

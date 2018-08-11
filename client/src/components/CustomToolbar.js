@@ -1,4 +1,5 @@
 import React from "react";
+import PropTypes from "prop-types";
 import debounce from "debounce";
 import { Flex, Box } from "reflexbox";
 import fscreen from "fscreen";
@@ -20,10 +21,7 @@ export class CustomToolbar extends React.Component {
 	constructor() {
 		super();
 		this.state = {
-			createButtonDisabled: false,
 			selectedSearchOption: "Subnet Tree",
-			modifyButtonDisabled: true,
-			deleteButtonDisabled: true,
 			buttonLabelArray: null,
 			fullscreenButtonDisabled: false,
 			fullscreenAlertIsOpen: false
@@ -85,29 +83,24 @@ export class CustomToolbar extends React.Component {
 			<div style={{ height: "50px" }}>
 				<Navbar className="bp3-dark">
 					<NavbarGroup align={Alignment.LEFT}>
-						<div className="bp3-navbar-heading">
+						<div className="bp3-navbar-heading" style={{ marginLeft: "15px" }}>
 							<b>IPAM</b>
 						</div>
 
-						<Button
-							className="bp3-minimal"
-							icon="add"
-							text="Create"
-							disabled={this.state.createButtonDisabled}
-						/>
+						<Button className="bp3-minimal" icon="add" text="Create" />
 
 						<Button
 							className="bp3-minimal"
 							icon="annotation"
 							text="Modify"
-							disabled={this.state.modifyButtonDisabled}
+							disabled={this.props.buttonDisabled}
 						/>
 
 						<Button
 							className="bp3-minimal"
 							icon="remove"
 							text="Delete"
-							disabled={this.state.deleteButtonDisabled}
+							disabled={this.props.buttonDisabled}
 						/>
 					</NavbarGroup>
 
@@ -119,11 +112,18 @@ export class CustomToolbar extends React.Component {
 							type="search"
 							rightElement={searchOptionsMenu}
 						/>
-						<div style={{ marginLeft: "30px" }} />
-						<Button className="bp3-minimal" icon="property" text="" />
 
-						<Button className="bp3-minimal" icon="cog" text="" />
-
+						<div style={{ marginLeft: "20px" }} />
+						<Button className="bp3-minimal" icon="property" text="" disabled={true} />
+						<Button className="bp3-minimal" icon="cog" text="" disabled={true} />
+						<Button
+							className="bp3-minimal"
+							icon="help"
+							text=""
+							onClick={() => {
+								console.log("you just clicked the help button");
+							}}
+						/>
 						<Button
 							className="bp3-minimal"
 							icon="fullscreen"
@@ -145,3 +145,7 @@ export class CustomToolbar extends React.Component {
 		);
 	}
 }
+
+CustomToolbar.propTypes = {
+	buttonDisabled: PropTypes.bool
+};
