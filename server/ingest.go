@@ -14,19 +14,18 @@ import (
 func (ipam *IPAMServer) IngestSubnetCSVLines(csvlines []string, verbose bool) (processed, skipped int, err error) {
 	newTree := subnets.NewTree()
 	subnetColumns := make([][]string, 0, len(csvlines))
-	const skipme = []string{"SKIP_ME"}
 	for lineNum, line := range csvlines {
 		if lineNum == 0 && strings.Contains(line, "subnet,") {
 			if verbose {
 				log.Println("auto skipping line 0 as it appears to be spreadsheet header")
 			}
-			subnetColumns = append(subnetColumns, skipme)
+			subnetColumns = append(subnetColumns, []string{"SKIP_ME"})
 			continue
 		} else if len(line) > 0 && strings.HasPrefix(line, "#") {
 			if verbose {
 				log.Printf("skipping line %v as it is commented out\n", lineNum+1)
 			}
-			subnetColumns = append(subnetColumns, skipme)
+			subnetColumns = append(subnetColumns, []string{"SKIP_ME"})
 			continue
 		}
 		val, err := csv.NewReader(strings.NewReader(line)).Read()
@@ -57,7 +56,7 @@ func (ipam *IPAMServer) IngestSubnetCSVLines(csvlines []string, verbose bool) (p
 			err = fmt.Errorf("error parsing line %v contains %v which is not a valid network address", lineNum+1, ip)
 			return processed, skipped, err
 		}
-		skeleton := &SubnetSkeleton{
+		skeleton := &subnets.SubnetSkeleton{
 			Net:     subzero.String(),
 			Desc:    description,
 			Mod:     modifiedTime,
@@ -66,7 +65,7 @@ func (ipam *IPAMServer) IngestSubnetCSVLines(csvlines []string, verbose bool) (p
 		}
 		err = newTree.CreateSubnet(skeleton)
 		if err != nil {
-			err = fmt.Errorf("error adding subnet regarding lineNum: %v because %v", lineNum, err.Error())
+			err = fmt.Errorf("error adding subnet regarding lineNum: %v because %v", lineNum, err)
 			return processed, skipped, err
 		}
 		processed++
