@@ -10,21 +10,24 @@ type SubnetSkeleton struct {
 	Net, Desc, Vlan, Details, Mod string
 }
 
+func (subnet *subnet) toSkeleton() *SubnetSkeleton {
+	if subnet != nil {
+		return &SubnetSkeleton{
+			Net:     subnet.network.String(),
+			Desc:    subnet.description,
+			Vlan:    subnet.vlan,
+			Details: subnet.details,
+			Mod:     subnet.modifiedTime,
+		}
+	}
+	return nil
+}
+
 // GetSubnetSkeleton will return the skeleton version of a subnet if it exists
 func (tree *Tree) GetSubnetSkeleton(network *net.IPNet) *SubnetSkeleton {
 	tree.mtx.RLock()
 	defer tree.mtx.RUnlock()
-	sn := findSubnet(network, tree.roots)
-	if sn != nil {
-		return &SubnetSkeleton{
-			Net:     sn.network.String(),
-			Desc:    sn.description,
-			Vlan:    sn.vlan,
-			Details: sn.details,
-			Mod:     sn.modifiedTime,
-		}
-	}
-	return nil
+	return findSubnet(network, tree.roots).toSkeleton()
 }
 
 // ListDifferences will return a slice of strings demonstrating the differences

@@ -210,6 +210,18 @@ func getSubnetChildren(children []*subnet, allSubnets []*subnet) []*subnet {
 	return allSubnets
 }
 
+// GetAllSubnets will return a list of flattened subnets
+func (tree *Tree) GetAllSubnets() []*SubnetSkeleton {
+	tree.mtx.RLock()
+	defer tree.mtx.RUnlock()
+	rawSubnets := getSubnetChildren(tree.roots, []*subnet{})
+	results := make([]*SubnetSkeleton, len(rawSubnets))
+	for i, subnet := range rawSubnets {
+		results[i] = subnet.toSkeleton()
+	}
+	return results
+}
+
 // GetRandomNetwork will choose a weighted pseudorandom network based on size
 func (tree *Tree) GetRandomNetwork(rnum *rand.Rand) *net.IPNet {
 	tree.mtx.RLock()
