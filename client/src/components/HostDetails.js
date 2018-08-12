@@ -1,9 +1,8 @@
 import React from "react";
 import PropTypes from "prop-types";
 import debounce from "debounce";
-import { Flex, Box } from "reflexbox";
-import { Cell, Column, Table, RenderMode, SelectionModes } from "@blueprintjs/table";
-import { HeaderCell } from "@blueprintjs/table/lib/esm/headers/headerCell";
+import { Box } from "reflexbox";
+import { Cell, Column, Table, RenderMode } from "@blueprintjs/table";
 
 export class HostDetails extends React.Component {
 	constructor() {
@@ -70,10 +69,7 @@ export class HostDetails extends React.Component {
 					renderMode={RenderMode.BATCH_ON_UPDATE}
 					enableGhostCells={true}
 					columnWidths={this.state.columnWidthArrays}
-					enableRowHeader={true}
-					rowHeaderCellRenderer={() => {
-						return <HeaderCell />;
-					}}
+					enableRowHeader={false}
 				>
 					<Column name="Address" cellRenderer={addressRenderer} />
 					<Column name="A Record" cellRenderer={aRecordRenderer} />

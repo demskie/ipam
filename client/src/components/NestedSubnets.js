@@ -1,8 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
-import debounce from "debounce";
-import { Flex, Box } from "reflexbox";
-import { Tooltip, Tree } from "@blueprintjs/core";
+import { Box } from "reflexbox";
+import { Tooltip, Tree, Position, Intent } from "@blueprintjs/core";
 import isEqual from "react-fast-compare";
 
 export class NestedSubnets extends React.Component {
@@ -10,15 +9,29 @@ export class NestedSubnets extends React.Component {
 		super();
 		this.state = {
 			formattedNodes: [],
-			selectedNode: {}
+			selectedNode: {},
+			expandedContainers: []
 		};
 	}
 
 	generateLabel = (net, desc) => {
-		while (net.length < 20) {
+		let tooltipContent = net + "  " + desc;
+		while (net.length < 24) {
 			net += " ";
 		}
-		return net + " " + desc;
+		if (tooltipContent.length > 40) {
+			return (
+				<Tooltip
+					content={tooltipContent}
+					position={Position.TOP_RIGHT}
+					intent={Intent.NONE}
+					hoverOpenDelay={500}
+				>
+					{net + " " + desc}
+				</Tooltip>
+			);
+		}
+		return net + " " + desc;
 	};
 
 	constructTreeNodes = serverData => {

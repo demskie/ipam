@@ -1,21 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
-import debounce from "debounce";
-import { Flex, Box } from "reflexbox";
 import fscreen from "fscreen";
-import {
-	Button,
-	Navbar,
-	NavbarGroup,
-	Alignment,
-	InputGroup,
-	Alert,
-	Position,
-	Popover,
-	PopoverInteractionKind,
-	Menu,
-	MenuItem
-} from "@blueprintjs/core";
+import { Button, Navbar, NavbarGroup, Alignment, Alert } from "@blueprintjs/core";
 
 export class CustomToolbar extends React.Component {
 	constructor() {
@@ -64,21 +50,6 @@ export class CustomToolbar extends React.Component {
 	};
 
 	render() {
-		const searchOptionsMenu = (
-			<Popover
-				content={
-					<Menu>
-						<MenuItem text="Subnet Tree" onClick={this.selectSubnetTreeOption} />
-						<MenuItem text="DNS Records" onClick={this.selectDNSRecordsOption} />
-						<MenuItem text="Changelog" onClick={this.selectChangelogOption} />
-					</Menu>
-				}
-				interactionKind={PopoverInteractionKind.HOVER}
-				position={Position.BOTTOM}
-			>
-				<Button className="bp3-minimal" rightIcon="caret-down" text={this.state.selectedSearchOption} />
-			</Popover>
-		);
 		return (
 			<div style={{ height: "50px" }}>
 				<Navbar className="bp3-dark">
@@ -105,19 +76,10 @@ export class CustomToolbar extends React.Component {
 					</NavbarGroup>
 
 					<NavbarGroup align={Alignment.RIGHT}>
-						<InputGroup
-							className="bp3-dark"
-							leftIcon="search"
-							placeholder="Search"
-							type="search"
-							rightElement={searchOptionsMenu}
-						/>
-
-						<div style={{ marginLeft: "20px" }} />
-						<Button className="bp3-minimal" icon="property" text="" disabled={true} />
-						<Button className="bp3-minimal" icon="cog" text="" disabled={true} />
+						<Button className="bp3-minimal" icon="property" text="Advanced Options" />
 						<Button
 							className="bp3-minimal"
+							style={{ marginLeft: "10px" }}
 							icon="help"
 							text=""
 							onClick={() => {
