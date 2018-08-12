@@ -1,5 +1,5 @@
 root = true
 
-[*.{js,jsx,html,sass}]
+[*.{js,jsx,html,sass,go}]
 indent_style = tab
 indent_size = 4
