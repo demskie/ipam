@@ -1,5 +1,7 @@
 package main
 
+import "github.com/demskie/ipam/server"
+
 func main() {
-	// do some stuff
+	ipam := server.NewIPAMServer()
 }

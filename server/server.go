@@ -7,10 +7,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/demskie/ipam/dns"
-	"github.com/demskie/ipam/history"
-	"github.com/demskie/ipam/ping"
-	"github.com/demskie/ipam/subnets"
+	"github.com/demskie/ipam/server/dns"
+	"github.com/demskie/ipam/server/history"
+	"github.com/demskie/ipam/server/ping"
+	"github.com/demskie/ipam/server/subnets"
 	"github.com/gorilla/mux"
 )
 
@@ -21,9 +21,9 @@ const (
 // IPAMServer is the object used to mutate and read data
 type IPAMServer struct {
 	subnets     *subnets.Tree
-	history     *history.Records
+	history     *history.UserActions
 	debug       *history.ServerLogger
-	dns         *dns.Resolver
+	dns         *dns.Bucket
 	pinger      *ping.Pinger
 	mutationMtx *sync.Mutex
 }
@@ -32,9 +32,9 @@ type IPAMServer struct {
 func NewIPAMServer() *IPAMServer {
 	return &IPAMServer{
 		subnets:     subnets.NewTree(),
-		history:     history.NewRecords(),
+		history:     history.NewUserActions(),
 		debug:       history.NewServerLogger(),
-		dns:         dns.NewResolver(),
+		dns:         dns.NewBucket(),
 		pinger:      ping.NewPinger(),
 		mutationMtx: &sync.Mutex{},
 	}

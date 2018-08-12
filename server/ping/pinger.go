@@ -115,3 +115,35 @@ func (p *Pinger) GetHostResult(hostAddr string) (string, string) {
 	p.mtx.RUnlock()
 	return data.lastValue, data.attemptTime
 }
+
+// GetPingResultsForAddresses returns ping results for slice of addresses
+func (p *Pinger) GetPingResultsForAddresses(addresses []string) []string {
+	results := make([]string, len(addresses))
+	p.mtx.RLock()
+	for i := 0; i < len(addresses); i++ {
+		val, exists := p.data[addresses[i]]
+		if exists {
+			results[i] = val.lastValue
+		} else {
+			results[i] = ""
+		}
+	}
+	p.mtx.RUnlock()
+	return results
+}
+
+// GetPingTimesForAddresses returns last ping attemptTime for slice of addresses
+func (p *Pinger) GetPingTimesForAddresses(addresses []string) []string {
+	results := make([]string, len(addresses))
+	p.mtx.RLock()
+	for i := 0; i < len(addresses); i++ {
+		val, exists := p.data[addresses[i]]
+		if exists {
+			results[i] = val.attemptTime
+		} else {
+			results[i] = ""
+		}
+	}
+	p.mtx.RUnlock()
+	return results
+}

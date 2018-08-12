@@ -23,8 +23,12 @@ func NewBucket() *Bucket {
 // GetForwardRecords will get a slice of A Records for the ipAddress if there are any
 func (b *Bucket) GetForwardRecords(ipAddress string) []string {
 	b.mtx.RLock()
-	defer b.mtx.RUnlock()
-	return b.forwardRecords[ipAddress]
+	val, exists := b.forwardRecords[ipAddress]
+	b.mtx.RUnlock()
+	if exists {
+		return val
+	}
+	return []string{}
 }
 
 // GetReverseRecord returns the PTR record of a hostname if there is one
@@ -40,4 +44,20 @@ func (b *Bucket) Reset() {
 	b.forwardRecords = map[string][]string{}
 	b.reverseRecords = map[string]string{}
 	b.mtx.Unlock()
+}
+
+// GetForwardRecordsForAddresses returns A Records for slice of addresses
+func (b *Bucket) GetForwardRecordsForAddresses(addresses []string) []string {
+	results := make([]string, len(addresses))
+	b.mtx.RLock()
+	for i := 0; i < len(addresses); i++ {
+		val, exists := b.forwardRecords[addresses[i]]
+		if exists {
+			results[i] = val[0]
+		} else {
+			results[i] = ""
+		}
+	}
+	b.mtx.RUnlock()
+	return results
 }

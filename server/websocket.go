@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/demskie/ipam/server/subnets"
+	"github.com/demskie/subnetmath"
 	"github.com/gorilla/websocket"
 )
 
@@ -79,12 +81,66 @@ func (ipam *IPAMServer) handleWebsocketClient(w http.ResponseWriter, r *http.Req
 	}
 }
 
-func (ipam *IPAMServer) handleGetSubnetData(conn *websocket.Conn) {
+type outgoingSubnetDataJSON struct {
+	RequestType string               `json:"requestType"`
+	RequestData []subnets.SubnetJSON `json:"requestData"`
+}
 
+func (ipam *IPAMServer) handleGetSubnetData(conn *websocket.Conn) {
+	outMsg := outgoingSubnetDataJSON{
+		RequestType: "DISPLAYSUBNETDATA",
+		RequestData: ipam.subnets.GetJSON(),
+	}
+	b, err := json.Marshal(outMsg)
+	if err != nil {
+		log.Printf("error encoding outgoing message to %v", conn.RemoteAddr())
+	} else {
+		conn.WriteMessage(websocket.TextMessage, b)
+	}
+}
+
+type outgoingHostDataJSON struct {
+	RequestType string     `json:"requestType"`
+	RequestData [][]string `json:"requestData"`
 }
 
 func (ipam *IPAMServer) handleGetHostData(conn *websocket.Conn, inMsg incomingJSON) {
-
+	var network *net.IPNet
+	if len(inMsg.RequestData) != 1 {
+		network = subnetmath.BlindlyParseCIDR(inMsg.RequestData[0])
+	}
+	if network == nil {
+		log.Printf("received invalid request from %v > %#v\n", conn.RemoteAddr(), inMsg)
+		return
+	}
+	log.Printf("%v requesting hostData for %v\n", conn.RemoteAddr(), network)
+	addressCount := subnetmath.AddressCount(network)
+	if addressCount >= 1024 {
+		addressCount = 1023
+	} else if addressCount > 2 {
+		addressCount--
+	}
+	currentIP := subnetmath.DuplicateNetwork(network).IP
+	sliceOfAddresses := make([]string, addressCount)
+	for i := 0; i < addressCount; i++ {
+		sliceOfAddresses[i] = currentIP.String()
+		currentIP = subnetmath.AddToAddr(currentIP, 1)
+	}
+	outMsg := outgoingHostDataJSON{
+		RequestType: "DISPLAYHOSTDATA",
+		RequestData: [][]string{
+			sliceOfAddresses,
+			ipam.dns.GetForwardRecordsForAddresses(sliceOfAddresses),
+			ipam.pinger.GetPingResultsForAddresses(sliceOfAddresses),
+			ipam.pinger.GetPingTimesForAddresses(sliceOfAddresses),
+		},
+	}
+	b, err := json.Marshal(outMsg)
+	if err != nil {
+		log.Printf("error encoding outgoing message to %v", conn.RemoteAddr())
+	} else {
+		conn.WriteMessage(websocket.TextMessage, b)
+	}
 }
 
 func (ipam *IPAMServer) handleGetOverallHistory(conn *websocket.Conn) {
@@ -99,7 +155,7 @@ func (ipam *IPAMServer) handlePostNewSubnet(conn *websocket.Conn, inMsg incoming
 
 }
 
-func (ipam *IPAMServer) handleModifyNewSubnet(conn *websocket.Conn, inMsg incomingJSON) {
+func (ipam *IPAMServer) handlePostModifySubnet(conn *websocket.Conn, inMsg incomingJSON) {
 
 }
 
