@@ -232,3 +232,10 @@ func (tree *Tree) GetRandomNetwork(rnum *rand.Rand) *net.IPNet {
 	}
 	return subnetmath.DuplicateNetwork(choice.Object.(*subnet).network)
 }
+
+// SwapTree will safely replace the the existing tree
+func (tree *Tree) SwapTree(newTree *Tree) {
+	tree.mtx.Lock()
+	tree.roots = newTree.roots
+	tree.mtx.Unlock()
+}
