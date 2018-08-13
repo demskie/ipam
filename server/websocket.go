@@ -106,7 +106,7 @@ type outgoingHostDataJSON struct {
 
 func (ipam *IPAMServer) handleGetHostData(conn *websocket.Conn, inMsg incomingJSON) {
 	var network *net.IPNet
-	if len(inMsg.RequestData) != 1 {
+	if len(inMsg.RequestData) == 1 {
 		network = subnetmath.BlindlyParseCIDR(inMsg.RequestData[0])
 	}
 	if network == nil {

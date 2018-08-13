@@ -7,14 +7,10 @@ export class CustomToolbar extends React.Component {
 	constructor() {
 		super();
 		this.state = {
-			selectedSearchOption: "Subnet Tree",
-			buttonLabelArray: null,
 			fullscreenButtonDisabled: false,
 			fullscreenAlertIsOpen: false
 		};
 	}
-
-	componentDidMount = () => {};
 
 	requestFullscreen = () => {
 		if (fscreen.fullscreenEnabled) {
@@ -37,51 +33,38 @@ export class CustomToolbar extends React.Component {
 		});
 	};
 
-	selectSubnetTreeOption = () => {
-		this.setState({ selectedSearchOption: "Subnet Tree" });
-	};
-
-	selectDNSRecordsOption = () => {
-		this.setState({ selectedSearchOption: "DNS Records" });
-	};
-
-	selectChangelogOption = () => {
-		this.setState({ selectedSearchOption: "Changelog" });
-	};
-
 	render() {
 		return (
 			<div style={{ height: "50px" }}>
 				<Navbar className="bp3-dark">
 					<NavbarGroup align={Alignment.LEFT}>
+						<Button
+							className="bp3-minimal"
+							icon="menu"
+							disabled={this.props.sidebarButtonDisabled}
+							onClick={this.props.toggleSidebarTrigger}
+						/>
 						<div className="bp3-navbar-heading" style={{ marginLeft: "15px" }}>
 							<b>IPAM</b>
 						</div>
-
-						<Button className="bp3-minimal" icon="add" text="Create" />
-
-						<Button
-							className="bp3-minimal"
-							icon="annotation"
-							text="Modify"
-							disabled={this.props.buttonDisabled}
-						/>
-
-						<Button
-							className="bp3-minimal"
-							icon="remove"
-							text="Delete"
-							disabled={this.props.buttonDisabled}
-						/>
 					</NavbarGroup>
 
 					<NavbarGroup align={Alignment.RIGHT}>
-						<Button className="bp3-minimal" icon="property" text="Advanced Options" />
+						<Button
+							className="bp3-minimal"
+							icon="property"
+							text="Advanced"
+							disabled={true}
+							onClick={() => {
+								console.log("you just clicked the advanced button");
+							}}
+						/>
 						<Button
 							className="bp3-minimal"
 							style={{ marginLeft: "10px" }}
 							icon="help"
 							text=""
+							disabled={true}
 							onClick={() => {
 								console.log("you just clicked the help button");
 							}}
@@ -109,5 +92,6 @@ export class CustomToolbar extends React.Component {
 }
 
 CustomToolbar.propTypes = {
-	buttonDisabled: PropTypes.bool
+	sidebarButtonDisabled: PropTypes.bool,
+	toggleSidebarTrigger: PropTypes.func
 };

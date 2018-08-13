@@ -1,10 +1,12 @@
 import React from "react";
 import debounce from "debounce";
-import { Flex } from "reflexbox";
 import { CustomToolbar } from "./CustomToolbar.js";
 import { NestedSubnets } from "./NestedSubnets.js";
 import { HostDetails } from "./HostDetails.js";
-import { Alert, Intent, Toaster } from "@blueprintjs/core";
+import { Alert, Intent, Toaster, Navbar, NavbarGroup, Alignment, Button } from "@blueprintjs/core";
+import Sidebar from "react-sidebar";
+
+const sidebarMinimumWidth = 400;
 
 export class Main extends React.Component {
 	constructor() {
@@ -14,46 +16,61 @@ export class Main extends React.Component {
 		this.state = {
 			websocket: new WebSocket(tcp + host + "/sync"),
 			height: "0px",
-			toolbarButtonDisabled: true,
-			nestedSubnets: mockServerData,
+			nestedSubnets: [],
 			hostDetails: {
 				addresses: [],
 				aRecords: [],
 				pingResults: [],
 				lastAttempts: []
 			},
-			alertVisible: false
+			alertVisible: false,
+			sidebarOpen: false,
+			sidebarDocked: false
 		};
 	}
 
 	askForHostDetails = selectedSubnet => {
-		let emptyArray = new Array(1024);
-		this.setState({
-			toolbarButtonDisabled: false,
-			hostDetails: {
-				addresses: emptyArray,
-				aRecords: emptyArray,
-				pingResults: emptyArray,
-				lastAttempts: emptyArray
-			}
-		});
-		let request = {
-			requestType: "GETHOSTDATA",
-			requestData: [selectedSubnet]
-		};
-		console.log("GETHOSTDATA\n", request);
-		this.state.websocket.send(JSON.stringify(request));
+		if (this.state.websocket.readyState === 1) {
+			console.log(this.state.websocket);
+			let emptyArray = new Array(1024);
+			this.setState({
+				hostDetails: {
+					addresses: emptyArray,
+					aRecords: emptyArray,
+					pingResults: emptyArray,
+					lastAttempts: emptyArray
+				}
+			});
+			let request = {
+				requestType: "GETHOSTDATA",
+				requestData: [selectedSubnet]
+			};
+			console.log("GETHOSTDATA\n", request);
+			this.state.websocket.send(JSON.stringify(request));
+		}
 	};
 
 	updateDimensions = () => {
+		let dockedBool;
+		let width = document.getElementById("root").clientWidth / 3;
+		if (width >= sidebarMinimumWidth) {
+			dockedBool = true;
+		} else {
+			dockedBool = false;
+			width = sidebarMinimumWidth;
+		}
 		this.setState({
+			sidebarDocked: dockedBool,
+			sidebarWidth: width + "px",
 			height: document.getElementById("root").clientHeight - 50 + "px"
 		});
 	};
 
 	handleWebsocketClose = () => {
 		this.state.websocket.addEventListener("close", () => {
-			//this.setState({ alertVisible: true });
+			if (window.location.hostname !== "localhost") {
+				this.setState({ alertVisible: true });
+			}
 		});
 	};
 
@@ -61,17 +78,17 @@ export class Main extends React.Component {
 		this.state.websocket.addEventListener("message", ev => {
 			let msg = JSON.parse(ev.data);
 			switch (msg.requestType) {
-			case "DISPLAYERROR":
-				this.processWebsocketErrorMessage(msg.requestData);
-				break;
-			case "DISPLAYSUBNETDATA":
-				this.processWebsocketSubnetData(msg.requestData);
-				break;
-			case "DISPLAYHOSTDATA":
-				this.processWebsocketHostData(msg.requestData);
-				break;
-			default:
-				console.log("received unknown message type:", msg.requestType);
+				case "DISPLAYERROR":
+					this.processWebsocketErrorMessage(msg.requestData);
+					break;
+				case "DISPLAYSUBNETDATA":
+					this.processWebsocketSubnetData(msg.requestData);
+					break;
+				case "DISPLAYHOSTDATA":
+					this.processWebsocketHostData(msg.requestData);
+					break;
+				default:
+					console.log("received unknown message type:", msg.requestType);
 			}
 		});
 	};
@@ -89,24 +106,46 @@ export class Main extends React.Component {
 
 	processWebsocketSubnetData = requestData => {
 		console.log("DISPLAYSUBNETDATA\n", requestData);
+		let newRequestData = requestData;
+		this.setState({ nestedSubnets: newRequestData });
 	};
 
 	processWebsocketHostData = requestData => {
 		console.log("DISPLAYHOSTDATA\n", requestData);
+		this.setState({
+			hostDetails: {
+				addresses: requestData[0],
+				aRecords: requestData[1],
+				pingResults: requestData[2],
+				lastAttempts: requestData[3]
+			}
+		});
 	};
 
 	handleWebsocketCreation = () => {
 		this.state.websocket.addEventListener("open", () => {
-			setInterval(() => {
-				if (this.state.websocket.OPEN) {
+			let requestSubnetData = () => {
+				if (this.state.websocket.readyState === 1) {
 					let request = {
 						requestType: "GETSUBNETDATA"
 					};
 					console.log("GETSUBNETDATA\n", request);
 					this.state.websocket.send(JSON.stringify(request));
+				} else {
+					console.log("websocket is not open\n", this.state.websocket);
 				}
-			}, 10000);
+			};
+			requestSubnetData();
+			setInterval(requestSubnetData, 15000);
 		});
+	};
+
+	toggleSidebarTrigger = () => {
+		if (!this.state.sidebarDocked) {
+			this.setState({
+				sidebarOpen: !this.state.sidebarOpen
+			});
+		}
 	};
 
 	componentDidMount = () => {
@@ -118,64 +157,55 @@ export class Main extends React.Component {
 	};
 
 	render() {
+		const sidebarNavbarPadding = () => {
+			if (this.state.sidebarDocked) {
+				return "0px";
+			}
+			return "50px";
+		};
 		return (
-			<div style={{ minWidth: "800px", height: "100vh" }}>
-				<CustomToolbar buttonDisabled={this.state.toolbarButtonDisabled} />
-				<Flex style={{ height: this.state.height }}>
-					<NestedSubnets subnets={this.state.nestedSubnets} hostDetailsRequester={this.askForHostDetails} />
-					<HostDetails details={this.state.hostDetails} />
-				</Flex>
+			<Sidebar
+				styles={{
+					sidebar: {
+						width: this.state.sidebarWidth,
+						backgroundColor: "#30404D"
+					}
+				}}
+				sidebar={
+					<div>
+						<Navbar className="bp3-dark" style={{ paddingTop: sidebarNavbarPadding() }}>
+							<NavbarGroup align={Alignment.LEFT}>
+								<Button className="bp3-minimal" icon="add" text="Create" />
+								<Button className="bp3-minimal" icon="annotation" text="Modify" disabled={true} />
+								<Button className="bp3-minimal" icon="remove" text="Delete" disabled={true} />
+							</NavbarGroup>
+						</Navbar>
+						<NestedSubnets
+							subnets={this.state.nestedSubnets}
+							hostDetailsRequester={this.askForHostDetails}
+						/>
+					</div>
+				}
+				open={this.state.sidebarOpen}
+				docked={this.state.sidebarDocked}
+				onSetOpen={this.onSetSidebarOpen}
+			>
+				<CustomToolbar
+					sidebarButtonDisabled={this.state.sidebarDocked}
+					toggleSidebarTrigger={this.toggleSidebarTrigger}
+				/>
+				<HostDetails details={this.state.hostDetails} />
 				<Alert
 					className="bp3-dark"
 					confirmButtonText="Reconnect"
 					icon="warning-sign"
 					intent={Intent.WARNING}
 					isOpen={this.state.alertVisible}
-					onClose={() => window.location.reload({ forceGet: true })}
+					onClose={() => window.location.reload(true)}
 				>
 					<p>{"Lost connection to server"}</p>
 				</Alert>
-			</div>
+			</Sidebar>
 		);
 	}
 }
-
-const mockServerData = [
-	{
-		id: 0,
-		net: "255.255.255.255/18",
-		desc: "alpha"
-	},
-	{
-		id: 1,
-		net: "255.255.255.255/18",
-		desc: "bravo",
-		childNodes: [
-			{
-				id: 2,
-				net: "255.255.255.255/18",
-				desc: "charlie"
-			},
-			{
-				id: 3,
-				net: "255.255.255.255/18",
-				desc: "delta"
-			},
-			{
-				id: 4,
-				net: "255.255.255.255/18",
-				desc: "echo"
-			},
-			{
-				id: 5,
-				net: "255.255.255.255/18",
-				desc: "foxtrot"
-			},
-			{
-				id: 6,
-				net: "255.255.255.255/18",
-				desc: "golf"
-			}
-		]
-	}
-];

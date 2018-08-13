@@ -1,7 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
 import debounce from "debounce";
-import { Box } from "reflexbox";
 import { Cell, Column, Table, RenderMode } from "@blueprintjs/table";
 
 export class HostDetails extends React.Component {
@@ -13,14 +12,14 @@ export class HostDetails extends React.Component {
 	}
 
 	updateColumnWidthArrays = () => {
-		let width = (document.getElementById("root").clientWidth * (2 / 3)) / 4;
+		let width = document.getElementById("hostDetails").clientWidth / 4;
 		this.setState({
 			columnWidthArrays: [width, width, width, width]
 		});
 	};
 
 	componentDidMount = () => {
-		window.addEventListener("resize", debounce(this.updateColumnWidthArrays, 1000));
+		window.addEventListener("resize", debounce(this.updateColumnWidthArrays, 500));
 		this.updateColumnWidthArrays();
 	};
 
@@ -62,11 +61,11 @@ export class HostDetails extends React.Component {
 			}
 		};
 		return (
-			<Box auto w={2 / 3}>
+			<div id="hostDetails">
 				<Table
 					className="bp3-dark"
 					numRows={1024}
-					renderMode={RenderMode.BATCH_ON_UPDATE}
+					renderMode={RenderMode.NONE}
 					enableGhostCells={true}
 					columnWidths={this.state.columnWidthArrays}
 					enableRowHeader={false}
@@ -76,7 +75,7 @@ export class HostDetails extends React.Component {
 					<Column name="Ping Result" cellRenderer={pingResultRenderer} />
 					<Column name="Last Attempt" cellRenderer={lastAttemptRenderer} />
 				</Table>
-			</Box>
+			</div>
 		);
 	}
 }
