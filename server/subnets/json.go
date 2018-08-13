@@ -1,5 +1,7 @@
 package subnets
 
+import "strconv"
+
 // SubnetJSON is the data format consumed by websocket client
 type SubnetJSON struct {
 	ID         string       `json:"id"`
@@ -11,19 +13,31 @@ type SubnetJSON struct {
 	ChildNodes []SubnetJSON `json:"childNodes"`
 }
 
-// GetJSON returns a nested SubnetJSON structure
+// GetJSON returns the nested SubnetJSON structure for the websocket client
 func (tree *Tree) GetJSON() []SubnetJSON {
 	tree.mtx.RLock()
-	defer tree.mtx.RUnlock()
-	result := []SubnetJSON{}
-	for _, sn := range tree.roots {
-		result = append(result, nestedSubnetJSON(sn)...)
+	var i int
+	results := make([]SubnetJSON, len(tree.roots))
+	for j, subnet := range tree.roots {
+		i, results[j] = getNestedSubnetJSON(i, subnet)
 	}
-	return result
+	tree.mtx.RUnlock()
+	return results
 }
 
-func nestedSubnetJSON(sn *subnet) []SubnetJSON {
-	result := []SubnetJSON{}
-	// do some stuff
-	return result
+func getNestedSubnetJSON(i int, sn *subnet) (int, SubnetJSON) {
+	results := SubnetJSON{
+		ID:         strconv.Itoa(i),
+		Net:        sn.network.String(),
+		Desc:       sn.description,
+		Vlan:       sn.vlan,
+		ModTime:    sn.modifiedTime,
+		Notes:      sn.details,
+		ChildNodes: make([]SubnetJSON, len(sn.children)),
+	}
+	i++
+	for j, child := range sn.children {
+		i, results.ChildNodes[j] = getNestedSubnetJSON(i, child)
+	}
+	return i, results
 }
