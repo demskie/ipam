@@ -73,3 +73,13 @@ func (ipam *IPAMServer) IngestSubnetCSVLines(csvlines []string, verbose bool) (p
 	ipam.subnets.SwapTree(newTree)
 	return processed, skipped, err
 }
+
+// IngestTinyDNSLines is a wrapper around the import method defined in ipam/server/dns
+func (ipam *IPAMServer) IngestTinyDNSLines(dnslines []string) {
+	if len(dnslines) == 0 {
+		log.Println("unable to fetch int-dns/data or ext-dns/data from gitlab")
+		return
+	}
+	processed, skipped := ipam.dns.ParseTinyDNS(dnslines)
+	log.Printf("imported %v TinyDNS entries and skipped %v\n", processed, skipped)
+}
