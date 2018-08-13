@@ -98,11 +98,13 @@ export class Main extends React.Component {
 	handleWebsocketCreation = () => {
 		this.state.websocket.addEventListener("open", () => {
 			setInterval(() => {
-				let request = {
-					requestType: "GETSUBNETDATA"
-				};
-				console.log("GETSUBNETDATA\n", request);
-				this.state.websocket.send(JSON.stringify(request));
+				if (this.state.websocket.OPEN) {
+					let request = {
+						requestType: "GETSUBNETDATA"
+					};
+					console.log("GETSUBNETDATA\n", request);
+					this.state.websocket.send(JSON.stringify(request));
+				}
 			}, 10000);
 		});
 	};
