@@ -89,7 +89,7 @@ func (ipam *IPAMServer) startWebServer(addr string) {
 	muxInsecure.HandleFunc("/api/createsubnet", ipam.handleRestfulCreateSubnet)
 	muxInsecure.HandleFunc("/api/replacesubnet", ipam.handleRestfulReplaceSubnet)
 	muxInsecure.HandleFunc("/api/deletesubnet", ipam.handleRestfulDeleteSubnet)
-	muxInsecure.PathPrefix("/").Handler(http.FileServer(http.Dir("public")))
+	muxInsecure.PathPrefix("/").Handler(http.FileServer(http.Dir(".")))
 	srvInsecure := &http.Server{
 		Addr:         addr,
 		Handler:      muxInsecure,
