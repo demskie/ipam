@@ -111,8 +111,8 @@ export class NestedSubnets extends React.Component {
 
 	render() {
 		const buildTree = () => {
-			if (this.props.subnets.length === 0) {
-				return this.constructTreeNodes(emptyLoadingTree);
+			if (window.location.host === "localhost:3000") {
+				return this.constructTreeNodes(testTree);
 			}
 			return this.constructTreeNodes(this.props.subnets);
 		};
@@ -133,7 +133,7 @@ NestedSubnets.propTypes = {
 	hostDetailsRequester: PropTypes.func
 };
 
-const emptyLoadingTree = [
+const testTree = [
 	{
 		id: 0,
 		net: "255.255.255.255/18",

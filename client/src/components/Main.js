@@ -1,7 +1,8 @@
 import React from "react";
 import debounce from "debounce";
-import { CustomToolbar } from "./CustomToolbar.js";
 import { NestedSubnets } from "./NestedSubnets.js";
+import { NestedSubnetsPrompt } from "./NestedSubnetsPrompt.js";
+import { RightSideToolbar } from "./RightSideToolbar.js";
 import { HostDetails } from "./HostDetails.js";
 import { Alert, Intent, Toaster, Navbar, NavbarGroup, Alignment, Button } from "@blueprintjs/core";
 import Sidebar from "react-sidebar";
@@ -25,7 +26,9 @@ export class Main extends React.Component {
 			},
 			alertVisible: false,
 			sidebarOpen: false,
-			sidebarDocked: false
+			sidebarDocked: false,
+			sidebarWidth: 0,
+			tableWidth: 0
 		};
 	}
 
@@ -52,23 +55,28 @@ export class Main extends React.Component {
 
 	updateDimensions = () => {
 		let dockedBool;
-		let width = document.getElementById("root").clientWidth / 3;
-		if (width >= sidebarMinimumWidth) {
+		let sidebarWidth = document.getElementById("root").clientWidth / 3;
+		if (sidebarWidth >= sidebarMinimumWidth) {
 			dockedBool = true;
 		} else {
 			dockedBool = false;
-			width = sidebarMinimumWidth;
+			sidebarWidth = sidebarMinimumWidth;
+		}
+		let tableWidth = document.getElementById("root").clientWidth;
+		if (dockedBool) {
+			tableWidth -= sidebarWidth;
 		}
 		this.setState({
 			sidebarDocked: dockedBool,
-			sidebarWidth: width + "px",
+			sidebarWidth: sidebarWidth,
+			tableWidth: tableWidth,
 			height: document.getElementById("root").clientHeight - 50 + "px"
 		});
 	};
 
 	handleWebsocketClose = () => {
 		this.state.websocket.addEventListener("close", () => {
-			if (window.location.hostname !== "localhost") {
+			if (window.location.hostname !== "localhost:3000") {
 				this.setState({ alertVisible: true });
 			}
 		});
@@ -78,17 +86,17 @@ export class Main extends React.Component {
 		this.state.websocket.addEventListener("message", ev => {
 			let msg = JSON.parse(ev.data);
 			switch (msg.requestType) {
-				case "DISPLAYERROR":
-					this.processWebsocketErrorMessage(msg.requestData);
-					break;
-				case "DISPLAYSUBNETDATA":
-					this.processWebsocketSubnetData(msg.requestData);
-					break;
-				case "DISPLAYHOSTDATA":
-					this.processWebsocketHostData(msg.requestData);
-					break;
-				default:
-					console.log("received unknown message type:", msg.requestType);
+			case "DISPLAYERROR":
+				this.processWebsocketErrorMessage(msg.requestData);
+				break;
+			case "DISPLAYSUBNETDATA":
+				this.processWebsocketSubnetData(msg.requestData);
+				break;
+			case "DISPLAYHOSTDATA":
+				this.processWebsocketHostData(msg.requestData);
+				break;
+			default:
+				console.log("received unknown message type:", msg.requestType);
 			}
 		});
 	};
@@ -167,7 +175,7 @@ export class Main extends React.Component {
 			<Sidebar
 				styles={{
 					sidebar: {
-						width: this.state.sidebarWidth,
+						width: this.state.sidebarWidth + "px",
 						backgroundColor: "#30404D"
 					}
 				}}
@@ -190,11 +198,11 @@ export class Main extends React.Component {
 				docked={this.state.sidebarDocked}
 				onSetOpen={this.onSetSidebarOpen}
 			>
-				<CustomToolbar
+				<RightSideToolbar
 					sidebarButtonDisabled={this.state.sidebarDocked}
 					toggleSidebarTrigger={this.toggleSidebarTrigger}
 				/>
-				<HostDetails details={this.state.hostDetails} />
+				<HostDetails details={this.state.hostDetails} tableWidth={this.state.tableWidth} />
 				<Alert
 					className="bp3-dark"
 					confirmButtonText="Reconnect"

@@ -6,24 +6,14 @@ import { Cell, Column, Table, RenderMode } from "@blueprintjs/table";
 export class HostDetails extends React.Component {
 	constructor() {
 		super();
-		this.state = {
-			columnWidthArrays: null
-		};
+		this.state = {};
 	}
 
-	updateColumnWidthArrays = () => {
-		let width = document.getElementById("hostDetails").clientWidth / 4;
-		this.setState({
-			columnWidthArrays: [width, width, width, width]
-		});
-	};
-
-	componentDidMount = () => {
-		window.addEventListener("resize", debounce(this.updateColumnWidthArrays, 500));
-		this.updateColumnWidthArrays();
-	};
-
 	render() {
+		const columnWidthArrays = () => {
+			let width = this.props.tableWidth / 4;
+			return [width, width, width, width];
+		};
 		const addressRenderer = rowIndex => {
 			if (rowIndex >= this.props.details.addresses.length) {
 				return <Cell />;
@@ -67,7 +57,7 @@ export class HostDetails extends React.Component {
 					numRows={1024}
 					renderMode={RenderMode.NONE}
 					enableGhostCells={true}
-					columnWidths={this.state.columnWidthArrays}
+					columnWidths={columnWidthArrays()}
 					enableRowHeader={false}
 				>
 					<Column name="Address" cellRenderer={addressRenderer} />
@@ -81,5 +71,6 @@ export class HostDetails extends React.Component {
 }
 
 HostDetails.propTypes = {
+	tableWidth: PropTypes.number,
 	details: PropTypes.object
 };
