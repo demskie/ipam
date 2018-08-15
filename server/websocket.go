@@ -98,6 +98,14 @@ func sendErrorMessage(conn *websocket.Conn, message string) {
 	}
 }
 
+func removeWhitespace(stringSlice ...string) []string {
+	results := make([]string, 0, len(stringSlice))
+	for _, s := range stringSlice {
+		results = append(results, strings.TrimSpace(s))
+	}
+	return results
+}
+
 type outgoingSubnetDataJSON struct {
 	RequestType string               `json:"requestType"`
 	RequestData []subnets.SubnetJSON `json:"requestData"`
@@ -176,6 +184,7 @@ func (ipam *IPAMServer) handlePostNewSubnet(conn *websocket.Conn, inMsg simpleJS
 		log.Printf("received an invalid request from %v\n", remoteIP)
 		return
 	}
+	inMsg.RequestData = removeWhitespace(inMsg.RequestData...)
 	addr, network, err := net.ParseCIDR(inMsg.RequestData[0])
 	if err != nil {
 		sendErrorMessage(conn, fmt.Sprintf("could not create '%v' as it is not a valid CIDR subnet", inMsg.RequestData[0]))
@@ -207,6 +216,7 @@ func (ipam *IPAMServer) handlePostModifySubnet(conn *websocket.Conn, inMsg simpl
 		log.Printf("received an invalid request from %v\n", remoteIP)
 		return
 	}
+	inMsg.RequestData = removeWhitespace(inMsg.RequestData...)
 	network := subnetmath.BlindlyParseCIDR(inMsg.RequestData[0])
 	if network == nil {
 		log.Printf("received an invalid request from %v\n", remoteIP)
@@ -241,6 +251,7 @@ func (ipam *IPAMServer) handlePostDeleteSubnet(conn *websocket.Conn, inMsg simpl
 		log.Printf("received an invalid request from %v\n", remoteIP)
 		return
 	}
+	inMsg.RequestData = removeWhitespace(inMsg.RequestData...)
 	network := subnetmath.BlindlyParseCIDR(inMsg.RequestData[0])
 	oldSkeleton := ipam.subnets.GetSubnetSkeleton(network)
 	if network == nil || ipam.subnets.DeleteSubnet(network) != nil {
