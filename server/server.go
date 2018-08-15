@@ -11,6 +11,9 @@ import (
 	"github.com/demskie/ipam/server/history"
 	"github.com/demskie/ipam/server/ping"
 	"github.com/demskie/ipam/server/subnets"
+
+	"github.com/demskie/randutil"
+
 	"github.com/gorilla/mux"
 )
 
@@ -52,6 +55,18 @@ func (ipam *IPAMServer) signalMutation() {
 	ipam.mutationChan <- MutatedData{
 		subnets: ipam.ExportSubnetCSVLines(),
 		history: ipam.history.GetAllUserActions(),
+	}
+}
+
+// PingSweepSubnets will pick subnets at random and ping all nonBroadcast addresses
+func (ipam *IPAMServer) PingSweepSubnets(pingsPerSecond, pingerGoroutineCount int) {
+	go ipam.pinger.InitializeBackgroundPinger(pingsPerSecond, pingerGoroutineCount)
+	rnum := randutil.CreateBasicMathRnum()
+	for {
+		subnet := ipam.subnets.GetRandomNetwork(rnum)
+		if subnet != nil {
+			ipam.pinger.ScanNetwork(subnet)
+		}
 	}
 }
 

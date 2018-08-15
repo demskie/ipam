@@ -237,9 +237,13 @@ func (tree *Tree) GetRandomNetwork(rnum *rand.Rand) *net.IPNet {
 			Object: subnets[i],
 		}
 	}
+	if len(allChoices) == 0 {
+		time.Sleep(time.Second)
+		return nil
+	}
 	choice, err := randutil.WeightedChoice(allChoices, rnum)
 	if err != nil {
-		log.Fatal("weightedChoice >", err.Error())
+		log.Fatal("weightedChoice:", err.Error())
 	}
 	return subnetmath.DuplicateNetwork(choice.Object.(*subnet).network)
 }

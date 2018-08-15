@@ -27,7 +27,6 @@ func NewPinger() (ping *Pinger) {
 		data:        make(map[string]result, 0),
 		requestChan: make(chan string, 0),
 	}
-	go ping.startBackgroundScanner()
 	return
 }
 
@@ -70,14 +69,10 @@ func ping(ip string) bool {
 	return false
 }
 
-const (
-	maxPingsPerSecond  = 32
-	pingGoroutineCount = 64
-	fastInterval       = time.Duration(pingGoroutineCount * (int64(time.Second) / maxPingsPerSecond))
-)
-
-func (p *Pinger) startBackgroundScanner() {
-	workers := simplesync.NewWorkerPool(pingGoroutineCount)
+// InitializeBackgroundPinger will create the workers needed for scanning
+func (p *Pinger) InitializeBackgroundPinger(maxPingsPerSecond, goroutineCount int) {
+	interval := time.Duration(int64(goroutineCount) * (int64(time.Second) / int64(maxPingsPerSecond)))
+	workers := simplesync.NewWorkerPool(goroutineCount)
 	workers.Execute(func(threadNum int) {
 		for ipString := range p.requestChan {
 			reachable := ping(ipString)
@@ -91,7 +86,7 @@ func (p *Pinger) startBackgroundScanner() {
 			}
 			p.data[ipString] = pingData
 			p.mtx.Unlock()
-			<-time.NewTimer(fastInterval).C
+			<-time.NewTimer(interval).C
 		}
 	})
 }
