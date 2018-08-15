@@ -152,6 +152,10 @@ export class Main extends React.Component {
 		});
 	};
 
+	onSetSidebarOpen = open => {
+		this.setState({ sidebarOpen: open });
+	};
+
 	toggleSidebarTrigger = () => {
 		if (!this.state.sidebarDocked) {
 			this.setState({
@@ -208,6 +212,9 @@ export class Main extends React.Component {
 		};
 		return (
 			<Sidebar
+				open={this.state.sidebarOpen}
+				docked={this.state.sidebarDocked}
+				onSetOpen={this.onSetSidebarOpen}
 				styles={{
 					sidebar: {
 						width: this.state.sidebarWidth + "px",
@@ -233,9 +240,6 @@ export class Main extends React.Component {
 						/>
 					</div>
 				}
-				open={this.state.sidebarOpen}
-				docked={this.state.sidebarDocked}
-				onSetOpen={this.onSetSidebarOpen}
 			>
 				<RightSideToolbar
 					sidebarButtonDisabled={this.state.sidebarDocked}
