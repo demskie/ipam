@@ -36,7 +36,7 @@ export class Main extends React.Component {
 	}
 
 	askForHostDetails = nodeData => {
-		let emptyArray = new Array(1024);
+		let emptyArray = new Array(128);
 		this.setState({
 			selectedSubnetInfo: nodeData,
 			hostDetails: {
@@ -89,17 +89,17 @@ export class Main extends React.Component {
 		this.state.websocket.addEventListener("message", ev => {
 			let msg = JSON.parse(ev.data);
 			switch (msg.requestType) {
-			case "DISPLAYERROR":
-				this.processWebsocketErrorMessage(msg.requestData);
-				break;
-			case "DISPLAYSUBNETDATA":
-				this.processWebsocketSubnetData(msg.requestData);
-				break;
-			case "DISPLAYHOSTDATA":
-				this.processWebsocketHostData(msg.requestData);
-				break;
-			default:
-				console.log("received unknown message type:", msg.requestType);
+				case "DISPLAYERROR":
+					this.processWebsocketErrorMessage(msg.requestData);
+					break;
+				case "DISPLAYSUBNETDATA":
+					this.processWebsocketSubnetData(msg.requestData);
+					break;
+				case "DISPLAYHOSTDATA":
+					this.processWebsocketHostData(msg.requestData);
+					break;
+				default:
+					console.log("received unknown message type:", msg.requestType);
 			}
 		});
 	};
@@ -147,7 +147,7 @@ export class Main extends React.Component {
 				}
 			};
 			requestSubnetData();
-			setInterval(requestSubnetData, 15000);
+			setInterval(requestSubnetData, 10000);
 		});
 	};
 
@@ -159,21 +159,35 @@ export class Main extends React.Component {
 		}
 	};
 
-	handleSubnetAction = action => {
-		console.log("caught action:", action);
+	handleSubnetAction = obj => {
 		this.setState({
 			nestedSubnetPromptEnabled: false
 		});
-	};
-
-	isSubnetSelected = () => {
-		if (
-			Object.keys(this.state.selectedSubnetInfo).length === 0 &&
-			this.state.selectedSubnetInfo.constructor === Object
-		) {
-			return true;
+		if (this.state.websocket.readyState === 1) {
+			let outMsg = {};
+			switch (obj.action) {
+				case "create":
+					outMsg.RequestType = "POSTNEWSUBNET";
+					outMsg.RequestData = [obj.subnet, obj.description, obj.vlan, obj.notes];
+					break;
+				case "modify":
+					outMsg.RequestType = "POSTMODIFYSUBNET";
+					outMsg.RequestData = [obj.subnet, obj.description, obj.vlan, obj.notes];
+					break;
+				case "delete":
+					outMsg.RequestType = "POSTDELETESUBNET";
+					outMsg.RequestData = [obj.subnet];
+					break;
+				default:
+					console.log("Error! unknown action value:", obj);
+					return;
+			}
+			console.log(outMsg.RequestType + "\n", outMsg);
+			this.state.websocket.send(JSON.stringify(outMsg));
+			this.state.websocket.send(JSON.stringify({ RequestType: "GETSUBNETDATA" }));
+		} else {
+			console.log("caught an action while websocket is closed:", obj);
 		}
-		return false;
 	};
 
 	componentDidMount = () => {
@@ -190,6 +204,15 @@ export class Main extends React.Component {
 				return "0px";
 			}
 			return "50px";
+		};
+		const isSubnetSelected = () => {
+			if (
+				Object.keys(this.state.selectedSubnetInfo).length === 0 &&
+				this.state.selectedSubnetInfo.constructor === Object
+			) {
+				return true;
+			}
+			return false;
 		};
 		return (
 			<Sidebar
@@ -218,7 +241,7 @@ export class Main extends React.Component {
 									className="bp3-minimal"
 									icon="annotation"
 									text="Modify"
-									disabled={this.isSubnetSelected()}
+									disabled={isSubnetSelected()}
 									onClick={() => {
 										this.setState({
 											nestedSubnetPromptAction: "modify",
@@ -230,7 +253,7 @@ export class Main extends React.Component {
 									className="bp3-minimal"
 									icon="remove"
 									text="Delete"
-									disabled={this.isSubnetSelected()}
+									disabled={isSubnetSelected()}
 									onClick={() => {
 										this.setState({
 											nestedSubnetPromptAction: "delete",

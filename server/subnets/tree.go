@@ -1,7 +1,6 @@
 package subnets
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"math/rand"
@@ -47,7 +46,7 @@ func (tree *Tree) CreateSubnet(skeleton *SubnetSkeleton) error {
 	// creating a new subnet object
 	network := subnetmath.BlindlyParseCIDR(skeleton.Net)
 	if network == nil {
-		return errors.New("invalid CIDR network")
+		return fmt.Errorf("could not create '%v' as it is not a valid CIDR network", skeleton.Net)
 	}
 	newSubnet := &subnet{
 		network:      network,
@@ -60,7 +59,7 @@ func (tree *Tree) CreateSubnet(skeleton *SubnetSkeleton) error {
 	// ensure that this subnet does not already exist
 	if newSubnet.parent != nil &&
 		subnetmath.NetworksAreIdentical(newSubnet.parent.network, newSubnet.network) {
-		return fmt.Errorf("%v already exists", newSubnet.network)
+		return fmt.Errorf("could not create '%v' because it already exists", newSubnet.network)
 	}
 	// deletions will need to occur outside the upcoming loops to avoid corruption
 	relocatedSubnets := []*subnet{}
@@ -71,7 +70,7 @@ func (tree *Tree) CreateSubnet(skeleton *SubnetSkeleton) error {
 			if newSubnet.network.Contains(otherSubnet.network.IP) {
 				// ensure that this subnet does not already exist
 				if subnetmath.NetworksAreIdentical(newSubnet.network, otherSubnet.network) {
-					return fmt.Errorf("%v already exists", newSubnet.network)
+					return fmt.Errorf("could not create '%v' because it already exists", newSubnet.network)
 				}
 				// remove subnet from the base of the tree
 				relocatedSubnets = append(relocatedSubnets, otherSubnet)
@@ -93,7 +92,7 @@ func (tree *Tree) CreateSubnet(skeleton *SubnetSkeleton) error {
 			if newSubnet.network.Contains(sibling.network.IP) {
 				// ensure that this subnet does not already exist
 				if subnetmath.NetworksAreIdentical(newSubnet.network, sibling.network) {
-					return fmt.Errorf("%v already exists", newSubnet.network)
+					return fmt.Errorf("could not create '%v' because it already exists", newSubnet.network)
 				}
 				// remove child from previous parent
 				relocatedSubnets = append(relocatedSubnets, sibling)
@@ -116,13 +115,13 @@ func (tree *Tree) CreateSubnet(skeleton *SubnetSkeleton) error {
 func (tree *Tree) ReplaceSubnet(skeleton *SubnetSkeleton) error {
 	network := subnetmath.BlindlyParseCIDR(skeleton.Net)
 	if network == nil {
-		return errors.New("invalid subnet")
+		return fmt.Errorf("could not modify '%v' as it is not a valid CIDR network", skeleton.Net)
 	}
 	tree.mtx.Lock()
 	defer tree.mtx.Unlock()
 	sn := findSubnet(network, tree.roots)
 	if sn == nil {
-		return errors.New("subnet not found")
+		return fmt.Errorf("could not modify '%v' as it does not exist", skeleton.Net)
 	}
 	sn.description = skeleton.Desc
 	sn.vlan = skeleton.Vlan
@@ -137,7 +136,7 @@ func (tree *Tree) DeleteSubnet(network *net.IPNet) error {
 	defer tree.mtx.Unlock()
 	sn := findSubnet(network, tree.roots)
 	if sn == nil {
-		return errors.New("subnet not found")
+		return fmt.Errorf("could not delete '%v' as it does not exist", network.String())
 	}
 	for _, child := range sn.children {
 		if sn.parent == nil {

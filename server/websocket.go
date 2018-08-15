@@ -3,6 +3,7 @@ package server
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -13,7 +14,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-type incomingJSON struct {
+type simpleJSON struct {
 	RequestType string   `json:"requestType"`
 	RequestData []string `json:"requestData"`
 }
@@ -53,7 +54,7 @@ func (ipam *IPAMServer) handleWebsocketClient(w http.ResponseWriter, r *http.Req
 		}
 		networkIn.Reset()
 		networkIn.Write(newData)
-		inMsg := incomingJSON{}
+		inMsg := simpleJSON{}
 		err = decJSON.Decode(&inMsg)
 		if err != nil {
 			log.Printf("error decoding incoming message from %v\n", remoteIP)
@@ -76,7 +77,7 @@ func (ipam *IPAMServer) handleWebsocketClient(w http.ResponseWriter, r *http.Req
 		case "POSTDELETESUBNET":
 			ipam.handlePostDeleteSubnet(conn, inMsg)
 		default:
-			log.Printf("received invalid request from %v > %+v\n", remoteIP, inMsg)
+			log.Printf("received invalid request from %v \n", remoteIP)
 		}
 	}
 }
@@ -104,7 +105,7 @@ type outgoingHostDataJSON struct {
 	RequestData [][]string `json:"requestData"`
 }
 
-func (ipam *IPAMServer) handleGetHostData(conn *websocket.Conn, inMsg incomingJSON) {
+func (ipam *IPAMServer) handleGetHostData(conn *websocket.Conn, inMsg simpleJSON) {
 	var network *net.IPNet
 	if len(inMsg.RequestData) == 1 {
 		network = subnetmath.BlindlyParseCIDR(inMsg.RequestData[0])
@@ -151,14 +152,64 @@ func (ipam *IPAMServer) handleGetDebugInfo(conn *websocket.Conn) {
 
 }
 
-func (ipam *IPAMServer) handlePostNewSubnet(conn *websocket.Conn, inMsg incomingJSON) {
-
+func (ipam *IPAMServer) handlePostNewSubnet(conn *websocket.Conn, inMsg simpleJSON) {
+	err := ipam.subnets.CreateSubnet(&subnets.SubnetSkeleton{
+		Net:     inMsg.RequestData[0],
+		Desc:    inMsg.RequestData[1],
+		Mod:     time.Now().Format(defaultTimeLayout),
+		Vlan:    inMsg.RequestData[3],
+		Details: inMsg.RequestData[4],
+	})
+	if err != nil {
+		outMsg := simpleJSON{
+			RequestType: "DISPLAYERROR",
+			RequestData: []string{err.Error()},
+		}
+		b, err := json.Marshal(outMsg)
+		if err != nil {
+			log.Printf("error encoding outgoing message to %v", conn.RemoteAddr())
+		} else {
+			conn.WriteMessage(websocket.TextMessage, b)
+			ipam.handleGetSubnetData(conn)
+		}
+	}
 }
 
-func (ipam *IPAMServer) handlePostModifySubnet(conn *websocket.Conn, inMsg incomingJSON) {
-
+func (ipam *IPAMServer) handlePostModifySubnet(conn *websocket.Conn, inMsg simpleJSON) {
+	err := ipam.subnets.ReplaceSubnet(&subnets.SubnetSkeleton{
+		Net:     inMsg.RequestData[0],
+		Desc:    inMsg.RequestData[1],
+		Vlan:    inMsg.RequestData[3],
+		Details: inMsg.RequestData[4],
+	})
+	if err != nil {
+		outMsg := simpleJSON{
+			RequestType: "DISPLAYERROR",
+			RequestData: []string{err.Error()},
+		}
+		b, err := json.Marshal(outMsg)
+		if err != nil {
+			log.Printf("error encoding outgoing message to %v", conn.RemoteAddr())
+		} else {
+			conn.WriteMessage(websocket.TextMessage, b)
+			ipam.handleGetSubnetData(conn)
+		}
+	}
 }
 
-func (ipam *IPAMServer) handlePostDeleteSubnet(conn *websocket.Conn, inMsg incomingJSON) {
-
+func (ipam *IPAMServer) handlePostDeleteSubnet(conn *websocket.Conn, inMsg simpleJSON) {
+	network := subnetmath.BlindlyParseCIDR(inMsg.RequestData[0])
+	if network == nil || ipam.subnets.DeleteSubnet(network) != nil {
+		outMsg := simpleJSON{
+			RequestType: "DISPLAYERROR",
+			RequestData: []string{fmt.Sprintf("could not delete '%v' as it does not exist", inMsg.RequestData[0])},
+		}
+		b, err := json.Marshal(outMsg)
+		if err != nil {
+			log.Printf("error encoding outgoing message to %v", conn.RemoteAddr())
+		} else {
+			conn.WriteMessage(websocket.TextMessage, b)
+			ipam.handleGetSubnetData(conn)
+		}
+	}
 }

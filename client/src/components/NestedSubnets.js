@@ -31,16 +31,16 @@ export class NestedSubnets extends React.PureComponent {
 		return net + " " + desc;
 	};
 
-	constructTreeNodes = (serverData, selectedNode, expandedNodeIds) => {
+	constructTreeNodes = serverData => {
 		let processedData = [];
 		for (let i in serverData) {
 			let newNode = Object.assign({}, serverData[i]);
 			newNode.label = this.generateLabel(newNode.net, newNode.desc);
-			if (newNode.id === selectedNode.id) {
+			if (newNode.id === this.state.selectedNode.id) {
 				newNode.isSelected = true;
 			}
-			for (let j in expandedNodeIds) {
-				if (newNode.id === expandedNodeIds[j]) {
+			for (let j in this.state.expandedNodeIds) {
+				if (newNode.id === this.state.expandedNodeIds[j]) {
 					newNode.isExpanded = true;
 				}
 			}
@@ -48,7 +48,7 @@ export class NestedSubnets extends React.PureComponent {
 				if (newNode.childNodes.length === 0) {
 					delete newNode.childNodes;
 				} else {
-					newNode.childNodes = this.constructTreeNodes(newNode.childNodes, selectedNode, expandedNodeIds);
+					newNode.childNodes = this.constructTreeNodes(newNode.childNodes);
 				}
 			}
 			processedData.push(newNode);
@@ -56,7 +56,7 @@ export class NestedSubnets extends React.PureComponent {
 		return processedData;
 	};
 
-	handleNodeClick = (nodeData, nodePath, ev) => {
+	handleNodeClick = nodeData => {
 		let newNodeData = Object.assign({}, nodeData);
 		newNodeData.isSelected = true;
 		newNodeData.isExpanded = true;
@@ -109,9 +109,9 @@ export class NestedSubnets extends React.PureComponent {
 	render() {
 		const processedTree = () => {
 			if (window.location.host === "localhost:3000") {
-				return this.constructTreeNodes(testTree, this.state.selectedNode, this.state.expandedNodeIds);
+				return this.constructTreeNodes(testTree);
 			}
-			return this.constructTreeNodes(this.props.subnets, this.state.selectedNode, this.state.expandedNodeIds);
+			return this.constructTreeNodes(this.props.subnets);
 		};
 		return (
 			<Tree

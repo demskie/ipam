@@ -251,14 +251,14 @@ export class NestedSubnetsPrompt extends React.PureComponent {
 			</Dialog>
 		);
 		switch (this.props.subnetAction) {
-		case "create":
-			return create;
-		case "modify":
-			return modify;
-		case "delete":
-			return remove;
-		default:
-			return null;
+			case "create":
+				return create;
+			case "modify":
+				return modify;
+			case "delete":
+				return remove;
+			default:
+				return null;
 		}
 	}
 }
