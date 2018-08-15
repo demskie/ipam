@@ -2,12 +2,12 @@ import React from "react";
 import PropTypes from "prop-types";
 import { Tooltip, Tree, Position, Intent } from "@blueprintjs/core";
 
-export class NestedSubnets extends React.Component {
+export class NestedSubnets extends React.PureComponent {
 	constructor() {
 		super();
 		this.state = {
 			selectedNode: {},
-			expandedContainers: []
+			expandedNodeIds: {}
 		};
 	}
 
@@ -31,95 +31,92 @@ export class NestedSubnets extends React.Component {
 		return net + " " + desc;
 	};
 
-	constructTreeNodes = serverData => {
+	constructTreeNodes = (serverData, selectedNode, expandedNodeIds) => {
+		let processedData = [];
 		for (let i in serverData) {
-			serverData[i].label = this.generateLabel(serverData[i].net, serverData[i].desc);
-			if (this.state.selectedNode.id === serverData[i].id) {
-				serverData[i].isSelected = true;
+			let newNode = Object.assign({}, serverData[i]);
+			newNode.label = this.generateLabel(newNode.net, newNode.desc);
+			if (newNode.id === selectedNode.id) {
+				newNode.isSelected = true;
 			}
-			for (let j in this.state.expandedContainers) {
-				if (this.state.expandedContainers[j].id === serverData[i].id) {
-					serverData[i].isExpanded = true;
+			for (let j in expandedNodeIds) {
+				if (newNode.id === expandedNodeIds[j]) {
+					newNode.isExpanded = true;
 				}
 			}
-			if (serverData[i].childNodes !== undefined) {
-				if (serverData[i].childNodes.length === 0) {
-					delete serverData[i].childNodes;
+			if (newNode.childNodes !== undefined) {
+				if (newNode.childNodes.length === 0) {
+					delete newNode.childNodes;
 				} else {
-					serverData[i].childNodes = this.constructTreeNodes(serverData[i].childNodes);
+					newNode.childNodes = this.constructTreeNodes(newNode.childNodes, selectedNode, expandedNodeIds);
 				}
 			}
+			processedData.push(newNode);
 		}
-		return serverData;
+		return processedData;
 	};
 
 	handleNodeClick = (nodeData, nodePath, ev) => {
-		let oldSelection = this.state.selectedNode;
-		if (nodeData.id !== oldSelection.id) {
-			oldSelection.isSelected = false;
-		}
-		nodeData.isSelected = true;
-		nodeData.isExpanded = true;
-		let foundMatch = false;
-		let tmpExpandedContainers = this.state.expandedContainers;
-		for (let i in tmpExpandedContainers) {
-			if (tmpExpandedContainers[i].id === nodeData.id) {
-				foundMatch = true;
-				break;
+		let newNodeData = Object.assign({}, nodeData);
+		newNodeData.isSelected = true;
+		newNodeData.isExpanded = true;
+		if (nodeData.childNodes !== undefined) {
+			let foundMatch = false;
+			for (let i in this.state.expandedNodeIds) {
+				if (this.state.expandedNodeIds[i] === newNodeData.id) {
+					foundMatch = true;
+					this.setState({
+						selectedNode: newNodeData
+					});
+					break;
+				}
 			}
+			if (!foundMatch) {
+				this.setState({
+					selectedNode: newNodeData,
+					expandedNodeIds: [newNodeData.id, ...this.state.expandedNodeIds]
+				});
+			}
+		} else {
+			this.setState({
+				selectedNode: newNodeData
+			});
 		}
-		if (!foundMatch) {
-			tmpExpandedContainers.push(nodeData);
-		}
-		this.setState({
-			selectedNode: nodeData,
-			expandedContainers: tmpExpandedContainers
-		});
-		this.props.hostDetailsRequester(nodeData.net);
+		this.props.hostDetailsRequester(newNodeData);
 	};
 
 	handleNodeCollapse = nodeData => {
 		nodeData.isExpanded = false;
-		let tmpExpandedContainers = this.state.expandedContainers;
-		for (let i in tmpExpandedContainers) {
-			if (tmpExpandedContainers[i].id === nodeData.id) {
-				tmpExpandedContainers.splice(i, 1);
+		let newExpandedNodeIds = [...this.state.expandedNodeIds];
+		for (let i in newExpandedNodeIds) {
+			if (newExpandedNodeIds[i] === nodeData.id) {
+				newExpandedNodeIds.splice(i, 1);
+				break;
 			}
 		}
 		this.setState({
-			expandedContainers: tmpExpandedContainers
+			expandedNodeIds: newExpandedNodeIds
 		});
 	};
 
 	handleNodeExpand = nodeData => {
 		nodeData.isExpanded = true;
-		let foundMatch = false;
-		let tmpExpandedContainers = this.state.expandedContainers;
-		for (let i in tmpExpandedContainers) {
-			if (tmpExpandedContainers[i].id === nodeData.id) {
-				foundMatch = true;
-				break;
-			}
-		}
-		if (!foundMatch) {
-			tmpExpandedContainers.push(nodeData);
-			this.setState({
-				expandedContainers: tmpExpandedContainers
-			});
-		}
+		this.setState({
+			expandedNodeIds: [nodeData.id, ...this.state.expandedNodeIds]
+		});
 	};
 
 	render() {
-		const buildTree = () => {
+		const processedTree = () => {
 			if (window.location.host === "localhost:3000") {
-				return this.constructTreeNodes(testTree);
+				return this.constructTreeNodes(testTree, this.state.selectedNode, this.state.expandedNodeIds);
 			}
-			return this.constructTreeNodes(this.props.subnets);
+			return this.constructTreeNodes(this.props.subnets, this.state.selectedNode, this.state.expandedNodeIds);
 		};
 		return (
 			<Tree
 				className="bp3-dark"
-				contents={buildTree()}
+				contents={processedTree()}
 				onNodeClick={this.handleNodeClick}
 				onNodeCollapse={this.handleNodeCollapse}
 				onNodeExpand={this.handleNodeExpand}

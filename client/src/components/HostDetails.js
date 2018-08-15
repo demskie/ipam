@@ -1,6 +1,5 @@
 import React from "react";
 import PropTypes from "prop-types";
-import debounce from "debounce";
 import { Cell, Column, Table, RenderMode } from "@blueprintjs/table";
 
 export class HostDetails extends React.Component {
@@ -56,8 +55,9 @@ export class HostDetails extends React.Component {
 					className="bp3-dark"
 					numRows={1024}
 					renderMode={RenderMode.NONE}
-					enableGhostCells={true}
+					enableGhostCells={false}
 					columnWidths={columnWidthArrays()}
+					enableColumnResizing={false}
 					enableRowHeader={false}
 				>
 					<Column name="Address" cellRenderer={addressRenderer} />

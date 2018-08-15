@@ -18,6 +18,9 @@ export class Main extends React.Component {
 			websocket: new WebSocket(tcp + host + "/sync"),
 			height: "0px",
 			nestedSubnets: [],
+			nestedSubnetPromptAction: "",
+			selectedSubnetInfo: {},
+			nestedSubnetPromptEnabled: false,
 			hostDetails: {
 				addresses: [],
 				aRecords: [],
@@ -32,21 +35,21 @@ export class Main extends React.Component {
 		};
 	}
 
-	askForHostDetails = selectedSubnet => {
+	askForHostDetails = nodeData => {
+		let emptyArray = new Array(1024);
+		this.setState({
+			selectedSubnetInfo: nodeData,
+			hostDetails: {
+				addresses: emptyArray,
+				aRecords: emptyArray,
+				pingResults: emptyArray,
+				lastAttempts: emptyArray
+			}
+		});
 		if (this.state.websocket.readyState === 1) {
-			console.log(this.state.websocket);
-			let emptyArray = new Array(1024);
-			this.setState({
-				hostDetails: {
-					addresses: emptyArray,
-					aRecords: emptyArray,
-					pingResults: emptyArray,
-					lastAttempts: emptyArray
-				}
-			});
 			let request = {
 				requestType: "GETHOSTDATA",
-				requestData: [selectedSubnet]
+				requestData: [nodeData.net]
 			};
 			console.log("GETHOSTDATA\n", request);
 			this.state.websocket.send(JSON.stringify(request));
@@ -76,7 +79,7 @@ export class Main extends React.Component {
 
 	handleWebsocketClose = () => {
 		this.state.websocket.addEventListener("close", () => {
-			if (window.location.hostname !== "localhost:3000") {
+			if (window.location.hostname !== "localhost") {
 				this.setState({ alertVisible: true });
 			}
 		});
@@ -156,8 +159,25 @@ export class Main extends React.Component {
 		}
 	};
 
+	handleSubnetAction = action => {
+		console.log("caught action:", action);
+		this.setState({
+			nestedSubnetPromptEnabled: false
+		});
+	};
+
+	isSubnetSelected = () => {
+		if (
+			Object.keys(this.state.selectedSubnetInfo).length === 0 &&
+			this.state.selectedSubnetInfo.constructor === Object
+		) {
+			return true;
+		}
+		return false;
+	};
+
 	componentDidMount = () => {
-		window.addEventListener("resize", debounce(this.updateDimensions, 100));
+		window.addEventListener("resize", debounce(this.updateDimensions, 500));
 		this.updateDimensions();
 		this.handleWebsocketClose();
 		this.handleWebsocketMessage();
@@ -183,14 +203,52 @@ export class Main extends React.Component {
 					<div>
 						<Navbar className="bp3-dark" style={{ paddingTop: sidebarNavbarPadding() }}>
 							<NavbarGroup align={Alignment.LEFT}>
-								<Button className="bp3-minimal" icon="add" text="Create" />
-								<Button className="bp3-minimal" icon="annotation" text="Modify" disabled={true} />
-								<Button className="bp3-minimal" icon="remove" text="Delete" disabled={true} />
+								<Button
+									className="bp3-minimal"
+									icon="add"
+									text="Create"
+									onClick={() => {
+										this.setState({
+											nestedSubnetPromptAction: "create",
+											nestedSubnetPromptEnabled: true
+										});
+									}}
+								/>
+								<Button
+									className="bp3-minimal"
+									icon="annotation"
+									text="Modify"
+									disabled={this.isSubnetSelected()}
+									onClick={() => {
+										this.setState({
+											nestedSubnetPromptAction: "modify",
+											nestedSubnetPromptEnabled: true
+										});
+									}}
+								/>
+								<Button
+									className="bp3-minimal"
+									icon="remove"
+									text="Delete"
+									disabled={this.isSubnetSelected()}
+									onClick={() => {
+										this.setState({
+											nestedSubnetPromptAction: "delete",
+											nestedSubnetPromptEnabled: true
+										});
+									}}
+								/>
 							</NavbarGroup>
 						</Navbar>
 						<NestedSubnets
 							subnets={this.state.nestedSubnets}
 							hostDetailsRequester={this.askForHostDetails}
+						/>
+						<NestedSubnetsPrompt
+							subnetAction={this.state.nestedSubnetPromptAction}
+							subnetInfo={this.state.selectedSubnetInfo}
+							isOpen={this.state.nestedSubnetPromptEnabled}
+							sendUserAction={this.handleSubnetAction}
 						/>
 					</div>
 				}
