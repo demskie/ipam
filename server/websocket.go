@@ -94,7 +94,7 @@ func (ipam *IPAMServer) handleGetSubnetData(conn *websocket.Conn) {
 	}
 	b, err := json.Marshal(outMsg)
 	if err != nil {
-		log.Printf("error encoding outgoing message to %v", conn.RemoteAddr())
+		log.Printf("error encoding outgoing message to %v\n", conn.RemoteAddr())
 	} else {
 		conn.WriteMessage(websocket.TextMessage, b)
 	}
@@ -138,7 +138,7 @@ func (ipam *IPAMServer) handleGetHostData(conn *websocket.Conn, inMsg simpleJSON
 	}
 	b, err := json.Marshal(outMsg)
 	if err != nil {
-		log.Printf("error encoding outgoing message to %v", conn.RemoteAddr())
+		log.Printf("error encoding outgoing message to %v\n", conn.RemoteAddr())
 	} else {
 		conn.WriteMessage(websocket.TextMessage, b)
 	}
@@ -167,7 +167,7 @@ func (ipam *IPAMServer) handlePostNewSubnet(conn *websocket.Conn, inMsg simpleJS
 		}
 		b, err := json.Marshal(outMsg)
 		if err != nil {
-			log.Printf("error encoding outgoing message to %v", conn.RemoteAddr())
+			log.Printf("error encoding outgoing message to %v\n", conn.RemoteAddr())
 		} else {
 			conn.WriteMessage(websocket.TextMessage, b)
 			ipam.handleGetSubnetData(conn)
@@ -189,7 +189,7 @@ func (ipam *IPAMServer) handlePostModifySubnet(conn *websocket.Conn, inMsg simpl
 		}
 		b, err := json.Marshal(outMsg)
 		if err != nil {
-			log.Printf("error encoding outgoing message to %v", conn.RemoteAddr())
+			log.Printf("error encoding outgoing message to %v\n", conn.RemoteAddr())
 		} else {
 			conn.WriteMessage(websocket.TextMessage, b)
 			ipam.handleGetSubnetData(conn)
@@ -206,7 +206,7 @@ func (ipam *IPAMServer) handlePostDeleteSubnet(conn *websocket.Conn, inMsg simpl
 		}
 		b, err := json.Marshal(outMsg)
 		if err != nil {
-			log.Printf("error encoding outgoing message to %v", conn.RemoteAddr())
+			log.Printf("error encoding outgoing message to %v\n", conn.RemoteAddr())
 		} else {
 			conn.WriteMessage(websocket.TextMessage, b)
 			ipam.handleGetSubnetData(conn)
