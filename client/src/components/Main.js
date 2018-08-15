@@ -2,9 +2,10 @@ import React from "react";
 import debounce from "debounce";
 import { NestedSubnets } from "./NestedSubnets.js";
 import { NestedSubnetsPrompt } from "./NestedSubnetsPrompt.js";
+import { NestedSubnetsToolbar } from "./NestedSubnetsToolbar.js";
 import { RightSideToolbar } from "./RightSideToolbar.js";
 import { HostDetails } from "./HostDetails.js";
-import { Alert, Intent, Toaster, Navbar, NavbarGroup, Alignment, Button } from "@blueprintjs/core";
+import { Alert, Intent, Toaster } from "@blueprintjs/core";
 import Sidebar from "react-sidebar";
 
 const sidebarMinimumWidth = 400;
@@ -199,20 +200,11 @@ export class Main extends React.Component {
 	};
 
 	render() {
-		const sidebarNavbarPadding = () => {
-			if (this.state.sidebarDocked) {
-				return "0px";
-			}
-			return "50px";
-		};
-		const isSubnetSelected = () => {
-			if (
-				Object.keys(this.state.selectedSubnetInfo).length === 0 &&
-				this.state.selectedSubnetInfo.constructor === Object
-			) {
-				return true;
-			}
-			return false;
+		const subnetsToolbarButtonPress = val => {
+			this.setState({
+				nestedSubnetPromptAction: val,
+				nestedSubnetPromptEnabled: true
+			});
 		};
 		return (
 			<Sidebar
@@ -224,45 +216,11 @@ export class Main extends React.Component {
 				}}
 				sidebar={
 					<div>
-						<Navbar className="bp3-dark" style={{ paddingTop: sidebarNavbarPadding() }}>
-							<NavbarGroup align={Alignment.LEFT}>
-								<Button
-									className="bp3-minimal"
-									icon="add"
-									text="Create"
-									onClick={() => {
-										this.setState({
-											nestedSubnetPromptAction: "create",
-											nestedSubnetPromptEnabled: true
-										});
-									}}
-								/>
-								<Button
-									className="bp3-minimal"
-									icon="annotation"
-									text="Modify"
-									disabled={isSubnetSelected()}
-									onClick={() => {
-										this.setState({
-											nestedSubnetPromptAction: "modify",
-											nestedSubnetPromptEnabled: true
-										});
-									}}
-								/>
-								<Button
-									className="bp3-minimal"
-									icon="remove"
-									text="Delete"
-									disabled={isSubnetSelected()}
-									onClick={() => {
-										this.setState({
-											nestedSubnetPromptAction: "delete",
-											nestedSubnetPromptEnabled: true
-										});
-									}}
-								/>
-							</NavbarGroup>
-						</Navbar>
+						<NestedSubnetsToolbar
+							isSidebarDocked={this.state.sidebarDocked}
+							isSubnetSelected={Object.keys(this.state.selectedSubnetInfo).length === 0}
+							handleButtonPress={subnetsToolbarButtonPress}
+						/>
 						<NestedSubnets
 							subnets={this.state.nestedSubnets}
 							hostDetailsRequester={this.askForHostDetails}
