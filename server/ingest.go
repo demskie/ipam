@@ -74,12 +74,12 @@ func (ipam *IPAMServer) IngestSubnetCSVLines(csvlines []string, verbose bool) (p
 	return processed, skipped, err
 }
 
+// IngestUserHistory is a wrapper around the import method defined in ipam/server/history
+func (ipam *IPAMServer) IngestUserHistory(history []string) {
+	ipam.history.OverwriteUserHistory(history)
+}
+
 // IngestTinyDNSLines is a wrapper around the import method defined in ipam/server/dns
-func (ipam *IPAMServer) IngestTinyDNSLines(dnslines []string) {
-	if len(dnslines) == 0 {
-		log.Println("unable to fetch int-dns/data or ext-dns/data from gitlab")
-		return
-	}
-	processed, skipped := ipam.dns.ParseTinyDNS(dnslines)
-	log.Printf("imported %v TinyDNS entries and skipped %v\n", processed, skipped)
+func (ipam *IPAMServer) IngestTinyDNSLines(dnslines []string) (processed, skipped int) {
+	return ipam.dns.ParseTinyDNS(dnslines)
 }

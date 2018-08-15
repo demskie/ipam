@@ -31,7 +31,11 @@ export class HostDetails extends React.Component {
 			} else if (this.props.details.addresses[rowIndex] === undefined) {
 				return emptyCell;
 			} else {
-				return <Cell>{this.props.details.addresses[rowIndex]}</Cell>;
+				return (
+					<Cell>
+						<div style={{ textAlign: "center" }}>{this.props.details.addresses[rowIndex]}</div>
+					</Cell>
+				);
 			}
 		};
 		const aRecordRenderer = rowIndex => {
@@ -40,7 +44,11 @@ export class HostDetails extends React.Component {
 			} else if (this.props.details.aRecords[rowIndex] === undefined) {
 				return emptyCell;
 			} else {
-				return <Cell>{this.props.details.aRecords[rowIndex]}</Cell>;
+				return (
+					<Cell>
+						<div style={{ textAlign: "center" }}>{this.props.details.aRecords[rowIndex]}</div>
+					</Cell>
+				);
 			}
 		};
 		const pingResultRenderer = rowIndex => {
@@ -49,7 +57,11 @@ export class HostDetails extends React.Component {
 			} else if (this.props.details.pingResults[rowIndex] === undefined) {
 				return emptyCell;
 			} else {
-				return <Cell>{this.props.details.pingResults[rowIndex]}</Cell>;
+				return (
+					<Cell>
+						<div style={{ textAlign: "center" }}>{this.props.details.pingResults[rowIndex]}</div>
+					</Cell>
+				);
 			}
 		};
 		const lastAttemptRenderer = rowIndex => {
@@ -58,7 +70,11 @@ export class HostDetails extends React.Component {
 			} else if (this.props.details.lastAttempts[rowIndex] === undefined) {
 				return emptyCell;
 			} else {
-				return <Cell>{this.props.details.lastAttempts[rowIndex]}</Cell>;
+				return (
+					<Cell>
+						<div style={{ textAlign: "center" }}>{this.props.details.lastAttempts[rowIndex]}</div>
+					</Cell>
+				);
 			}
 		};
 		return (

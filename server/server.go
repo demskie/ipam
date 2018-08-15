@@ -18,12 +18,6 @@ const (
 	defaultTimeLayout = "01-02-2006 15:04:05"
 )
 
-// MutatedData contains the raw lines of the changed subnets.csv and history.txt files
-type MutatedData struct {
-	subnets []string
-	history []string
-}
-
 // IPAMServer is the object used to mutate and read data
 type IPAMServer struct {
 	subnets      *subnets.Tree
@@ -33,6 +27,12 @@ type IPAMServer struct {
 	pinger       *ping.Pinger
 	mutationMtx  *sync.Mutex
 	mutationChan chan MutatedData
+}
+
+// MutatedData contains the raw lines of the changed subnets.csv and history.txt files
+type MutatedData struct {
+	subnets []string
+	history []string
 }
 
 // NewIPAMServer returns a new server object
@@ -45,6 +45,13 @@ func NewIPAMServer() *IPAMServer {
 		pinger:       ping.NewPinger(),
 		mutationMtx:  &sync.Mutex{},
 		mutationChan: make(chan MutatedData, 1),
+	}
+}
+
+func (ipam *IPAMServer) signalMutation() {
+	ipam.mutationChan <- MutatedData{
+		subnets: ipam.ExportSubnetCSVLines(),
+		history: ipam.history.GetAllUserActions(),
 	}
 }
 

@@ -23,6 +23,16 @@ func NewUserActions() *UserActions {
 
 const defaultTimeLayout string = "01-02-2006 15:04:05"
 
+// OverwriteUserHistory reinitializes the UserActions history
+func (r *UserActions) OverwriteUserHistory(history []string) {
+	r.mtx.Lock()
+	r.stack = make([]string, 0, len(history))
+	for _, line := range history {
+		r.stack = append(r.stack, line)
+	}
+	r.mtx.Unlock()
+}
+
 // RecordUserAction adds the action to history and returns the resulting string
 func (r *UserActions) RecordUserAction(user, verb string, changes []string) string {
 	t := time.Now().Format(defaultTimeLayout)

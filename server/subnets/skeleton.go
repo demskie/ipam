@@ -27,20 +27,23 @@ func (subnet *subnet) toSkeleton() *SubnetSkeleton {
 func (tree *Tree) GetSubnetSkeleton(network *net.IPNet) *SubnetSkeleton {
 	tree.mtx.RLock()
 	defer tree.mtx.RUnlock()
-	return findSubnet(network, tree.roots).toSkeleton()
+	if network != nil {
+		return findSubnet(network, tree.roots).toSkeleton()
+	}
+	return nil
 }
 
 // ListDifferences will return a slice of strings demonstrating the differences
-func (skeleton *SubnetSkeleton) ListDifferences(otherSkeleton *SubnetSkeleton) []string {
-	differences := []string{fmt.Sprintf("net='%v'", otherSkeleton.Net)}
-	if skeleton.Desc != otherSkeleton.Desc {
-		differences = append(differences, fmt.Sprintf("desc='%v'", otherSkeleton.Desc))
+func (skeleton *SubnetSkeleton) ListDifferences(newSkeleton *SubnetSkeleton) []string {
+	differences := []string{fmt.Sprintf("net='%v'", newSkeleton.Net)}
+	if skeleton.Desc != newSkeleton.Desc {
+		differences = append(differences, fmt.Sprintf("desc='%v'", newSkeleton.Desc))
 	}
-	if skeleton.Vlan != otherSkeleton.Vlan {
-		differences = append(differences, fmt.Sprintf("vlan='%v'", otherSkeleton.Vlan))
+	if skeleton.Vlan != newSkeleton.Vlan {
+		differences = append(differences, fmt.Sprintf("vlan='%v'", newSkeleton.Vlan))
 	}
-	if skeleton.Details != otherSkeleton.Details {
-		differences = append(differences, fmt.Sprintf("details='%v'", otherSkeleton.Details))
+	if skeleton.Details != newSkeleton.Details {
+		differences = append(differences, fmt.Sprintf("details='%v'", newSkeleton.Details))
 	}
 	if len(differences) > 1 {
 		return differences
