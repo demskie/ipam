@@ -1,6 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { Tooltip, Tree, Position, Intent, ContextMenu, Menu, MenuItem } from "@blueprintjs/core";
+import { Tooltip, Tree, Position, Intent, ContextMenu, Menu, MenuItem, Classes } from "@blueprintjs/core";
 
 var selectedSubnet = null;
 
@@ -20,10 +20,25 @@ window.oncontextmenu = ev => {
 		ev.preventDefault();
 		const menu = React.createElement(
 			Menu,
-			{ className: "bp3-dark" }, // props
-			React.createElement(MenuItem, { className: "bp3-dark", onClick: triggerCreate, text: "Create" }),
-			React.createElement(MenuItem, { className: "bp3-dark", onClick: triggerModify, text: "Modify" }),
-			React.createElement(MenuItem, { className: "bp3-dark", onClick: triggerDelete, text: "Delete" })
+			{ className: Classes.DARK },
+			React.createElement(MenuItem, {
+				className: Classes.DARK,
+				onClick: triggerCreate,
+				intent: Intent.PRIMARY,
+				text: "Create New Subnet"
+			}),
+			React.createElement(MenuItem, {
+				className: Classes.DARK,
+				onClick: triggerModify,
+				intent: Intent.PRIMARY,
+				text: "Modify This Subnet"
+			}),
+			React.createElement(MenuItem, {
+				className: Classes.DARK,
+				onClick: triggerDelete,
+				intent: Intent.PRIMARY,
+				text: "Delete This Subnet"
+			})
 		);
 		ContextMenu.show(menu, { left: ev.clientX, top: ev.clientY }, () => {
 			console.debug("context menu has closed");
