@@ -5,6 +5,7 @@ import { NestedSubnetsPrompt } from "./NestedSubnetsPrompt.js";
 import { NestedSubnetsToolbar } from "./NestedSubnetsToolbar.js";
 import { RightSideToolbar } from "./RightSideToolbar.js";
 import { HostDetails } from "./HostDetails.js";
+import { AdvancedOverlay } from "./AdvancedOverlay.js";
 import { Alert, Intent, Toaster, Classes, Position } from "@blueprintjs/core";
 import Sidebar from "react-sidebar";
 
@@ -39,7 +40,8 @@ export class Main extends React.Component {
 			sidebarOpen: false,
 			sidebarDocked: false,
 			sidebarWidth: 0,
-			tableWidth: 0
+			tableWidth: 0,
+			advancedOverlayEnabled: false
 		};
 	}
 
@@ -169,34 +171,59 @@ export class Main extends React.Component {
 		}
 	};
 
-	handleSubnetAction = obj => {
-		this.setState({
-			nestedSubnetPromptEnabled: false
-		});
-		if (this.state.websocket.readyState === 1) {
-			let outMsg = {};
-			switch (obj.action) {
-				case "create":
-					outMsg.RequestType = "POSTNEWSUBNET";
-					outMsg.RequestData = [obj.subnet, obj.description, obj.vlan, obj.notes];
-					break;
-				case "modify":
-					outMsg.RequestType = "POSTMODIFYSUBNET";
-					outMsg.RequestData = [obj.subnet, obj.description, obj.vlan, obj.notes];
-					break;
-				case "delete":
-					outMsg.RequestType = "POSTDELETESUBNET";
-					outMsg.RequestData = [obj.subnet];
-					break;
-				default:
-					console.log("Error! unknown action value:", obj);
-					return;
+	handleUserAction = obj => {
+		if (obj.action === "create") {
+			if (this.state.websocket.readyState === 1) {
+				let outMsg = {
+					RequestType: "POSTNEWSUBNET",
+					RequestData: [obj.subnet, obj.description, obj.vlan, obj.notes]
+				};
+				console.log(outMsg.RequestType + "\n", outMsg);
+				this.state.websocket.send(JSON.stringify(outMsg));
+			} else {
+				console.log("caught an action while websocket is closed:", obj);
 			}
-			console.log(outMsg.RequestType + "\n", outMsg);
-			this.state.websocket.send(JSON.stringify(outMsg));
-			this.state.websocket.send(JSON.stringify({ RequestType: "GETSUBNETDATA" }));
+			this.setState({
+				nestedSubnetPromptEnabled: false
+			});
+		} else if (obj.action === "modify") {
+			if (this.state.websocket.readyState === 1) {
+				let outMsg = {
+					RequestType: "POSTMODIFYSUBNET",
+					RequestData: [obj.subnet, obj.description, obj.vlan, obj.notes]
+				};
+				console.log(outMsg.RequestType + "\n", outMsg);
+				this.state.websocket.send(JSON.stringify(outMsg));
+			} else {
+				console.log("caught an action while websocket is closed:", obj);
+			}
+			this.setState({
+				nestedSubnetPromptEnabled: false
+			});
+		} else if (obj.action === "delete") {
+			if (this.state.websocket.readyState === 1) {
+				let outMsg = {
+					RequestType: "POSTDELETESUBNET",
+					RequestData: [obj.subnet]
+				};
+				console.log(outMsg.RequestType + "\n", outMsg);
+				this.state.websocket.send(JSON.stringify(outMsg));
+			} else {
+				console.log("caught an action while websocket is closed:", obj);
+			}
+			this.setState({
+				nestedSubnetPromptEnabled: false
+			});
+		} else if (obj.action === "closeNestedSubnetsPrompt") {
+			this.setState({
+				nestedSubnetPromptEnabled: false
+			});
+		} else if (obj.action === "closeAdvancedOverlay") {
+			this.setState({
+				advancedOverlayEnabled: false
+			});
 		} else {
-			console.log("caught an action while websocket is closed:", obj);
+			console.log("Error! unknown action value:", obj);
 		}
 	};
 
@@ -262,7 +289,7 @@ export class Main extends React.Component {
 							subnetAction={this.state.nestedSubnetPromptAction}
 							subnetInfo={this.state.selectedSubnetInfo}
 							isOpen={this.state.nestedSubnetPromptEnabled}
-							sendUserAction={this.handleSubnetAction}
+							sendUserAction={this.handleUserAction}
 						/>
 					</div>
 				}
@@ -270,8 +297,18 @@ export class Main extends React.Component {
 				<RightSideToolbar
 					sidebarButtonDisabled={this.state.sidebarDocked}
 					toggleSidebarTrigger={this.toggleSidebarTrigger}
+					showAdvancedOverlay={() => {
+						this.setState({
+							advancedOverlayEnabled: true
+						});
+					}}
 				/>
 				<HostDetails details={this.state.hostDetails} tableWidth={this.state.tableWidth} />
+				<AdvancedOverlay
+					historyData={[]}
+					isOpen={this.state.advancedOverlayEnabled}
+					sendUserAction={this.handleUserAction}
+				/>
 				<Alert
 					className="bp3-dark"
 					confirmButtonText="Reconnect"

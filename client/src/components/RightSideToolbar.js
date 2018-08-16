@@ -54,10 +54,8 @@ export class RightSideToolbar extends React.Component {
 							className="bp3-minimal"
 							icon="property"
 							text="Advanced"
-							disabled={true}
-							onClick={() => {
-								console.log("you just clicked the advanced button");
-							}}
+							disabled={false}
+							onClick={this.props.showAdvancedOverlay}
 						/>
 						<Button
 							className="bp3-minimal"
@@ -93,5 +91,6 @@ export class RightSideToolbar extends React.Component {
 
 RightSideToolbar.propTypes = {
 	sidebarButtonDisabled: PropTypes.bool,
-	toggleSidebarTrigger: PropTypes.func
+	toggleSidebarTrigger: PropTypes.func,
+	showAdvancedOverlay: PropTypes.func
 };

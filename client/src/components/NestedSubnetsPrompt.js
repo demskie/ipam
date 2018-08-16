@@ -18,7 +18,7 @@ export class NestedSubnetsPrompt extends React.PureComponent {
 				title=""
 				isOpen={this.props.isOpen}
 				onClose={() => {
-					this.props.sendUserAction({ action: "close" });
+					this.props.sendUserAction({ action: "closeNestedSubnetsPrompt" });
 				}}
 			>
 				<div className={classNames(Classes.DIALOG_BODY)}>
@@ -87,7 +87,7 @@ export class NestedSubnetsPrompt extends React.PureComponent {
 				title=""
 				isOpen={this.props.isOpen}
 				onClose={() => {
-					this.props.sendUserAction({ action: "close" });
+					this.props.sendUserAction({ action: "closeNestedSubnetsPrompt" });
 				}}
 			>
 				<div className={classNames(Classes.DIALOG_BODY)}>
@@ -176,7 +176,7 @@ export class NestedSubnetsPrompt extends React.PureComponent {
 				title=""
 				isOpen={this.props.isOpen}
 				onClose={() => {
-					this.props.sendUserAction({ action: "close" });
+					this.props.sendUserAction({ action: "closeNestedSubnetsPrompt" });
 				}}
 			>
 				<div className={classNames(Classes.DIALOG_BODY)}>
