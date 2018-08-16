@@ -5,10 +5,17 @@ import { NestedSubnetsPrompt } from "./NestedSubnetsPrompt.js";
 import { NestedSubnetsToolbar } from "./NestedSubnetsToolbar.js";
 import { RightSideToolbar } from "./RightSideToolbar.js";
 import { HostDetails } from "./HostDetails.js";
-import { Alert, Intent, Toaster } from "@blueprintjs/core";
+import { Alert, Intent, Toaster, Classes, Position } from "@blueprintjs/core";
 import Sidebar from "react-sidebar";
 
 const sidebarMinimumWidth = 400;
+
+const errorToaster = Toaster.create({
+	autoFocus: false,
+	canEscapeKeyClear: false,
+	className: Classes.DARK,
+	position: Position.BOTTOM
+});
 
 export class Main extends React.Component {
 	constructor() {
@@ -107,13 +114,11 @@ export class Main extends React.Component {
 
 	processWebsocketErrorMessage = requestData => {
 		console.log("DISPLAYERROR\n", requestData);
-		Toaster.create({
-			icon: "warning-sign",
-			intent: Intent.DANGER,
+		errorToaster.show({
+			intent: Intent.WARNING,
 			message: requestData[0],
-			canEscapeKeyClear: false,
 			timeout: 0
-		}).show();
+		});
 	};
 
 	processWebsocketSubnetData = requestData => {
