@@ -88,10 +88,22 @@ export class HostDetails extends React.Component {
 					enableColumnResizing={false}
 					enableRowHeader={false}
 				>
-					<Column name="Address" cellRenderer={addressRenderer} />
-					<Column name="A Record" cellRenderer={aRecordRenderer} />
-					<Column name="Ping Result" cellRenderer={pingResultRenderer} />
-					<Column name="Last Attempt" cellRenderer={lastAttemptRenderer} />
+					<Column
+						name={<div style={{ textAlign: "center" }}>{"Address"}</div>}
+						cellRenderer={addressRenderer}
+					/>
+					<Column
+						name={<div style={{ textAlign: "center" }}>{"A Record"}</div>}
+						cellRenderer={aRecordRenderer}
+					/>
+					<Column
+						name={<div style={{ textAlign: "center" }}>{"Ping Result"}</div>}
+						cellRenderer={pingResultRenderer}
+					/>
+					<Column
+						name={<div style={{ textAlign: "center" }}>{"Last Attempt"}</div>}
+						cellRenderer={lastAttemptRenderer}
+					/>
 				</Table>
 			</div>
 		);

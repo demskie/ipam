@@ -10,7 +10,7 @@ import Sidebar from "react-sidebar";
 
 const sidebarMinimumWidth = 400;
 
-const errorToaster = Toaster.create({
+const notifications = Toaster.create({
 	autoFocus: false,
 	canEscapeKeyClear: false,
 	className: Classes.DARK,
@@ -114,9 +114,9 @@ export class Main extends React.Component {
 
 	processWebsocketErrorMessage = requestData => {
 		console.log("DISPLAYERROR\n", requestData);
-		errorToaster.show({
-			intent: Intent.WARNING,
-			message: requestData[0],
+		notifications.show({
+			intent: Intent.DANGER,
+			message: requestData[0].charAt(0).toUpperCase() + requestData[0].substr(1),
 			timeout: 0
 		});
 	};
@@ -200,12 +200,31 @@ export class Main extends React.Component {
 		}
 	};
 
+	watchForOutdatedCache = () => {
+		let interval = setInterval(() => {
+			if (window.isOutdated === true) {
+				notifications.show({
+					action: {
+						onClick: () => window.location.reload(true),
+						text: "Refresh"
+					},
+					icon: "",
+					intent: Intent.SUCCESS,
+					message: "New content is available; please refresh.",
+					timeout: 0
+				});
+				clearInterval(interval);
+			}
+		}, 5000);
+	};
+
 	componentDidMount = () => {
 		window.addEventListener("resize", debounce(this.updateDimensions, 500));
 		this.updateDimensions();
 		this.handleWebsocketClose();
 		this.handleWebsocketMessage();
 		this.handleWebsocketCreation();
+		this.watchForOutdatedCache();
 	};
 
 	render() {
@@ -234,8 +253,10 @@ export class Main extends React.Component {
 							handleButtonPress={subnetsToolbarButtonPress}
 						/>
 						<NestedSubnets
+							isSidebarDocked={this.state.sidebarDocked}
 							subnets={this.state.nestedSubnets}
 							hostDetailsRequester={this.askForHostDetails}
+							handleButtonPress={subnetsToolbarButtonPress}
 						/>
 						<NestedSubnetsPrompt
 							subnetAction={this.state.nestedSubnetPromptAction}

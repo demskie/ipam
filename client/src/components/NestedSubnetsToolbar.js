@@ -16,7 +16,7 @@ export class NestedSubnetsToolbar extends React.PureComponent {
 			return "50px";
 		};
 		return (
-			<Navbar className="bp3-dark" style={{ paddingTop: sidebarNavbarPadding() }}>
+			<Navbar className="bp3-dark" fixedToTop={true} style={{ paddingTop: sidebarNavbarPadding() }}>
 				<NavbarGroup align={Alignment.LEFT}>
 					<Button
 						className="bp3-minimal"
