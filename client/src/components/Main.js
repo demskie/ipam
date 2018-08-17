@@ -9,7 +9,7 @@ import { AdvancedOverlay } from "./AdvancedOverlay.js";
 import { Alert, Intent, Toaster, Classes, Position } from "@blueprintjs/core";
 import Sidebar from "react-sidebar";
 
-const sidebarMinimumWidth = 400;
+const sidebarMinimumWidth = 500;
 
 const notifications = Toaster.create({
 	autoFocus: false,
@@ -31,10 +31,10 @@ export class Main extends React.Component {
 			selectedSubnetInfo: {},
 			nestedSubnetPromptEnabled: false,
 			hostDetails: {
-				addresses: [],
-				aRecords: [],
-				pingResults: [],
-				lastAttempts: []
+				addresses: new Array(128),
+				aRecords: new Array(128),
+				pingResults: new Array(128),
+				lastAttempts: new Array(128)
 			},
 			alertVisible: false,
 			sidebarOpen: false,

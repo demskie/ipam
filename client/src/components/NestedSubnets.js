@@ -15,35 +15,40 @@ var triggerDelete = function() {
 };
 
 window.oncontextmenu = ev => {
-	if (selectedSubnet !== null && ev.path[0].className.includes("bp3-tree", 0)) {
-		console.debug("context menu has opened");
-		ev.preventDefault();
-		const menu = React.createElement(
-			Menu,
-			{ className: Classes.DARK },
-			React.createElement(MenuItem, {
-				className: Classes.DARK,
-				onClick: triggerCreate,
-				intent: Intent.PRIMARY,
-				text: "Create New Subnet"
-			}),
-			React.createElement(MenuItem, {
-				className: Classes.DARK,
-				onClick: triggerModify,
-				intent: Intent.PRIMARY,
-				text: "Modify This Subnet"
-			}),
-			React.createElement(MenuItem, {
-				className: Classes.DARK,
-				onClick: triggerDelete,
-				intent: Intent.PRIMARY,
-				text: "Delete This Subnet"
-			})
-		);
-		ContextMenu.show(menu, { left: ev.clientX, top: ev.clientY }, () => {
-			console.debug("context menu has closed");
-		});
+	console.debug("context menu has opened", ev);
+	if (
+		selectedSubnet === null ||
+		(ev.target !== undefined &&
+			(!ev.target.className.includes("subnetLabel", 0) && !ev.target.className.includes("bp3-tree", 0)))
+	) {
+		return;
 	}
+	ev.preventDefault();
+	const menu = React.createElement(
+		Menu,
+		{ className: Classes.DARK },
+		React.createElement(MenuItem, {
+			className: Classes.DARK,
+			onClick: triggerCreate,
+			intent: Intent.PRIMARY,
+			text: "Create New Subnet"
+		}),
+		React.createElement(MenuItem, {
+			className: Classes.DARK,
+			onClick: triggerModify,
+			intent: Intent.PRIMARY,
+			text: "Modify This Subnet"
+		}),
+		React.createElement(MenuItem, {
+			className: Classes.DARK,
+			onClick: triggerDelete,
+			intent: Intent.PRIMARY,
+			text: "Delete This Subnet"
+		})
+	);
+	ContextMenu.show(menu, { left: ev.clientX, top: ev.clientY }, () => {
+		console.debug("context menu has closed", ev);
+	});
 };
 
 export class NestedSubnets extends React.PureComponent {
@@ -66,23 +71,14 @@ export class NestedSubnets extends React.PureComponent {
 	}
 
 	generateLabel = (net, desc) => {
-		let tooltipContent = net + "  " + desc;
 		while (net.length < 24) {
-			net += " ";
+			net += "\u00A0";
 		}
-		if (tooltipContent.length > 40) {
-			return (
-				<Tooltip
-					content={tooltipContent}
-					position={Position.TOP_RIGHT}
-					intent={Intent.NONE}
-					hoverOpenDelay={500}
-				>
-					{net + " " + desc}
-				</Tooltip>
-			);
-		}
-		return net + " " + desc;
+		return (
+			<div className="subnetLabel" style={{ fontFamily: "Fira Mono, monospace" }}>
+				{net + "\u00A0" + desc}
+			</div>
+		);
 	};
 
 	constructTreeNodes = serverData => {
@@ -173,7 +169,7 @@ export class NestedSubnets extends React.PureComponent {
 			return "100px";
 		};
 		const processedTree = () => {
-			if (window.location.host === "localhost:3000") {
+			if (window.location.host === "localhost" || window.location.host === "localhost:3000") {
 				return this.constructTreeNodes(testTree);
 			}
 			return this.constructTreeNodes(this.props.subnets);

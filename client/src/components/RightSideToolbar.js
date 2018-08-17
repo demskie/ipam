@@ -54,7 +54,7 @@ export class RightSideToolbar extends React.Component {
 							className="bp3-minimal"
 							icon="property"
 							text="Advanced"
-							disabled={false}
+							disabled={true}
 							onClick={this.props.showAdvancedOverlay}
 						/>
 						<Button

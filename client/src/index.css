@@ -9,3 +9,8 @@
 label.bp3-label .bp3-popover-wrapper {
 	margin-top: 0px;
 }
+
+.bp3-tree-node-label {
+	font-family: "Fira Mono", monospace;
+	font-size-adjust: 0.45;
+}
