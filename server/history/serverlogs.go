@@ -36,11 +36,18 @@ func (b *protectedBuffer) Read(p []byte) (n int, err error) {
 	defer b.m.Unlock()
 	return b.b.Read(p)
 }
+
+const megabyte = 1000000
+
 func (b *protectedBuffer) Write(p []byte) (n int, err error) {
 	b.m.Lock()
 	defer b.m.Unlock()
+	if b.b.Len() > 5*megabyte {
+		b.b = *bytes.NewBuffer(b.b.Bytes()[0 : 4*megabyte])
+	}
 	return b.b.Write(p)
 }
+
 func (b *protectedBuffer) String() string {
 	b.m.Lock()
 	defer b.m.Unlock()

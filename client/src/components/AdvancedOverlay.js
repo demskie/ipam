@@ -6,7 +6,7 @@ import { Flex, Box } from "reflexbox";
 import classNames from "classnames";
 import { List } from "react-virtualized";
 
-export class AdvancedOverlay extends React.Component {
+export class AdvancedOverlay extends React.PureComponent {
 	constructor() {
 		super();
 		this.state = {

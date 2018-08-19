@@ -140,7 +140,7 @@ func (ipam *IPAMServer) handleGetHostData(conn *websocket.Conn, inMsg simpleJSON
 		log.Printf("received an invalid request from %v\n", remoteIP)
 		return
 	}
-	log.Printf("%v requesting hostData for %v\n", remoteIP, network)
+	log.Printf("%v requested hostData for %v\n", remoteIP, network)
 	addressCount := subnetmath.AddressCount(network)
 	if addressCount >= 1024 {
 		addressCount = 1023
@@ -171,11 +171,36 @@ func (ipam *IPAMServer) handleGetHostData(conn *websocket.Conn, inMsg simpleJSON
 }
 
 func (ipam *IPAMServer) handleGetOverallHistory(conn *websocket.Conn) {
-
+	remoteIP, _, _ := net.SplitHostPort(conn.RemoteAddr().String())
+	log.Printf("%v requesting history\n", remoteIP)
+	outMsg := simpleJSON{
+		RequestType: "DISPLAYHISTORYDATA",
+		RequestData: ipam.history.GetAllUserActions(),
+	}
+	if len(outMsg.RequestData) > 10000 {
+		outMsg.RequestData = outMsg.RequestData[:10000]
+	}
+	b, err := json.Marshal(outMsg)
+	if err != nil {
+		log.Printf("error encoding outgoing message to %v\n", remoteIP)
+	} else {
+		conn.WriteMessage(websocket.TextMessage, b)
+	}
 }
 
 func (ipam *IPAMServer) handleGetDebugInfo(conn *websocket.Conn) {
-
+	remoteIP, _, _ := net.SplitHostPort(conn.RemoteAddr().String())
+	log.Printf("%v requesting debugInfo\n", remoteIP)
+	outMsg := simpleJSON{
+		RequestType: "DISPLAYDEBUGDATA",
+		RequestData: strings.Split(ipam.debug.GetString(), "\n"),
+	}
+	b, err := json.Marshal(outMsg)
+	if err != nil {
+		log.Printf("error encoding outgoing message to %v\n", remoteIP)
+	} else {
+		conn.WriteMessage(websocket.TextMessage, b)
+	}
 }
 
 func (ipam *IPAMServer) handlePostNewSubnet(conn *websocket.Conn, inMsg simpleJSON) {

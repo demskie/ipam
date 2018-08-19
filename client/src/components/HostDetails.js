@@ -23,7 +23,9 @@ export class HostDetails extends React.PureComponent {
 		}
 		return (
 			<Cell>
-				<div style={{ textAlign: "center" }}>{value}</div>
+				<div tooltip={value} style={{ textAlign: "center" }}>
+					{value}
+				</div>
 			</Cell>
 		);
 	};
@@ -38,7 +40,9 @@ export class HostDetails extends React.PureComponent {
 		}
 		return (
 			<Cell>
-				<div style={{ textAlign: "center" }}>{value}</div>
+				<div tooltip={value} style={{ textAlign: "center" }}>
+					{value}
+				</div>
 			</Cell>
 		);
 	};
@@ -54,13 +58,17 @@ export class HostDetails extends React.PureComponent {
 		if (value === "failure") {
 			return (
 				<Cell>
-					<div style={{ textAlign: "center", color: "rgb(255, 0, 0)" }}>{"unreachable"}</div>
+					<div tooltip={value} style={{ textAlign: "center", color: "rgb(255, 0, 0)" }}>
+						{"unreachable"}
+					</div>
 				</Cell>
 			);
 		}
 		return (
 			<Cell>
-				<div style={{ textAlign: "center", color: "rgb(0, 240, 0)" }}>{value}</div>
+				<div tooltip={value} style={{ textAlign: "center", color: "rgb(0, 240, 0)" }}>
+					{value}
+				</div>
 			</Cell>
 		);
 	};
@@ -76,23 +84,24 @@ export class HostDetails extends React.PureComponent {
 		if (value === "") {
 			return (
 				<Cell>
-					<div style={{ textAlign: "center", color: "orange" }}>{"pending"}</div>
+					<div tooltip={value} style={{ textAlign: "center", color: "orange" }}>
+						{"pending"}
+					</div>
 				</Cell>
 			);
 		}
 		return (
 			<Cell>
-				<div style={{ textAlign: "center" }}>{value}</div>
+				<div tooltip={value} style={{ textAlign: "center" }}>
+					{value}
+				</div>
 			</Cell>
 		);
 	};
 
 	render() {
-		const getTableHeight = () => {
-			return window.document.body.clientHeight - 50 + "px";
-		};
 		return (
-			<div id="hostDetails" style={{ height: getTableHeight() }}>
+			<div id="hostDetails" style={{ height: window.document.body.clientHeight - 50 + "px" }}>
 				<Table
 					className="bp3-dark"
 					numRows={this.props.details.addresses.length}
@@ -102,14 +111,8 @@ export class HostDetails extends React.PureComponent {
 					enableColumnResizing={true}
 					enableRowHeader={false}
 				>
-					<Column
-						name={<div style={{ textAlign: "center" }}>{"Address"}</div>}
-						cellRenderer={this.addressRenderer}
-					/>
-					<Column
-						name={<div style={{ textAlign: "center" }}>{"A Record"}</div>}
-						cellRenderer={this.aRecordRenderer}
-					/>
+					<Column name={<div style={{ textAlign: "center" }}>{"Address"}</div>} cellRenderer={this.addressRenderer} />
+					<Column name={<div style={{ textAlign: "center" }}>{"A Record"}</div>} cellRenderer={this.aRecordRenderer} />
 					<Column
 						name={<div style={{ textAlign: "center" }}>{"Ping Result"}</div>}
 						cellRenderer={this.pingResultRenderer}
