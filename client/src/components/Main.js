@@ -148,7 +148,7 @@ export class Main extends React.Component {
 	processWebsocketHistoryData = requestData => {
 		console.log("DISPLAYHISTORYDATA");
 		this.setState({
-			hostData: requestData
+			historyData: requestData
 		});
 	};
 
@@ -207,16 +207,22 @@ export class Main extends React.Component {
 		this.handleWebsocketMessage();
 		this.handleWebsocketCreation();
 		this.watchForOutdatedCache();
-
-		let CHANCE = require("chance");
-		let chance = new CHANCE();
-		let data = [];
-		for (let i = 0; i < 10000; i++) {
-			data.push(chance.sentence());
+		if (this.state.sidebarDocked === false) {
+			setTimeout(() => {
+				this.setState({
+					sidebarOpen: true
+				});
+			}, 2500);
 		}
-		this.setState({
-			historyData: data
-		});
+		if (window.location.host === "localhost:3000") {
+			let CHANCE = require("chance");
+			let chance = new CHANCE();
+			let data = [];
+			for (let i = 0; i < 10000; i++) {
+				data.push(chance.sentence());
+			}
+			this.processWebsocketHistoryData(data);
+		}
 	};
 
 	render() {

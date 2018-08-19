@@ -6,11 +6,13 @@ import { Flex, Box } from "reflexbox";
 import classNames from "classnames";
 import { List } from "react-virtualized";
 
-export class AdvancedOverlay extends React.PureComponent {
+export class AdvancedOverlay extends React.Component {
 	constructor() {
 		super();
 		this.state = {
-			selectedTabId: "history"
+			selectedTabId: "history",
+			panelHeight: window.document.body.clientHeight * 0.8,
+			panelWidth: window.document.body.clientWidth * 0.8 - 40
 		};
 	}
 
@@ -20,27 +22,16 @@ export class AdvancedOverlay extends React.PureComponent {
 		});
 	};
 
-	render() {
-		const history = this.props.historyData;
-		const createHistoryItems = () => {
-			let items = new Array(this.props.historyData.length);
-			for (let i = 0; i < items.length; i++) {
-				items[i] = (
-					<li key={i} style={{ paddingBottom: "7px" }}>
-						{this.props.historyData[i]}
-					</li>
-				);
-			}
-			console.log(items);
-			return items;
-		};
+	componentDidMount = () => {
+		window.addEventListener("resize", () => {
+			this.setState({
+				panelHeight: window.document.body.clientHeight * 0.8,
+				panelWidth: window.document.body.clientWidth * 0.8 - 40
+			});
+		});
+	};
 
-		const debug = this.props.debugData;
-		const debugItems = debug.map((line, index) => (
-			<li key={index} style={{ paddingBottom: "7px" }}>
-				{line}
-			</li>
-		));
+	render() {
 		return (
 			<div id="advancedOverlay">
 				<Dialog
@@ -66,25 +57,27 @@ export class AdvancedOverlay extends React.PureComponent {
 									panel={
 										<div
 											style={{
-												width: "calc(80vw - 40px)",
-												height: "80vh",
-												overflow: "auto",
+												width: this.state.panelWidth + "px",
+												height: this.state.panelHeight + "px",
 												backgroundColor: "#232d35",
-												borderRadius: "9px"
+												borderRadius: "9px",
+												paddingLeft: "10px",
+												paddingTop: "10px"
 											}}
 										>
-											<ul
-												style={{
-													paddingLeft: "15px",
-													paddingTop: "15px",
-													marginTop: "0px",
-													marginBottom: "0px",
-													listStyle: "none",
-													fontFamily: "Fira Mono, monospace"
+											<List
+												height={this.state.panelHeight - 10}
+												rowCount={this.props.historyData.length}
+												rowHeight={26}
+												rowRenderer={obj => {
+													return (
+														<div className="virtualRow" key={obj.key} style={obj.style}>
+															{this.props.historyData[obj.index]}
+														</div>
+													);
 												}}
-											>
-												{createHistoryItems()}
-											</ul>
+												width={this.state.panelWidth - 15}
+											/>
 										</div>
 									}
 								/>
@@ -94,25 +87,27 @@ export class AdvancedOverlay extends React.PureComponent {
 									panel={
 										<div
 											style={{
-												width: "calc(80vw - 40px)",
-												height: "80vh",
-												overflow: "auto",
+												width: this.state.panelWidth + "px",
+												height: this.state.panelHeight + "px",
 												backgroundColor: "#232d35",
-												borderRadius: "9px"
+												borderRadius: "9px",
+												paddingLeft: "10px",
+												paddingTop: "10px"
 											}}
 										>
-											<ul
-												style={{
-													paddingLeft: "15px",
-													paddingTop: "15px",
-													marginTop: "0px",
-													marginBottom: "0px",
-													listStyle: "none",
-													fontFamily: "Fira Mono, monospace"
+											<List
+												height={this.state.panelHeight - 10}
+												rowCount={this.props.debugData.length}
+												rowHeight={26}
+												rowRenderer={obj => {
+													return (
+														<div className="virtualRow" key={obj.key} style={obj.style}>
+															{this.props.debugData[obj.index]}
+														</div>
+													);
 												}}
-											>
-												{debugItems}
-											</ul>
+												width={this.state.panelWidth - 15}
+											/>
 										</div>
 									}
 								/>

@@ -38,6 +38,14 @@ label.bp3-label .bp3-popover-wrapper {
   margin-top: 0px !important;
 }
 
+.virtualRow {
+  font-family: "Fira Mono", monospace;
+  font-size: smaller;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
 #nestedSubnetsToolbar {
   position: static;
 }
