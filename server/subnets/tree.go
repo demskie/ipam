@@ -130,7 +130,7 @@ func (tree *Tree) ReplaceSubnet(skeleton *SubnetSkeleton) error {
 	return nil
 }
 
-// DeleteSubnet will remove the subnet (BUG: and all its children)
+// DeleteSubnet will remove the subnet
 func (tree *Tree) DeleteSubnet(network *net.IPNet) error {
 	tree.mtx.Lock()
 	defer tree.mtx.Unlock()
@@ -140,9 +140,11 @@ func (tree *Tree) DeleteSubnet(network *net.IPNet) error {
 	}
 	for _, child := range sn.children {
 		if sn.parent == nil {
+			child.parent = nil
 			tree.roots = insertIntoSortedSubnets(tree.roots, child)
 		} else {
 			child.parent = sn.parent
+			sn.parent.children = insertIntoSortedSubnets(sn.parent.children, child)
 		}
 	}
 	if sn.parent == nil {

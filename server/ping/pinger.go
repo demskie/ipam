@@ -93,14 +93,15 @@ func (p *Pinger) InitializeBackgroundPinger(maxPingsPerSecond, goroutineCount in
 
 // GetNumberOfHosts limits the number of hosts to display information for
 func GetNumberOfHosts(network *net.IPNet) int {
-	numberAddrs := subnetmath.AddressCount(network)
-	switch {
-	case numberAddrs > 1024:
-		return 1023
-	case numberAddrs > 2:
-		return numberAddrs - 1
+	addressCount := subnetmath.AddressCount(network)
+	if addressCount >= 1024 {
+		addressCount = 1023
+	} else if addressCount > 2 {
+		addressCount--
+	} else if addressCount == 0 {
+		addressCount++
 	}
-	return numberAddrs
+	return addressCount
 }
 
 // GetHostResult returns a the result and formatted time of the latest ping attempt

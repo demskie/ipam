@@ -23,9 +23,7 @@ export class HostDetails extends React.PureComponent {
 		}
 		return (
 			<Cell>
-				<div tooltip={value} style={{ textAlign: "center" }}>
-					{value}
-				</div>
+				<div style={{ textAlign: "center" }}>{value}</div>
 			</Cell>
 		);
 	};
@@ -40,9 +38,7 @@ export class HostDetails extends React.PureComponent {
 		}
 		return (
 			<Cell>
-				<div tooltip={value} style={{ textAlign: "center" }}>
-					{value}
-				</div>
+				<div style={{ textAlign: "center" }}>{value}</div>
 			</Cell>
 		);
 	};
@@ -58,17 +54,13 @@ export class HostDetails extends React.PureComponent {
 		if (value === "failure") {
 			return (
 				<Cell>
-					<div tooltip={value} style={{ textAlign: "center", color: "rgb(255, 0, 0)" }}>
-						{"unreachable"}
-					</div>
+					<div style={{ textAlign: "center", color: "rgb(255, 0, 0)" }}>{"unreachable"}</div>
 				</Cell>
 			);
 		}
 		return (
 			<Cell>
-				<div tooltip={value} style={{ textAlign: "center", color: "rgb(0, 240, 0)" }}>
-					{value}
-				</div>
+				<div style={{ textAlign: "center", color: "rgb(0, 240, 0)" }}>{value}</div>
 			</Cell>
 		);
 	};
@@ -84,28 +76,24 @@ export class HostDetails extends React.PureComponent {
 		if (value === "") {
 			return (
 				<Cell>
-					<div tooltip={value} style={{ textAlign: "center", color: "orange" }}>
-						{"pending"}
-					</div>
+					<div style={{ textAlign: "center", color: "orange" }}>{"pending"}</div>
 				</Cell>
 			);
 		}
 		return (
 			<Cell>
-				<div tooltip={value} style={{ textAlign: "center" }}>
-					{value}
-				</div>
+				<div style={{ textAlign: "center" }}>{value}</div>
 			</Cell>
 		);
 	};
 
 	render() {
 		return (
-			<div id="hostDetails" style={{ height: window.document.body.clientHeight - 50 + "px" }}>
+			<div id="hostDetails" style={{ height: this.props.height }}>
 				<Table
 					className="bp3-dark"
 					numRows={this.props.details.addresses.length}
-					renderMode={RenderMode.BATCH}
+					renderMode={RenderMode.NONE}
 					enableGhostCells={true}
 					columnWidths={this.columnWidthArrays()}
 					enableColumnResizing={true}
@@ -128,6 +116,7 @@ export class HostDetails extends React.PureComponent {
 }
 
 HostDetails.propTypes = {
+	height: PropTypes.string,
 	tableWidth: PropTypes.number,
 	details: PropTypes.object
 };

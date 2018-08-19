@@ -224,7 +224,7 @@ export class Main extends React.Component {
 				this.setState({
 					sidebarOpen: true
 				});
-			}, 2500);
+			}, 1000);
 		}
 	};
 
@@ -329,15 +329,8 @@ export class Main extends React.Component {
 						<NestedSubnets
 							subnets={this.state.nestedSubnets}
 							hostDetailsRequester={nodeData => {
-								let emptyArray = new Array(128);
 								this.setState({
-									selectedSubnetInfo: nodeData,
-									hostDetails: {
-										addresses: emptyArray,
-										aRecords: emptyArray,
-										pingResults: emptyArray,
-										lastAttempts: emptyArray
-									}
+									selectedSubnetInfo: nodeData
 								});
 								this.requestHostData(nodeData.net);
 							}}
@@ -367,7 +360,7 @@ export class Main extends React.Component {
 						});
 					}}
 				/>
-				<HostDetails details={this.state.hostDetails} tableWidth={this.state.tableWidth} />
+				<HostDetails height={this.state.height} tableWidth={this.state.tableWidth} details={this.state.hostDetails} />
 				<AdvancedOverlay
 					historyData={this.state.historyData}
 					requestHistoryData={this.requestHistoryData}

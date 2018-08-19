@@ -7,103 +7,51 @@
 @import "~animate.css";
 
 *:focus {
-  outline: none;
+	outline: none;
 }
 
 label.bp3-label .bp3-popover-wrapper {
-  margin-top: 0px;
+	margin-top: 0px;
 }
 
 .bp3-tree-node-label {
-  font-family: "Fira Mono", monospace;
-  font-size-adjust: 0.45;
+	font-family: "Fira Mono", monospace;
+	font-size-adjust: 0.45;
 }
 
 .bp3-tab-list {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
 }
 
 .bp3-tab {
-  text-align: center;
-  margin-top: 15px;
-  margin-left: 15px;
-  margin-right: 15px !important;
-  margin-bottom: 15px;
+	text-align: center;
+	margin-top: 15px;
+	margin-left: 15px;
+	margin-right: 15px !important;
+	margin-bottom: 15px;
 }
 
 .bp3-tab-panel {
-  margin-top: 0px !important;
+	margin-top: 0px !important;
 }
 
 .virtualRow {
-  font-family: "Fira Mono", monospace;
-  font-size: smaller;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+	font-family: "Fira Mono", monospace;
+	font-size: smaller;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
 }
 
 #nestedSubnetsToolbar {
-  position: static;
+	position: static;
 }
 
 @supports (position: sticky) {
-  #nestedSubnetsToolbar {
-    position: sticky;
-  }
-}
-
-[tooltip] {
-  margin: 20px;
-  position: relative;
-}
-[tooltip]::before {
-  content: "";
-  position: absolute;
-  top: -6px;
-  left: 50%;
-  transform: translateX(-50%);
-  border-width: 4px 6px 0 6px;
-  border-style: solid;
-  border-color: rgba(0, 0, 0, 0.7) transparent transparent transparent;
-  z-index: 10000;
-  opacity: 0;
-}
-[tooltip]::after {
-  content: attr(tooltip);
-  position: absolute;
-  left: 50%;
-  top: -6px;
-  transform: translateX(-50%) translateY(-100%);
-  background: rgba(0, 0, 0, 0.7);
-  text-align: center;
-  color: #ffffff;
-  padding: 4px 2px;
-  font-size: 12px;
-  min-width: 80px;
-  border-radius: 5px;
-  pointer-events: none;
-  padding: 4px 4px;
-  z-index: 9999;
-  opacity: 0;
-}
-[tooltip]:hover::after,
-[tooltip]:hover::before {
-  opacity: 1;
-  transition-delay: 2s;
-}
-[tooltip-position="right"]::before {
-  left: 100%;
-  top: 50%;
-  margin-left: 1px;
-  transform: translatey(-50%) rotate(90deg);
-}
-[tooltip-position="right"]::after {
-  left: 100%;
-  top: 50%;
-  margin-left: 8px;
-  transform: translateX(0%) translateY(-50%);
+	#nestedSubnetsToolbar {
+		position: sticky;
+	}
 }

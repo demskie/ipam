@@ -34,8 +34,9 @@ type IPAMServer struct {
 
 // MutatedData contains the raw lines of the changed subnets.csv and history.txt files
 type MutatedData struct {
-	subnets []string
-	history []string
+	CommitMsg string
+	Subnets   []string
+	History   []string
 }
 
 // NewIPAMServer returns a new server object
@@ -51,10 +52,11 @@ func NewIPAMServer() *IPAMServer {
 	}
 }
 
-func (ipam *IPAMServer) signalMutation() {
+func (ipam *IPAMServer) signalMutation(reason string) {
 	ipam.mutationChan <- MutatedData{
-		subnets: ipam.ExportSubnetCSVLines(),
-		history: ipam.history.GetAllUserActions(),
+		CommitMsg: reason,
+		Subnets:   ipam.ExportSubnetCSVLines(),
+		History:   ipam.history.GetAllUserActions(),
 	}
 }
 

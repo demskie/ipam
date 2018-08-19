@@ -10,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/demskie/ipam/server/ping"
+
 	"github.com/demskie/ipam/server/subnets"
 	"github.com/demskie/subnetmath"
 	"github.com/gorilla/websocket"
@@ -141,12 +143,7 @@ func (ipam *IPAMServer) handleGetHostData(conn *websocket.Conn, inMsg simpleJSON
 		return
 	}
 	log.Printf("%v has requested hostData for %v\n", remoteIP, network)
-	addressCount := subnetmath.AddressCount(network)
-	if addressCount >= 1024 {
-		addressCount = 1023
-	} else if addressCount > 2 {
-		addressCount--
-	}
+	addressCount := ping.GetNumberOfHosts(network)
 	currentIP := subnetmath.DuplicateNetwork(network).IP
 	sliceOfAddresses := make([]string, addressCount)
 	for i := 0; i < addressCount; i++ {
@@ -230,8 +227,8 @@ func (ipam *IPAMServer) handlePostNewSubnet(conn *websocket.Conn, inMsg simpleJS
 		sendErrorMessage(conn, err.Error())
 		return
 	}
-	ipam.history.RecordUserAction(remoteIP, "created", newSkeleton.ToSlice())
-	ipam.signalMutation()
+	msg := ipam.history.RecordUserAction(remoteIP, "creating subnet", newSkeleton.ToSlice())
+	ipam.signalMutation(msg)
 	ipam.handleGetSubnetData(conn)
 }
 
@@ -265,8 +262,8 @@ func (ipam *IPAMServer) handlePostModifySubnet(conn *websocket.Conn, inMsg simpl
 	if err != nil {
 		sendErrorMessage(conn, err.Error())
 	}
-	ipam.history.RecordUserAction(remoteIP, "modified", differences)
-	ipam.signalMutation()
+	msg := ipam.history.RecordUserAction(remoteIP, "pushing changes", differences)
+	ipam.signalMutation(msg)
 	ipam.handleGetSubnetData(conn)
 }
 
@@ -283,7 +280,7 @@ func (ipam *IPAMServer) handlePostDeleteSubnet(conn *websocket.Conn, inMsg simpl
 		sendErrorMessage(conn, fmt.Sprintf("could not delete '%v' as it does not exist", inMsg.RequestData[0]))
 		return
 	}
-	ipam.history.RecordUserAction(remoteIP, "deleted", oldSkeleton.ToSlice())
-	ipam.signalMutation()
+	msg := ipam.history.RecordUserAction(remoteIP, "deleting subnet", oldSkeleton.ToSlice())
+	ipam.signalMutation(msg)
 	ipam.handleGetSubnetData(conn)
 }

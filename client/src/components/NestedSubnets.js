@@ -25,9 +25,10 @@ export class NestedSubnets extends React.PureComponent {
 		while (net.length < 24) {
 			net += "\u00A0";
 		}
+		const extraSpace = net + "\u00A0" + desc;
 		return (
 			<div className="subnetLabel" style={{ fontFamily: "Fira Mono, monospace" }}>
-				{net + "\u00A0" + desc}
+				{extraSpace}
 			</div>
 		);
 	};

@@ -2,6 +2,7 @@ package history
 
 import (
 	"fmt"
+	"log"
 	"sort"
 	"sync"
 	"time"
@@ -39,7 +40,9 @@ func (r *UserActions) RecordUserAction(user, verb string, changes []string) stri
 	r.mtx.Lock()
 	r.stack = append([]string{fmt.Sprintf("%v (%v) is %v: %v", t, user, verb, changes)}, r.stack...)
 	r.mtx.Unlock()
-	return fmt.Sprintf("(%v) is %v: %v\n", user, verb, changes)
+	message := fmt.Sprintf("(%v) is %v: %v\n", user, verb, changes)
+	log.Print(message)
+	return message
 }
 
 type sortHistory struct {
