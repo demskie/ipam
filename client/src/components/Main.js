@@ -184,9 +184,9 @@ export class Main extends React.Component {
 	requestDebugData = () => {
 		if (this.state.websocket.readyState === 1) {
 			let request = {
-				requestType: "GETHISTORYDATA"
+				requestType: "GETDEBUGDATA"
 			};
-			console.log("GETHISTORYDATA\n", request);
+			console.log("GETDEBUGDATA\n", request);
 			this.state.websocket.send(JSON.stringify(request));
 		} else {
 			console.log("websocket is not open\n", this.state.websocket);
