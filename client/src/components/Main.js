@@ -370,7 +370,9 @@ export class Main extends React.Component {
 				<HostDetails details={this.state.hostDetails} tableWidth={this.state.tableWidth} />
 				<AdvancedOverlay
 					historyData={this.state.historyData}
+					requestHistoryData={this.requestHistoryData}
 					debugData={this.state.debugData}
+					requestDebugData={this.requestDebugData}
 					isOpen={this.state.advancedOverlayEnabled}
 					sendUserAction={handleUserAction}
 				/>

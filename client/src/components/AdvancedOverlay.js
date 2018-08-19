@@ -20,6 +20,16 @@ export class AdvancedOverlay extends React.PureComponent {
 		this.setState({
 			selectedTabId: newTab
 		});
+		switch (newTab) {
+			case "history":
+				this.props.requestHistoryData();
+				break;
+			case "debug":
+				this.props.requestDebugData();
+				break;
+			default:
+				console.log("unknown tab id:", newTab);
+		}
 	};
 
 	componentDidMount = () => {
@@ -142,7 +152,9 @@ export class AdvancedOverlay extends React.PureComponent {
 
 AdvancedOverlay.propTypes = {
 	historyData: PropTypes.array,
+	requestHistoryData: PropTypes.func,
 	debugData: PropTypes.array,
+	requestDebugData: PropTypes.func,
 	isOpen: PropTypes.bool,
 	sendUserAction: PropTypes.func
 };
