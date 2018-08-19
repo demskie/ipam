@@ -68,10 +68,10 @@ func (ipam *IPAMServer) handleWebsocketClient(w http.ResponseWriter, r *http.Req
 			ipam.handleGetSubnetData(conn)
 		case "GETHOSTDATA":
 			ipam.handleGetHostData(conn, inMsg)
-		case "GETCHANGEHISTORY":
-			ipam.handleGetOverallHistory(conn)
-		case "GETDEBUGINFO":
-			ipam.handleGetDebugInfo(conn)
+		case "GETHISTORYDATA":
+			ipam.handleGetHistoryData(conn)
+		case "GETDEBUGDATA":
+			ipam.handleGetDebugData(conn)
 		case "POSTNEWSUBNET":
 			ipam.handlePostNewSubnet(conn, inMsg)
 		case "POSTMODIFYSUBNET":
@@ -79,7 +79,7 @@ func (ipam *IPAMServer) handleWebsocketClient(w http.ResponseWriter, r *http.Req
 		case "POSTDELETESUBNET":
 			ipam.handlePostDeleteSubnet(conn, inMsg)
 		default:
-			log.Printf("received invalid request from %v \n", remoteIP)
+			log.Printf("received unknown request from %v \n", remoteIP)
 		}
 	}
 }
@@ -140,7 +140,7 @@ func (ipam *IPAMServer) handleGetHostData(conn *websocket.Conn, inMsg simpleJSON
 		log.Printf("received an invalid request from %v\n", remoteIP)
 		return
 	}
-	log.Printf("%v requested hostData for %v\n", remoteIP, network)
+	log.Printf("%v has requested hostData for %v\n", remoteIP, network)
 	addressCount := subnetmath.AddressCount(network)
 	if addressCount >= 1024 {
 		addressCount = 1023
@@ -170,9 +170,9 @@ func (ipam *IPAMServer) handleGetHostData(conn *websocket.Conn, inMsg simpleJSON
 	}
 }
 
-func (ipam *IPAMServer) handleGetOverallHistory(conn *websocket.Conn) {
+func (ipam *IPAMServer) handleGetHistoryData(conn *websocket.Conn) {
 	remoteIP, _, _ := net.SplitHostPort(conn.RemoteAddr().String())
-	log.Printf("%v requesting history\n", remoteIP)
+	log.Printf("%v has requested historyData\n", remoteIP)
 	outMsg := simpleJSON{
 		RequestType: "DISPLAYHISTORYDATA",
 		RequestData: ipam.history.GetAllUserActions(),
@@ -188,9 +188,9 @@ func (ipam *IPAMServer) handleGetOverallHistory(conn *websocket.Conn) {
 	}
 }
 
-func (ipam *IPAMServer) handleGetDebugInfo(conn *websocket.Conn) {
+func (ipam *IPAMServer) handleGetDebugData(conn *websocket.Conn) {
 	remoteIP, _, _ := net.SplitHostPort(conn.RemoteAddr().String())
-	log.Printf("%v requesting debugInfo\n", remoteIP)
+	log.Printf("%v has requested debugData\n", remoteIP)
 	outMsg := simpleJSON{
 		RequestType: "DISPLAYDEBUGDATA",
 		RequestData: strings.Split(ipam.debug.GetString(), "\n"),
