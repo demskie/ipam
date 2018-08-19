@@ -1,6 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { Tooltip, Tree, Position, Intent, ContextMenu, Menu, MenuItem, Classes } from "@blueprintjs/core";
+import { Tree, Intent, ContextMenu, Menu, MenuItem, Classes } from "@blueprintjs/core";
 
 var selectedSubnet = null;
 
@@ -162,12 +162,6 @@ export class NestedSubnets extends React.PureComponent {
 	};
 
 	render() {
-		const getPadding = () => {
-			if (this.props.isSidebarDocked) {
-				return "60px";
-			}
-			return "100px";
-		};
 		const processedTree = () => {
 			if (window.location.host === "localhost" || window.location.host === "localhost:3000") {
 				return this.constructTreeNodes(testTree);
@@ -175,7 +169,7 @@ export class NestedSubnets extends React.PureComponent {
 			return this.constructTreeNodes(this.props.subnets);
 		};
 		return (
-			<div style={{ paddingTop: getPadding() }}>
+			<div id="nestedSubnetsTree">
 				<Tree
 					className="bp3-dark"
 					contents={processedTree()}
@@ -190,153 +184,37 @@ export class NestedSubnets extends React.PureComponent {
 }
 
 NestedSubnets.propTypes = {
-	isSidebarDocked: PropTypes.bool,
 	subnets: PropTypes.array,
 	hostDetailsRequester: PropTypes.func,
 	handleButtonPress: PropTypes.func
 };
 
-const testTree = [
-	{
-		id: 0,
-		net: "255.255.255.255/18",
-		desc: "alpha"
-	},
-	{
-		id: 1,
-		net: "255.255.255.255/18",
-		desc: "bravo",
-		childNodes: [
-			{
-				id: 2,
-				net: "255.255.255.255/18",
-				desc: "charlie"
-			},
-			{
-				id: 3,
-				net: "255.255.255.255/18",
-				desc: "delta"
-			},
-			{
-				id: 4,
-				net: "255.255.255.255/18",
-				desc: "echo"
-			},
-			{
-				id: 5,
-				net: "255.255.255.255/18",
-				desc: "foxtrot"
-			},
-			{
-				id: 6,
-				net: "255.255.255.255/18",
-				desc: "golf"
-			},
-			{
-				id: 7,
-				net: "255.255.255.255/18",
-				desc: "golf"
-			},
-			{
-				id: 8,
-				net: "255.255.255.255/18",
-				desc: "golf"
-			},
-			{
-				id: 9,
-				net: "255.255.255.255/18",
-				desc: "golf"
-			},
-			{
-				id: 10,
-				net: "255.255.255.255/18",
-				desc: "golf"
-			},
-			{
-				id: 11,
-				net: "255.255.255.255/18",
-				desc: "golf"
-			},
-			{
-				id: 12,
-				net: "255.255.255.255/18",
-				desc: "golf"
-			},
-			{
-				id: 13,
-				net: "255.255.255.255/18",
-				desc: "golf"
-			},
-			{
-				id: 14,
-				net: "255.255.255.255/18",
-				desc: "golf"
-			},
-			{
-				id: 15,
-				net: "255.255.255.255/18",
-				desc: "golf"
-			},
-			{
-				id: 16,
-				net: "255.255.255.255/18",
-				desc: "golf"
-			},
-			{
-				id: 17,
-				net: "255.255.255.255/18",
-				desc: "golf"
-			},
-			{
-				id: 18,
-				net: "255.255.255.255/18",
-				desc: "golf"
-			},
-			{
-				id: 19,
-				net: "255.255.255.255/18",
-				desc: "golf"
-			},
-			{
-				id: 20,
-				net: "255.255.255.255/18",
-				desc: "golf"
-			},
-			{
-				id: 21,
-				net: "255.255.255.255/18",
-				desc: "golf"
-			},
-			{
-				id: 22,
-				net: "255.255.255.255/18",
-				desc: "golf"
-			},
-			{
-				id: 23,
-				net: "255.255.255.255/18",
-				desc: "golf"
-			},
-			{
-				id: 24,
-				net: "255.255.255.255/18",
-				desc: "golf"
-			},
-			{
-				id: 25,
-				net: "255.255.255.255/18",
-				desc: "golf"
-			},
-			{
-				id: 26,
-				net: "255.255.255.255/18",
-				desc: "golf"
-			},
-			{
-				id: 27,
-				net: "255.255.255.255/18",
-				desc: "golf"
+var testTree = [];
+if (window.location.host === "localhost" || window.location.host === "localhost:3000") {
+	let CHANCE = require("chance");
+	let chance = new CHANCE();
+	let createNode = (z, minMask, maxMask) => {
+		let result = {
+			id: z,
+			net: chance.ip() + "/" + chance.integer({ min: minMask, max: maxMask }),
+			desc: chance.street({ syllables: chance.integer({ min: 2, max: 12 }) }),
+			childNodes: []
+		};
+		return result;
+	};
+	let x = 0;
+	for (let i = 0; i < 512; i++) {
+		x++;
+		testTree.push(createNode(x, 18, 22));
+		let children = chance.integer({ min: -12, max: 24 });
+		for (let j = 0; j < children; j++) {
+			x++;
+			testTree[i].childNodes.push(createNode(x, 23, 26));
+			let grandchildren = chance.integer({ min: -12, max: 12 });
+			for (let k = 0; k < grandchildren; k++) {
+				x++;
+				testTree[i].childNodes[j].childNodes.push(createNode(x, 27, 32));
 			}
-		]
+		}
 	}
-];
+}

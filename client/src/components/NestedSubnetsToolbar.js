@@ -9,14 +9,21 @@ export class NestedSubnetsToolbar extends React.PureComponent {
 	}
 
 	render() {
-		const sidebarNavbarPadding = () => {
+		const sidebarNavbarOffset = () => {
 			if (this.props.isSidebarDocked) {
 				return "0px";
 			}
 			return "50px";
 		};
 		return (
-			<Navbar className="bp3-dark" fixedToTop={true} style={{ paddingTop: sidebarNavbarPadding() }}>
+			<Navbar
+				id="nestedSubnetsToolbar"
+				className="bp3-dark"
+				fixedToTop={true}
+				style={{
+					top: sidebarNavbarOffset()
+				}}
+			>
 				<NavbarGroup align={Alignment.LEFT}>
 					<Button
 						className="bp3-minimal"

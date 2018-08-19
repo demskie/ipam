@@ -36,6 +36,8 @@ export class Main extends React.Component {
 				pingResults: new Array(128),
 				lastAttempts: new Array(128)
 			},
+			historyData: [],
+			debugData: [],
 			alertVisible: false,
 			sidebarOpen: false,
 			sidebarDocked: false,
@@ -108,6 +110,9 @@ export class Main extends React.Component {
 				case "DISPLAYHOSTDATA":
 					this.processWebsocketHostData(msg.requestData);
 					break;
+				case "DISPLAYHISTORYDATA":
+					this.processWebsocketHistoryData(msg.requestData);
+					break;
 				default:
 					console.log("received unknown message type:", msg.requestType);
 			}
@@ -125,8 +130,7 @@ export class Main extends React.Component {
 
 	processWebsocketSubnetData = requestData => {
 		console.log("DISPLAYSUBNETDATA\n", requestData);
-		let newRequestData = requestData;
-		this.setState({ nestedSubnets: newRequestData });
+		this.setState({ nestedSubnets: requestData });
 	};
 
 	processWebsocketHostData = requestData => {
@@ -138,6 +142,13 @@ export class Main extends React.Component {
 				pingResults: requestData[2],
 				lastAttempts: requestData[3]
 			}
+		});
+	};
+
+	processWebsocketHistoryData = requestData => {
+		console.log("DISPLAYHISTORYDATA");
+		this.setState({
+			hostData: requestData
 		});
 	};
 
@@ -171,62 +182,6 @@ export class Main extends React.Component {
 		}
 	};
 
-	handleUserAction = obj => {
-		if (obj.action === "create") {
-			if (this.state.websocket.readyState === 1) {
-				let outMsg = {
-					RequestType: "POSTNEWSUBNET",
-					RequestData: [obj.subnet, obj.description, obj.vlan, obj.notes]
-				};
-				console.log(outMsg.RequestType + "\n", outMsg);
-				this.state.websocket.send(JSON.stringify(outMsg));
-			} else {
-				console.log("caught an action while websocket is closed:", obj);
-			}
-			this.setState({
-				nestedSubnetPromptEnabled: false
-			});
-		} else if (obj.action === "modify") {
-			if (this.state.websocket.readyState === 1) {
-				let outMsg = {
-					RequestType: "POSTMODIFYSUBNET",
-					RequestData: [obj.subnet, obj.description, obj.vlan, obj.notes]
-				};
-				console.log(outMsg.RequestType + "\n", outMsg);
-				this.state.websocket.send(JSON.stringify(outMsg));
-			} else {
-				console.log("caught an action while websocket is closed:", obj);
-			}
-			this.setState({
-				nestedSubnetPromptEnabled: false
-			});
-		} else if (obj.action === "delete") {
-			if (this.state.websocket.readyState === 1) {
-				let outMsg = {
-					RequestType: "POSTDELETESUBNET",
-					RequestData: [obj.subnet]
-				};
-				console.log(outMsg.RequestType + "\n", outMsg);
-				this.state.websocket.send(JSON.stringify(outMsg));
-			} else {
-				console.log("caught an action while websocket is closed:", obj);
-			}
-			this.setState({
-				nestedSubnetPromptEnabled: false
-			});
-		} else if (obj.action === "closeNestedSubnetsPrompt") {
-			this.setState({
-				nestedSubnetPromptEnabled: false
-			});
-		} else if (obj.action === "closeAdvancedOverlay") {
-			this.setState({
-				advancedOverlayEnabled: false
-			});
-		} else {
-			console.log("Error! unknown action value:", obj);
-		}
-	};
-
 	watchForOutdatedCache = () => {
 		let interval = setInterval(() => {
 			if (window.isOutdated === true) {
@@ -252,14 +207,85 @@ export class Main extends React.Component {
 		this.handleWebsocketMessage();
 		this.handleWebsocketCreation();
 		this.watchForOutdatedCache();
+
+		let CHANCE = require("chance");
+		let chance = new CHANCE();
+		let data = [];
+		for (let i = 0; i < 10000; i++) {
+			data.push(chance.sentence());
+		}
+		this.setState({
+			historyData: data
+		});
 	};
 
 	render() {
-		const subnetsToolbarButtonPress = val => {
+		const getSidebarOffset = () => {
+			if (this.state.sidebarDocked) {
+				return "0px";
+			}
+			return "50px";
+		};
+		const activateSubnetsToolbarButtonPress = val => {
 			this.setState({
 				nestedSubnetPromptAction: val,
 				nestedSubnetPromptEnabled: true
 			});
+		};
+		const handleUserAction = obj => {
+			if (obj.action === "create") {
+				if (this.state.websocket.readyState === 1) {
+					let outMsg = {
+						RequestType: "POSTNEWSUBNET",
+						RequestData: [obj.subnet, obj.description, obj.vlan, obj.notes]
+					};
+					console.log(outMsg.RequestType + "\n", outMsg);
+					this.state.websocket.send(JSON.stringify(outMsg));
+				} else {
+					console.log("caught an action while websocket is closed:", obj);
+				}
+				this.setState({
+					nestedSubnetPromptEnabled: false
+				});
+			} else if (obj.action === "modify") {
+				if (this.state.websocket.readyState === 1) {
+					let outMsg = {
+						RequestType: "POSTMODIFYSUBNET",
+						RequestData: [obj.subnet, obj.description, obj.vlan, obj.notes]
+					};
+					console.log(outMsg.RequestType + "\n", outMsg);
+					this.state.websocket.send(JSON.stringify(outMsg));
+				} else {
+					console.log("caught an action while websocket is closed:", obj);
+				}
+				this.setState({
+					nestedSubnetPromptEnabled: false
+				});
+			} else if (obj.action === "delete") {
+				if (this.state.websocket.readyState === 1) {
+					let outMsg = {
+						RequestType: "POSTDELETESUBNET",
+						RequestData: [obj.subnet]
+					};
+					console.log(outMsg.RequestType + "\n", outMsg);
+					this.state.websocket.send(JSON.stringify(outMsg));
+				} else {
+					console.log("caught an action while websocket is closed:", obj);
+				}
+				this.setState({
+					nestedSubnetPromptEnabled: false
+				});
+			} else if (obj.action === "closeNestedSubnetsPrompt") {
+				this.setState({
+					nestedSubnetPromptEnabled: false
+				});
+			} else if (obj.action === "closeAdvancedOverlay") {
+				this.setState({
+					advancedOverlayEnabled: false
+				});
+			} else {
+				console.log("Error! unknown action value:", obj);
+			}
 		};
 		return (
 			<Sidebar
@@ -273,23 +299,22 @@ export class Main extends React.Component {
 					}
 				}}
 				sidebar={
-					<div>
+					<div id="sidebarElements" style={{ position: "relative", top: getSidebarOffset() }}>
 						<NestedSubnetsToolbar
 							isSidebarDocked={this.state.sidebarDocked}
 							isSubnetSelected={Object.keys(this.state.selectedSubnetInfo).length === 0}
-							handleButtonPress={subnetsToolbarButtonPress}
+							handleButtonPress={activateSubnetsToolbarButtonPress}
 						/>
 						<NestedSubnets
-							isSidebarDocked={this.state.sidebarDocked}
 							subnets={this.state.nestedSubnets}
 							hostDetailsRequester={this.askForHostDetails}
-							handleButtonPress={subnetsToolbarButtonPress}
+							handleButtonPress={activateSubnetsToolbarButtonPress}
 						/>
 						<NestedSubnetsPrompt
 							subnetAction={this.state.nestedSubnetPromptAction}
 							subnetInfo={this.state.selectedSubnetInfo}
 							isOpen={this.state.nestedSubnetPromptEnabled}
-							sendUserAction={this.handleUserAction}
+							sendUserAction={handleUserAction}
 						/>
 					</div>
 				}
@@ -305,9 +330,10 @@ export class Main extends React.Component {
 				/>
 				<HostDetails details={this.state.hostDetails} tableWidth={this.state.tableWidth} />
 				<AdvancedOverlay
-					historyData={[]}
+					historyData={this.state.historyData}
+					debugData={this.state.debugData}
 					isOpen={this.state.advancedOverlayEnabled}
-					sendUserAction={this.handleUserAction}
+					sendUserAction={handleUserAction}
 				/>
 				<Alert
 					className="bp3-dark"

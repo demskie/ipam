@@ -36,41 +36,25 @@ export class RightSideToolbar extends React.Component {
 	render() {
 		return (
 			<div style={{ height: "50px" }}>
-				<Navbar className="bp3-dark">
+				<Navbar className="bp3-dark" style={{ paddingLeft: "5px", paddingRight: "5px" }}>
 					<NavbarGroup align={Alignment.LEFT}>
 						<Button
-							className="bp3-minimal"
+							className="bp3-minimal bp3-large"
 							icon="menu"
 							disabled={this.props.sidebarButtonDisabled}
 							onClick={this.props.toggleSidebarTrigger}
 						/>
-						<div className="bp3-navbar-heading" style={{ marginLeft: "15px" }}>
+						<div className="bp3-navbar-heading" style={{ marginLeft: "10px" }}>
 							<b>IPAM</b>
 						</div>
 					</NavbarGroup>
 
 					<NavbarGroup align={Alignment.RIGHT}>
+						<Button text="Advanced Options" onClick={this.props.showAdvancedOverlay} />
 						<Button
-							className="bp3-minimal"
-							icon="property"
-							text="Advanced"
-							disabled={true}
-							onClick={this.props.showAdvancedOverlay}
-						/>
-						<Button
-							className="bp3-minimal"
-							style={{ marginLeft: "10px" }}
-							icon="help"
-							text=""
-							disabled={true}
-							onClick={() => {
-								console.log("you just clicked the help button");
-							}}
-						/>
-						<Button
-							className="bp3-minimal"
+							className="bp3-minimal bp3-large"
 							icon="fullscreen"
-							text=""
+							style={{ marginLeft: "10px", marginRight: "5px" }}
 							onClick={this.requestFullscreen}
 							disabled={this.state.fullscreenButtonDisabled}
 						/>
