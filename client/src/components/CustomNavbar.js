@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import fscreen from "fscreen";
 import { Button, Navbar, NavbarGroup, Alignment, Alert } from "@blueprintjs/core";
 
-export class RightSideToolbar extends React.Component {
+export class CustomNavbar extends React.PureComponent {
 	constructor() {
 		super();
 		this.state = {
@@ -41,7 +41,7 @@ export class RightSideToolbar extends React.Component {
 						<Button
 							className="bp3-minimal bp3-large"
 							icon="menu"
-							disabled={this.props.sidebarButtonDisabled}
+							disabled={this.props.sidebarDocked}
 							onClick={this.props.toggleSidebarTrigger}
 						/>
 						<div className="bp3-navbar-heading" style={{ marginLeft: "10px" }}>
@@ -73,8 +73,7 @@ export class RightSideToolbar extends React.Component {
 	}
 }
 
-RightSideToolbar.propTypes = {
-	sidebarButtonDisabled: PropTypes.bool,
-	toggleSidebarTrigger: PropTypes.func,
-	showAdvancedOverlay: PropTypes.func
+CustomNavbar.propTypes = {
+	sidebarDocked: PropTypes.bool.isRequired,
+	handleUserAction: PropTypes.func.isRequired
 };

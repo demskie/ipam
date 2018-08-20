@@ -2,12 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import { Navbar, NavbarGroup, Alignment, Button } from "@blueprintjs/core";
 
-export class NestedSubnetsToolbar extends React.PureComponent {
-	constructor() {
-		super();
-		this.state = {};
-	}
-
+export class SubnetToolbar extends React.PureComponent {
 	render() {
 		const sidebarNavbarOffset = () => {
 			if (this.props.isSidebarDocked) {
@@ -17,7 +12,7 @@ export class NestedSubnetsToolbar extends React.PureComponent {
 		};
 		return (
 			<Navbar
-				id="nestedSubnetsToolbar"
+				id="subnetToolbar"
 				className="bp3-dark"
 				fixedToTop={true}
 				style={{
@@ -57,7 +52,7 @@ export class NestedSubnetsToolbar extends React.PureComponent {
 	}
 }
 
-NestedSubnetsToolbar.propTypes = {
+SubnetToolbar.propTypes = {
 	isSidebarDocked: PropTypes.bool,
 	isSubnetSelected: PropTypes.bool,
 	handleButtonPress: PropTypes.func

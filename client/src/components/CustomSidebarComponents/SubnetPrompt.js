@@ -5,12 +5,7 @@ import { Dialog, Classes, Button, Intent, Label, TextArea, InputGroup, Tooltip, 
 import { Flex, Box } from "reflexbox";
 import classNames from "classnames";
 
-export class NestedSubnetsPrompt extends React.PureComponent {
-	constructor() {
-		super();
-		this.state = {};
-	}
-
+export class SubnetPrompt extends React.PureComponent {
 	render() {
 		const create = (
 			<Dialog
@@ -203,21 +198,11 @@ export class NestedSubnetsPrompt extends React.PureComponent {
 							</Label>
 							<Label>
 								Description
-								<InputGroup
-									id="description-input"
-									placeholder=""
-									value={this.props.subnetInfo.desc}
-									disabled={true}
-								/>
+								<InputGroup id="description-input" placeholder="" value={this.props.subnetInfo.desc} disabled={true} />
 							</Label>
 							<Label>
 								VLAN ID
-								<InputGroup
-									id="vlan-input"
-									placeholder=""
-									value={this.props.subnetInfo.vlan}
-									disabled={true}
-								/>
+								<InputGroup id="vlan-input" placeholder="" value={this.props.subnetInfo.vlan} disabled={true} />
 							</Label>
 						</Box>
 						<Box p={2}>
@@ -342,7 +327,7 @@ const subnetCheatsheet = (
 	</table>
 );
 
-NestedSubnetsPrompt.propTypes = {
+SubnetPrompt.propTypes = {
 	subnetAction: PropTypes.string,
 	subnetInfo: PropTypes.object,
 	isOpen: PropTypes.bool,

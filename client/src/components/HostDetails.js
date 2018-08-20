@@ -51,7 +51,7 @@ export class HostDetails extends React.PureComponent {
 		if (value === undefined || value === null) {
 			return <Cell />;
 		}
-		if (value === "failure") {
+		if (value === "" || parseInt(value, 10) < 0) {
 			return (
 				<Cell>
 					<div style={{ textAlign: "center", color: "rgb(255, 0, 0)" }}>{"unreachable"}</div>
@@ -76,7 +76,7 @@ export class HostDetails extends React.PureComponent {
 		if (value === "") {
 			return (
 				<Cell>
-					<div style={{ textAlign: "center", color: "orange" }}>{"pending"}</div>
+					<div style={{ textAlign: "center", color: "rgb(255, 165, 0)" }}>{"pending"}</div>
 				</Cell>
 			);
 		}

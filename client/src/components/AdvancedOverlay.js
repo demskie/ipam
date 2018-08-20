@@ -1,10 +1,11 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-import { Dialog, Classes, Tab, Tabs } from "@blueprintjs/core";
+import { Dialog, Classes, Tab, Tabs, Button, InputGroup, Intent } from "@blueprintjs/core";
 import { Flex, Box } from "reflexbox";
 import classNames from "classnames";
 import { List } from "react-virtualized";
+import { TabList } from "./AdvancedOverlayMenus/TabList.js";
 
 export class AdvancedOverlay extends React.PureComponent {
 	constructor() {
@@ -12,7 +13,9 @@ export class AdvancedOverlay extends React.PureComponent {
 		this.state = {
 			selectedTabId: "history",
 			panelHeight: window.document.body.clientHeight * 0.8,
-			panelWidth: window.document.body.clientWidth * 0.8 - 40
+			panelWidth: window.document.body.clientWidth * 0.8 - 40,
+			pingsweepInputValue: "",
+			pingsweepRowCount: 12
 		};
 	}
 
@@ -41,6 +44,8 @@ export class AdvancedOverlay extends React.PureComponent {
 		});
 	};
 
+	//
+
 	render() {
 		return (
 			<div id="advancedOverlay">
@@ -61,74 +66,84 @@ export class AdvancedOverlay extends React.PureComponent {
 								selectedTabId={this.selectedTabId}
 								renderActiveTabPanelOnly={true}
 							>
-								<Tab
+								<TabList
 									id="history"
 									title="History"
-									panel={
-										<div
-											style={{
-												width: this.state.panelWidth + "px",
-												height: this.state.panelHeight + "px",
-												backgroundColor: "#232d35",
-												borderRadius: "9px",
-												paddingLeft: "10px",
-												paddingTop: "10px"
-											}}
-										>
-											<List
-												height={this.state.panelHeight - 10}
-												rowCount={this.props.historyData.length}
-												rowHeight={26}
-												rowRenderer={obj => {
-													return (
-														<div className="virtualRow" key={obj.key} style={obj.style}>
-															{this.props.historyData[obj.index]}
-														</div>
-													);
-												}}
-												width={this.state.panelWidth - 15}
-											/>
-										</div>
-									}
+									panelWidth={this.state.panelWidth}
+									panelHeight={this.state.panelHeight}
+									data={this.props.historyData}
 								/>
-								<Tab
+								<TabList
 									id="debug"
 									title="Debug"
-									panel={
-										<div
-											style={{
-												width: this.state.panelWidth + "px",
-												height: this.state.panelHeight + "px",
-												backgroundColor: "#232d35",
-												borderRadius: "9px",
-												paddingLeft: "10px",
-												paddingTop: "10px"
-											}}
-										>
-											<List
-												height={this.state.panelHeight - 10}
-												rowCount={this.props.debugData.length}
-												rowHeight={26}
-												rowRenderer={obj => {
-													return (
-														<div className="virtualRow" key={obj.key} style={obj.style}>
-															{this.props.debugData[obj.index]}
-														</div>
-													);
-												}}
-												width={this.state.panelWidth - 15}
-											/>
-										</div>
-									}
+									panelWidth={this.state.panelWidth}
+									panelHeight={this.state.panelHeight}
+									data={this.props.debugData}
 								/>
 								<Tab
 									id="scan"
 									title="Pingsweep"
-									disabled={true}
+									disabled={false}
 									panel={
-										<div style={{ width: "calc(80vw - 40px)", height: "80vh" }}>
-											<h1 style={{ textAlign: "center" }}>{"MANUAL SCAN TEST"}</h1>
-										</div>
+										<Flex
+											column
+											align="center"
+											style={{
+												width: this.state.panelWidth + "px",
+												height: this.state.panelHeight + "px",
+												backgroundColor: "#232d35",
+												borderRadius: "9px"
+											}}
+										>
+											<Box>
+												<List
+													height={this.state.panelHeight}
+													rowCount={this.state.pingsweepRowCount + 1}
+													rowHeight={50}
+													rowRenderer={obj => {
+														if (obj.index === 0) {
+															return (
+																<div className="virtualScanRow" key={obj.key} style={obj.style}>
+																	{
+																		<Flex column align="center" style={{ paddingTop: "10px" }}>
+																			<Box>
+																				<InputGroup
+																					disabled={false}
+																					intent={Intent.NONE}
+																					large={true}
+																					leftIcon="search"
+																					onChange={ev => this.setState({ pingsweepInputValue: ev.target.value })}
+																					placeholder="192.168.128.0/24"
+																					rightElement={
+																						<Button
+																							className="bp3-minimal"
+																							icon="chevron-down"
+																							intent={Intent.PRIMARY}
+																							onClick={() => {
+																								console.log("pingsweep button was clicked");
+																							}}
+																						/>
+																					}
+																					type="search"
+																					value={this.state.pingsweepInputValue}
+																				/>
+																			</Box>
+																		</Flex>
+																	}
+																</div>
+															);
+														} else {
+															return (
+																<div className="virtualScanRow" key={obj.key} style={obj.style}>
+																	{"PING RESULT " + (obj.index - 1).toString()}
+																</div>
+															);
+														}
+													}}
+													width={this.state.panelWidth - 15}
+												/>
+											</Box>
+										</Flex>
 									}
 								/>
 								<Tab
@@ -150,11 +165,14 @@ export class AdvancedOverlay extends React.PureComponent {
 	}
 }
 
+const scanData = [];
+
 AdvancedOverlay.propTypes = {
 	historyData: PropTypes.array,
 	requestHistoryData: PropTypes.func,
 	debugData: PropTypes.array,
 	requestDebugData: PropTypes.func,
+	scanData: PropTypes.array,
 	isOpen: PropTypes.bool,
 	sendUserAction: PropTypes.func
 };

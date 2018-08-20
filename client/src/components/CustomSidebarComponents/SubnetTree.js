@@ -2,7 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import { Tree, Intent, ContextMenu, Menu, MenuItem, Classes } from "@blueprintjs/core";
 
-export class NestedSubnets extends React.PureComponent {
+export class SubnetTree extends React.PureComponent {
 	constructor(props) {
 		super(props);
 		this.state = {
@@ -115,21 +115,19 @@ export class NestedSubnets extends React.PureComponent {
 
 	render() {
 		return (
-			<div id="nestedSubnetsTree">
-				<Tree
-					className="bp3-dark"
-					contents={this.constructTreeNodes(this.props.subnets)}
-					onNodeClick={this.handleNodeClick}
-					onNodeCollapse={this.handleNodeCollapse}
-					onNodeContextMenu={this.handleNodeContextClick}
-					onNodeExpand={this.handleNodeExpand}
-				/>
-			</div>
+			<Tree
+				className="bp3-dark"
+				contents={this.constructTreeNodes(this.props.subnets)}
+				onNodeClick={this.handleNodeClick}
+				onNodeCollapse={this.handleNodeCollapse}
+				onNodeContextMenu={this.handleNodeContextClick}
+				onNodeExpand={this.handleNodeExpand}
+			/>
 		);
 	}
 }
 
-NestedSubnets.propTypes = {
+SubnetTree.propTypes = {
 	subnets: PropTypes.array,
 	hostDetailsRequester: PropTypes.func,
 	handleButtonPress: PropTypes.func

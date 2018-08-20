@@ -1,13 +1,10 @@
 import React from "react";
 import debounce from "debounce";
-import { NestedSubnets } from "./NestedSubnets.js";
-import { NestedSubnetsPrompt } from "./NestedSubnetsPrompt.js";
-import { NestedSubnetsToolbar } from "./NestedSubnetsToolbar.js";
-import { RightSideToolbar } from "./RightSideToolbar.js";
 import { HostDetails } from "./HostDetails.js";
 import { AdvancedOverlay } from "./AdvancedOverlay.js";
 import { Alert, Intent, Toaster, Classes, Position } from "@blueprintjs/core";
-import Sidebar from "react-sidebar";
+import { CustomSidebar } from "./CustomSidebar.js";
+import { CustomNavbar } from "./CustomNavbar.js";
 
 const sidebarMinimumWidth = 500;
 
@@ -25,24 +22,32 @@ export class Main extends React.Component {
 		let host = window.location.host;
 		this.state = {
 			websocket: new WebSocket(tcp + host + "/sync"),
+
 			height: "0px",
-			nestedSubnets: [],
-			nestedSubnetPromptAction: "",
-			selectedSubnetInfo: {},
-			nestedSubnetPromptEnabled: false,
+
+			sidebarOpen: false,
+			sidebarDocked: false,
+			sidebarWidth: 0,
+
+			subnetData: [],
+			subnetPromptEnabled: false,
+			selectedSubnet: {},
+			selectedSubnetAction: "",
+
+			tableWidth: 0,
 			hostDetails: {
 				addresses: new Array(128),
 				aRecords: new Array(128),
 				pingResults: new Array(128),
 				lastAttempts: new Array(128)
 			},
+
 			historyData: [],
+
 			debugData: [],
+
 			alertVisible: false,
-			sidebarOpen: false,
-			sidebarDocked: false,
-			sidebarWidth: 0,
-			tableWidth: 0,
+
 			advancedOverlayEnabled: false
 		};
 	}
@@ -61,10 +66,10 @@ export class Main extends React.Component {
 			tableWidth -= sidebarWidth;
 		}
 		this.setState({
+			height: document.getElementById("root").clientHeight - 50 + "px",
 			sidebarDocked: dockedBool,
 			sidebarWidth: sidebarWidth,
-			tableWidth: tableWidth,
-			height: document.getElementById("root").clientHeight - 50 + "px"
+			tableWidth: tableWidth
 		});
 	};
 
@@ -95,11 +100,8 @@ export class Main extends React.Component {
 
 	handleWebsocketCreation = () => {
 		this.state.websocket.addEventListener("open", () => {
-			this.requestSubnetData();
-			this.requestHistoryData();
-			setInterval(this.requestSubnetData, 10000);
-			setInterval(this.requestHistoryData, 5 * 60000);
-			setTimeout(this.requestDebugData, 7500);
+			setInterval(this.requestSubnetData, 60000);
+			setInterval(this.requestHistoryData, 65432);
 		});
 	};
 
@@ -120,34 +122,9 @@ export class Main extends React.Component {
 		});
 	};
 
-	requestSubnetData = () => {
-		if (this.state.websocket.readyState === 1) {
-			let request = {
-				requestType: "GETSUBNETDATA"
-			};
-			console.log("GETSUBNETDATA\n", request);
-			this.state.websocket.send(JSON.stringify(request));
-		} else {
-			console.log("websocket is not open\n", this.state.websocket);
-		}
-	};
-
 	processWebsocketSubnetData = requestData => {
 		console.log("DISPLAYSUBNETDATA\n", requestData);
 		this.setState({ nestedSubnets: requestData });
-	};
-
-	requestHostData = network => {
-		if (this.state.websocket.readyState === 1) {
-			let request = {
-				requestType: "GETHOSTDATA",
-				requestData: [network]
-			};
-			console.log("GETHOSTDATA\n", request);
-			this.state.websocket.send(JSON.stringify(request));
-		} else {
-			console.log("websocket is not open\n", this.state.websocket);
-		}
 	};
 
 	processWebsocketHostData = requestData => {
@@ -162,35 +139,11 @@ export class Main extends React.Component {
 		});
 	};
 
-	requestHistoryData = () => {
-		if (this.state.websocket.readyState === 1) {
-			let request = {
-				requestType: "GETHISTORYDATA"
-			};
-			console.log("GETHISTORYDATA\n", request);
-			this.state.websocket.send(JSON.stringify(request));
-		} else {
-			console.log("websocket is not open\n", this.state.websocket);
-		}
-	};
-
 	processWebsocketHistoryData = requestData => {
 		console.log("DISPLAYHISTORYDATA");
 		this.setState({
 			historyData: requestData
 		});
-	};
-
-	requestDebugData = () => {
-		if (this.state.websocket.readyState === 1) {
-			let request = {
-				requestType: "GETDEBUGDATA"
-			};
-			console.log("GETDEBUGDATA\n", request);
-			this.state.websocket.send(JSON.stringify(request));
-		} else {
-			console.log("websocket is not open\n", this.state.websocket);
-		}
 	};
 
 	processWebsocketDebugData = requestData => {
@@ -224,7 +177,7 @@ export class Main extends React.Component {
 				this.setState({
 					sidebarOpen: true
 				});
-			}, 1000);
+			}, 0);
 		}
 	};
 
@@ -238,21 +191,9 @@ export class Main extends React.Component {
 		this.displaySidebarOnce();
 	};
 
-	render() {
-		const getSidebarOffset = () => {
-			if (this.state.sidebarDocked) {
-				return "0px";
-			}
-			return "50px";
-		};
-		const triggerToolbarButton = val => {
-			this.setState({
-				nestedSubnetPromptAction: val,
-				nestedSubnetPromptEnabled: true
-			});
-		};
-		const handleUserAction = obj => {
-			if (obj.action === "create") {
+	handleUserAction = obj => {
+		switch (obj.action) {
+			case "create":
 				if (this.state.websocket.readyState === 1) {
 					let outMsg = {
 						RequestType: "POSTNEWSUBNET",
@@ -266,7 +207,8 @@ export class Main extends React.Component {
 				this.setState({
 					nestedSubnetPromptEnabled: false
 				});
-			} else if (obj.action === "modify") {
+				break;
+			case "modify":
 				if (this.state.websocket.readyState === 1) {
 					let outMsg = {
 						RequestType: "POSTMODIFYSUBNET",
@@ -280,7 +222,8 @@ export class Main extends React.Component {
 				this.setState({
 					nestedSubnetPromptEnabled: false
 				});
-			} else if (obj.action === "delete") {
+				break;
+			case "delete":
 				if (this.state.websocket.readyState === 1) {
 					let outMsg = {
 						RequestType: "POSTDELETESUBNET",
@@ -294,80 +237,98 @@ export class Main extends React.Component {
 				this.setState({
 					nestedSubnetPromptEnabled: false
 				});
-			} else if (obj.action === "closeNestedSubnetsPrompt") {
+				break;
+			case "getSubnetData":
+				if (this.state.websocket.readyState === 1) {
+					let request = {
+						requestType: "GETSUBNETDATA"
+					};
+					console.log("GETSUBNETDATA\n", request);
+					this.state.websocket.send(JSON.stringify(request));
+				} else {
+					console.log("websocket is not open\n", this.state.websocket);
+				}
+				break;
+			case "getHostData":
+				if (this.state.websocket.readyState === 1) {
+					let request = {
+						requestType: "GETHOSTDATA",
+						requestData: [obj.subnet]
+					};
+					console.log("GETHOSTDATA\n", request);
+					this.state.websocket.send(JSON.stringify(request));
+				} else {
+					console.log("websocket is not open\n", this.state.websocket);
+				}
+				break;
+			case "getHistoryData":
+				if (this.state.websocket.readyState === 1) {
+					let request = {
+						requestType: "GETHISTORYDATA"
+					};
+					console.log("GETHISTORYDATA\n", request);
+					this.state.websocket.send(JSON.stringify(request));
+				} else {
+					console.log("websocket is not open\n", this.state.websocket);
+				}
+				break;
+			case "getDebugData":
+				if (this.state.websocket.readyState === 1) {
+					let request = {
+						requestType: "GETDEBUGDATA"
+					};
+					console.log("GETDEBUGDATA\n", request);
+					this.state.websocket.send(JSON.stringify(request));
+				} else {
+					console.log("websocket is not open\n", this.state.websocket);
+				}
+				break;
+			case "triggerSubnetMutationButton":
 				this.setState({
-					nestedSubnetPromptEnabled: false
+					subnetPromptAction: obj.value,
+					subnetPromptEnabled: true
 				});
-			} else if (obj.action === "closeAdvancedOverlay") {
+				break;
+			case "triggerSidebarToggle":
+				this.setState({
+					sidebarOpen: !this.state.sidebarOpen
+				});
+				break;
+			case "closeSubnetPrompt":
+				this.setState({
+					subnetPromptEnabled: false
+				});
+				break;
+			case "showAdvancedOverlay":
+				this.setState({
+					advancedOverlayEnabled: true
+				});
+				break;
+			case "closeAdvancedOverlay":
 				this.setState({
 					advancedOverlayEnabled: false
 				});
-			} else {
-				console.log("Error! unknown action value:", obj);
-			}
-		};
+				break;
+			default:
+				console.log("Error! unknown user action:", obj);
+		}
+	};
+
+	render() {
 		return (
-			<Sidebar
-				open={this.state.sidebarOpen}
-				docked={this.state.sidebarDocked}
-				onSetOpen={open => {
-					this.setState({ sidebarOpen: open });
-				}}
-				styles={{
-					sidebar: {
-						width: this.state.sidebarWidth + "px",
-						backgroundColor: "#30404D"
+			<React.Fragment>
+				<CustomSidebar
+					subnetData={this.state.subnetData}
+					sidebarOpen={this.state.sidebarOpen}
+					sidebarDocked={this.state.sidebarDocked}
+					sidebarWidth={this.state.sidebarWidth}
+					handleUserAction={this.handleUserAction}
+					content={
+						<div>
+							<CustomNavbar sidebarDocked={this.state.sidebarDocked} handleUserAction={this.handleUserAction} />
+							<HostDetails />
+						</div>
 					}
-				}}
-				sidebar={
-					<div id="sidebarElements" style={{ position: "relative", top: getSidebarOffset() }}>
-						<NestedSubnetsToolbar
-							isSidebarDocked={this.state.sidebarDocked}
-							isSubnetSelected={Object.keys(this.state.selectedSubnetInfo).length === 0}
-							handleButtonPress={triggerToolbarButton}
-						/>
-						<NestedSubnets
-							subnets={this.state.nestedSubnets}
-							hostDetailsRequester={nodeData => {
-								this.setState({
-									selectedSubnetInfo: nodeData
-								});
-								this.requestHostData(nodeData.net);
-							}}
-							handleButtonPress={triggerToolbarButton}
-						/>
-						<NestedSubnetsPrompt
-							subnetAction={this.state.nestedSubnetPromptAction}
-							subnetInfo={this.state.selectedSubnetInfo}
-							isOpen={this.state.nestedSubnetPromptEnabled}
-							sendUserAction={handleUserAction}
-						/>
-					</div>
-				}
-			>
-				<RightSideToolbar
-					sidebarButtonDisabled={this.state.sidebarDocked}
-					toggleSidebarTrigger={() => {
-						if (!this.state.sidebarDocked) {
-							this.setState({
-								sidebarOpen: !this.state.sidebarOpen
-							});
-						}
-					}}
-					showAdvancedOverlay={() => {
-						this.setState({
-							advancedOverlayEnabled: true
-						});
-					}}
-				/>
-				<HostDetails height={this.state.height} tableWidth={this.state.tableWidth} details={this.state.hostDetails} />
-				<AdvancedOverlay
-					historyData={this.state.historyData}
-					requestHistoryData={this.requestHistoryData}
-					debugData={this.state.debugData}
-					requestDebugData={this.requestDebugData}
-					isOpen={this.state.advancedOverlayEnabled}
-					sendUserAction={handleUserAction}
 				/>
 				<Alert
 					className="bp3-dark"
@@ -379,7 +340,15 @@ export class Main extends React.Component {
 				>
 					<p>{"Lost connection to server"}</p>
 				</Alert>
-			</Sidebar>
+				<AdvancedOverlay
+					historyData={this.state.historyData}
+					requestHistoryData={this.requestHistoryData}
+					debugData={this.state.debugData}
+					requestDebugData={this.requestDebugData}
+					isOpen={this.state.advancedOverlayEnabled}
+					sendUserAction={this.handleUserAction}
+				/>
+			</React.Fragment>
 		);
 	}
 }
