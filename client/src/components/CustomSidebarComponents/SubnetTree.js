@@ -6,18 +6,16 @@ export class SubnetTree extends React.PureComponent {
 	constructor(props) {
 		super(props);
 		this.state = {
-			selectedNode: {},
-			expandedNodeIds: {}
+			expandedNodeIds: []
 		};
 		triggerCreate = () => {
-			console.log("create");
-			props.handleButtonPress("create");
+			props.handleUserAction({ action: "create" });
 		};
 		triggerModify = () => {
-			props.handleButtonPress("modify");
+			props.handleUserAction({ action: "modify" });
 		};
 		triggerDelete = () => {
-			props.handleButtonPress("delete");
+			props.handleUserAction({ action: "delete" });
 		};
 	}
 
@@ -38,7 +36,7 @@ export class SubnetTree extends React.PureComponent {
 		for (let i in serverData) {
 			let newNode = Object.assign({}, serverData[i]);
 			newNode.label = this.generateLabel(newNode.net, newNode.desc);
-			if (newNode.id === this.state.selectedNode.id) {
+			if (newNode.id === this.props.selectedTreeNode.id) {
 				newNode.isSelected = true;
 			}
 			for (let j in this.state.expandedNodeIds) {
@@ -67,29 +65,16 @@ export class SubnetTree extends React.PureComponent {
 			for (let i in this.state.expandedNodeIds) {
 				if (this.state.expandedNodeIds[i] === newNodeData.id) {
 					foundMatch = true;
-					this.setState({
-						selectedNode: newNodeData
-					});
 					break;
 				}
 			}
 			if (!foundMatch) {
 				this.setState({
-					selectedNode: newNodeData,
 					expandedNodeIds: [newNodeData.id, ...this.state.expandedNodeIds]
 				});
 			}
-		} else {
-			this.setState({
-				selectedNode: newNodeData
-			});
 		}
-		this.props.hostDetailsRequester(newNodeData);
-	};
-
-	handleNodeContextClick = nodeData => {
-		selectedSubnet = nodeData;
-		this.handleNodeClick(nodeData);
+		this.props.handleUserAction({ action: "getHostData", nodeData: newNodeData });
 	};
 
 	handleNodeCollapse = nodeData => {
@@ -117,10 +102,10 @@ export class SubnetTree extends React.PureComponent {
 		return (
 			<Tree
 				className="bp3-dark"
-				contents={this.constructTreeNodes(this.props.subnets)}
+				contents={this.constructTreeNodes(this.props.subnetData)}
 				onNodeClick={this.handleNodeClick}
 				onNodeCollapse={this.handleNodeCollapse}
-				onNodeContextMenu={this.handleNodeContextClick}
+				onNodeContextMenu={this.handleNodeClick}
 				onNodeExpand={this.handleNodeExpand}
 			/>
 		);
@@ -128,27 +113,19 @@ export class SubnetTree extends React.PureComponent {
 }
 
 SubnetTree.propTypes = {
-	subnets: PropTypes.array,
-	hostDetailsRequester: PropTypes.func,
-	handleButtonPress: PropTypes.func
+	handleUserAction: PropTypes.func.isRequired,
+	selectedTreeNode: PropTypes.object.isRequired,
+	subnetData: PropTypes.array.isRequired
 };
 
-var selectedSubnet = null;
-
-var triggerCreate = function() {
-	console.log("create was clicked before component mount");
-};
-var triggerModify = function() {
-	console.log("modify was clicked before component mount");
-};
-var triggerDelete = function() {
-	console.log("delete was clicked before component mount");
-};
+var triggerCreate = function() {};
+var triggerModify = function() {};
+var triggerDelete = function() {};
 
 window.oncontextmenu = ev => {
 	console.debug("context menu has opened", ev);
 	if (
-		selectedSubnet === null ||
+		Object.keys(this.props.selectedTreeNode).length === 0 ||
 		(ev.target !== undefined &&
 			(!ev.target.className.includes("subnetLabel", 0) && !ev.target.className.includes("bp3-tree", 0)))
 	) {
@@ -160,19 +137,19 @@ window.oncontextmenu = ev => {
 		{ className: Classes.DARK },
 		React.createElement(MenuItem, {
 			className: Classes.DARK,
-			onClick: triggerCreate,
+			onClick: setTimeout(triggerCreate, 0),
 			intent: Intent.PRIMARY,
 			text: "Create New Subnet"
 		}),
 		React.createElement(MenuItem, {
 			className: Classes.DARK,
-			onClick: triggerModify,
+			onClick: setTimeout(triggerModify, 0),
 			intent: Intent.PRIMARY,
 			text: "Modify This Subnet"
 		}),
 		React.createElement(MenuItem, {
 			className: Classes.DARK,
-			onClick: triggerDelete,
+			onClick: setTimeout(triggerDelete, 0),
 			intent: Intent.PRIMARY,
 			text: "Delete This Subnet"
 		})

@@ -42,7 +42,9 @@ export class CustomNavbar extends React.PureComponent {
 							className="bp3-minimal bp3-large"
 							icon="menu"
 							disabled={this.props.sidebarDocked}
-							onClick={this.props.toggleSidebarTrigger}
+							onClick={() => {
+								this.props.handleUserAction({ action: "triggerSidebarToggle" });
+							}}
 						/>
 						<div className="bp3-navbar-heading" style={{ marginLeft: "10px" }}>
 							<b>IPAM</b>
@@ -50,7 +52,12 @@ export class CustomNavbar extends React.PureComponent {
 					</NavbarGroup>
 
 					<NavbarGroup align={Alignment.RIGHT}>
-						<Button text="Advanced Options" onClick={this.props.showAdvancedOverlay} />
+						<Button
+							text="Advanced Options"
+							onClick={() => {
+								this.props.handleUserAction({ action: "showAdvancedOverlay" });
+							}}
+						/>
 						<Button
 							className="bp3-minimal bp3-large"
 							icon="fullscreen"
@@ -74,6 +81,6 @@ export class CustomNavbar extends React.PureComponent {
 }
 
 CustomNavbar.propTypes = {
-	sidebarDocked: PropTypes.bool.isRequired,
-	handleUserAction: PropTypes.func.isRequired
+	handleUserAction: PropTypes.func.isRequired,
+	sidebarDocked: PropTypes.bool.isRequired
 };

@@ -3,21 +3,16 @@ import PropTypes from "prop-types";
 import { Cell, Column, Table, RenderMode } from "@blueprintjs/table";
 
 export class HostDetails extends React.PureComponent {
-	constructor() {
-		super();
-		this.state = {};
-	}
-
 	columnWidthArrays = () => {
-		let width = this.props.tableWidth / 4;
+		let width = this.props.hostDetailsWidth / 4;
 		return [width, width, width, width];
 	};
 
 	addressRenderer = rowIndex => {
-		if (rowIndex >= this.props.details.addresses.length) {
+		if (rowIndex >= this.props.hostData.addresses.length) {
 			return <Cell />;
 		}
-		let value = this.props.details.addresses[rowIndex];
+		let value = this.props.hostData.addresses[rowIndex];
 		if (value === undefined || value === null) {
 			return <Cell />;
 		}
@@ -27,12 +22,11 @@ export class HostDetails extends React.PureComponent {
 			</Cell>
 		);
 	};
-
 	aRecordRenderer = rowIndex => {
-		if (rowIndex >= this.props.details.aRecords.length) {
+		if (rowIndex >= this.props.hostData.aRecords.length) {
 			return <Cell />;
 		}
-		let value = this.props.details.aRecords[rowIndex];
+		let value = this.props.hostData.aRecords[rowIndex];
 		if (value === undefined || value === null) {
 			return <Cell />;
 		}
@@ -42,12 +36,11 @@ export class HostDetails extends React.PureComponent {
 			</Cell>
 		);
 	};
-
 	pingResultRenderer = rowIndex => {
-		if (rowIndex >= this.props.details.pingResults.length) {
+		if (rowIndex >= this.props.hostData.pingResults.length) {
 			return <Cell />;
 		}
-		let value = this.props.details.pingResults[rowIndex];
+		let value = this.props.hostData.pingResults[rowIndex];
 		if (value === undefined || value === null) {
 			return <Cell />;
 		}
@@ -64,12 +57,11 @@ export class HostDetails extends React.PureComponent {
 			</Cell>
 		);
 	};
-
 	lastAttemptRenderer = rowIndex => {
-		if (rowIndex >= this.props.details.lastAttempts.length) {
+		if (rowIndex >= this.props.hostData.lastAttempts.length) {
 			return <Cell />;
 		}
-		let value = this.props.details.lastAttempts[rowIndex];
+		let value = this.props.hostData.lastAttempts[rowIndex];
 		if (value === undefined || value === null) {
 			return <Cell />;
 		}
@@ -89,10 +81,10 @@ export class HostDetails extends React.PureComponent {
 
 	render() {
 		return (
-			<div id="hostDetails" style={{ height: this.props.height }}>
+			<div id="hostDetails" style={{ height: this.props.hostDetailsHeight }}>
 				<Table
 					className="bp3-dark"
-					numRows={this.props.details.addresses.length}
+					numRows={this.props.hostData.addresses.length}
 					renderMode={RenderMode.NONE}
 					enableGhostCells={true}
 					columnWidths={this.columnWidthArrays()}
@@ -116,7 +108,7 @@ export class HostDetails extends React.PureComponent {
 }
 
 HostDetails.propTypes = {
-	height: PropTypes.string,
-	tableWidth: PropTypes.number,
-	details: PropTypes.object
+	hostData: PropTypes.object.isRequired,
+	hostDetailsWidth: PropTypes.number.isRequired,
+	hostDetailsHeight: PropTypes.number.isRequired
 };

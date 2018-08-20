@@ -23,32 +23,32 @@ export class Main extends React.Component {
 		this.state = {
 			websocket: new WebSocket(tcp + host + "/sync"),
 
-			height: "0px",
-
 			sidebarOpen: false,
 			sidebarDocked: false,
 			sidebarWidth: 0,
 
 			subnetData: [],
+			selectedTreeNode: {},
 			subnetPromptEnabled: false,
-			selectedSubnet: {},
-			selectedSubnetAction: "",
+			subnetPromptAction: "",
 
-			tableWidth: 0,
-			hostDetails: {
+			hostData: {
 				addresses: new Array(128),
 				aRecords: new Array(128),
 				pingResults: new Array(128),
 				lastAttempts: new Array(128)
 			},
+			hostDetailsWidth: 0,
+			hostDetailsHeight: 0,
 
 			historyData: [],
-
 			debugData: [],
+			scanData: [],
+			advancedOverlayEnabled: false,
+			advancedOverlayWidth: 0,
+			advancedOverlayHeight: 0,
 
-			alertVisible: false,
-
-			advancedOverlayEnabled: false
+			alertVisible: false
 		};
 	}
 
@@ -66,10 +66,12 @@ export class Main extends React.Component {
 			tableWidth -= sidebarWidth;
 		}
 		this.setState({
-			height: document.getElementById("root").clientHeight - 50 + "px",
 			sidebarDocked: dockedBool,
 			sidebarWidth: sidebarWidth,
-			tableWidth: tableWidth
+			hostDetailsWidth: tableWidth,
+			hostDetailsHeight: document.getElementById("root").clientHeight - 50,
+			advancedOverlayWidth: document.getElementById("root").clientWidth * 0.8,
+			advancedOverlayHeight: document.getElementById("root").clientHeight * 0.8
 		});
 	};
 
@@ -124,7 +126,7 @@ export class Main extends React.Component {
 
 	processWebsocketSubnetData = requestData => {
 		console.log("DISPLAYSUBNETDATA\n", requestData);
-		this.setState({ nestedSubnets: requestData });
+		this.setState({ subnetData: requestData });
 	};
 
 	processWebsocketHostData = requestData => {
@@ -182,7 +184,7 @@ export class Main extends React.Component {
 	};
 
 	componentDidMount = () => {
-		window.addEventListener("resize", debounce(this.updateDimensions, 500));
+		window.addEventListener("resize", debounce(this.updateDimensions, 1000));
 		this.updateDimensions();
 		this.handleWebsocketMessage();
 		this.handleWebsocketCreation();
@@ -195,92 +197,103 @@ export class Main extends React.Component {
 		switch (obj.action) {
 			case "create":
 				if (this.state.websocket.readyState === 1) {
-					let outMsg = {
-						RequestType: "POSTNEWSUBNET",
-						RequestData: [obj.subnet, obj.description, obj.vlan, obj.notes]
-					};
-					console.log(outMsg.RequestType + "\n", outMsg);
-					this.state.websocket.send(JSON.stringify(outMsg));
+					console.debug("POSTNEWSUBNET", obj);
+					this.state.websocket.send(
+						JSON.stringify({
+							RequestType: "POSTNEWSUBNET",
+							RequestData: [obj.subnet, obj.description, obj.vlan, obj.notes]
+						})
+					);
 				} else {
-					console.log("caught an action while websocket is closed:", obj);
+					console.log("caught userAction while websocket was closed:", obj);
 				}
 				this.setState({
-					nestedSubnetPromptEnabled: false
+					subnetPromptEnabled: false
 				});
 				break;
 			case "modify":
 				if (this.state.websocket.readyState === 1) {
-					let outMsg = {
-						RequestType: "POSTMODIFYSUBNET",
-						RequestData: [obj.subnet, obj.description, obj.vlan, obj.notes]
-					};
-					console.log(outMsg.RequestType + "\n", outMsg);
-					this.state.websocket.send(JSON.stringify(outMsg));
+					console.debug("POSTMODIFYSUBNET", obj);
+					this.state.websocket.send(
+						JSON.stringify({
+							RequestType: "POSTMODIFYSUBNET",
+							RequestData: [obj.subnet, obj.description, obj.vlan, obj.notes]
+						})
+					);
 				} else {
-					console.log("caught an action while websocket is closed:", obj);
+					console.log("caught userAction while websocket was closed:", obj);
 				}
 				this.setState({
-					nestedSubnetPromptEnabled: false
+					subnetPromptEnabled: false
 				});
 				break;
 			case "delete":
 				if (this.state.websocket.readyState === 1) {
-					let outMsg = {
-						RequestType: "POSTDELETESUBNET",
-						RequestData: [obj.subnet]
-					};
-					console.log(outMsg.RequestType + "\n", outMsg);
-					this.state.websocket.send(JSON.stringify(outMsg));
+					console.debug("POSTDELETESUBNET", obj);
+					this.state.websocket.send(
+						JSON.stringify({
+							RequestType: "POSTDELETESUBNET",
+							RequestData: [obj.subnet]
+						})
+					);
 				} else {
-					console.log("caught an action while websocket is closed:", obj);
+					console.log("caught userAction while websocket was closed:", obj);
 				}
 				this.setState({
-					nestedSubnetPromptEnabled: false
+					subnetPromptEnabled: false
 				});
 				break;
 			case "getSubnetData":
 				if (this.state.websocket.readyState === 1) {
-					let request = {
-						requestType: "GETSUBNETDATA"
-					};
-					console.log("GETSUBNETDATA\n", request);
-					this.state.websocket.send(JSON.stringify(request));
+					console.debug("GETSUBNETDATA");
+					this.state.websocket.send(
+						JSON.stringify({
+							requestType: "GETSUBNETDATA",
+							requestData: []
+						})
+					);
 				} else {
-					console.log("websocket is not open\n", this.state.websocket);
+					console.log("GETSUBNETDATA failed because websocket was not open");
 				}
 				break;
 			case "getHostData":
+				this.setState({ selectedTreeNode: obj.nodeData });
 				if (this.state.websocket.readyState === 1) {
-					let request = {
-						requestType: "GETHOSTDATA",
-						requestData: [obj.subnet]
-					};
-					console.log("GETHOSTDATA\n", request);
-					this.state.websocket.send(JSON.stringify(request));
+					console.debug("GETHOSTDATA");
+					this.state.websocket.send(
+						JSON.stringify({
+							requestType: "GETHOSTDATA",
+							requestData: [obj.nodeData.subnet]
+						})
+					);
 				} else {
-					console.log("websocket is not open\n", this.state.websocket);
+					console.log("GETHOSTDATA failed because websocket was not open");
 				}
 				break;
 			case "getHistoryData":
 				if (this.state.websocket.readyState === 1) {
-					let request = {
-						requestType: "GETHISTORYDATA"
-					};
-					console.log("GETHISTORYDATA\n", request);
-					this.state.websocket.send(JSON.stringify(request));
+					console.debug("GETHISTORYDATA");
+					this.state.websocket.send(
+						JSON.stringify({
+							requestType: "GETHISTORYDATA",
+							requestData: []
+						})
+					);
 				} else {
-					console.log("websocket is not open\n", this.state.websocket);
+					console.log("GETHISTORYDATA failed because websocket was not open");
 				}
 				break;
 			case "getDebugData":
 				if (this.state.websocket.readyState === 1) {
-					let request = {
-						requestType: "GETDEBUGDATA"
-					};
-					console.log("GETDEBUGDATA\n", request);
-					this.state.websocket.send(JSON.stringify(request));
+					console.debug("GETDEBUGDATA");
+					this.state.websocket.send(
+						JSON.stringify({
+							requestType: "GETDEBUGDATA",
+							requestData: []
+						})
+					);
 				} else {
-					console.log("websocket is not open\n", this.state.websocket);
+					console.log("GETDEBUGDATA failed because websocket was not open");
 				}
 				break;
 			case "triggerSubnetMutationButton":
@@ -294,9 +307,19 @@ export class Main extends React.Component {
 					sidebarOpen: !this.state.sidebarOpen
 				});
 				break;
+			case "setSidebarOpen":
+				this.setState({
+					sidebarOpen: obj.value
+				});
+				break;
 			case "closeSubnetPrompt":
 				this.setState({
 					subnetPromptEnabled: false
+				});
+				break;
+			case "setSelectedTreeNode":
+				this.setState({
+					selectedTreeNode: obj.value
 				});
 				break;
 			case "showAdvancedOverlay":
@@ -318,17 +341,24 @@ export class Main extends React.Component {
 		return (
 			<React.Fragment>
 				<CustomSidebar
-					subnetData={this.state.subnetData}
+					content={
+						<div>
+							<CustomNavbar handleUserAction={this.handleUserAction} sidebarDocked={this.state.sidebarDocked} />
+							<HostDetails
+								hostData={this.state.hostData}
+								hostDetailsWidth={this.state.hostDetailsWidth}
+								hostDetailsHeight={this.state.hostDetailsHeight}
+							/>
+						</div>
+					}
+					handleUserAction={this.handleUserAction}
+					selectedTreeNode={this.state.selectedTreeNode}
 					sidebarOpen={this.state.sidebarOpen}
 					sidebarDocked={this.state.sidebarDocked}
 					sidebarWidth={this.state.sidebarWidth}
-					handleUserAction={this.handleUserAction}
-					content={
-						<div>
-							<CustomNavbar sidebarDocked={this.state.sidebarDocked} handleUserAction={this.handleUserAction} />
-							<HostDetails />
-						</div>
-					}
+					subnetData={this.state.subnetData}
+					subnetPromptAction={this.state.subnetPromptAction}
+					subnetPromptEnabled={this.state.subnetPromptEnabled}
 				/>
 				<Alert
 					className="bp3-dark"
@@ -341,12 +371,13 @@ export class Main extends React.Component {
 					<p>{"Lost connection to server"}</p>
 				</Alert>
 				<AdvancedOverlay
-					historyData={this.state.historyData}
-					requestHistoryData={this.requestHistoryData}
+					advancedOverlayEnabled={this.state.advancedOverlayEnabled}
+					advancedOverlayWidth={this.state.advancedOverlayWidth}
+					advancedOverlayHeight={this.state.advancedOverlayHeight}
 					debugData={this.state.debugData}
-					requestDebugData={this.requestDebugData}
-					isOpen={this.state.advancedOverlayEnabled}
-					sendUserAction={this.handleUserAction}
+					handleUserAction={this.handleUserAction}
+					historyData={this.state.historyData}
+					scanData={this.state.scanData}
 				/>
 			</React.Fragment>
 		);

@@ -3,20 +3,20 @@ import PropTypes from "prop-types";
 import { Navbar, NavbarGroup, Alignment, Button } from "@blueprintjs/core";
 
 export class SubnetToolbar extends React.PureComponent {
+	sidebarNavbarOffset = () => {
+		if (this.props.sidebarDocked) {
+			return "0px";
+		}
+		return "50px";
+	};
 	render() {
-		const sidebarNavbarOffset = () => {
-			if (this.props.isSidebarDocked) {
-				return "0px";
-			}
-			return "50px";
-		};
 		return (
 			<Navbar
 				id="subnetToolbar"
 				className="bp3-dark"
 				fixedToTop={true}
 				style={{
-					top: sidebarNavbarOffset()
+					top: this.sidebarNavbarOffset()
 				}}
 			>
 				<NavbarGroup align={Alignment.LEFT}>
@@ -25,25 +25,25 @@ export class SubnetToolbar extends React.PureComponent {
 						icon="add"
 						text="Create"
 						onClick={() => {
-							this.props.handleButtonPress("create");
+							this.props.handleUserAction({ action: "create" });
 						}}
 					/>
 					<Button
 						className="bp3-minimal"
 						icon="annotation"
 						text="Modify"
-						disabled={this.props.isSubnetSelected}
+						disabled={Object.keys(this.props.selectedTreeNode).length === 0}
 						onClick={() => {
-							this.props.handleButtonPress("modify");
+							this.props.handleUserAction({ action: "modify" });
 						}}
 					/>
 					<Button
 						className="bp3-minimal"
 						icon="remove"
 						text="Delete"
-						disabled={this.props.isSubnetSelected}
+						disabled={Object.keys(this.props.selectedTreeNode).length === 0}
 						onClick={() => {
-							this.props.handleButtonPress("delete");
+							this.props.handleUserAction({ action: "delete" });
 						}}
 					/>
 				</NavbarGroup>
@@ -53,7 +53,7 @@ export class SubnetToolbar extends React.PureComponent {
 }
 
 SubnetToolbar.propTypes = {
-	isSidebarDocked: PropTypes.bool,
-	isSubnetSelected: PropTypes.bool,
-	handleButtonPress: PropTypes.func
+	handleUserAction: PropTypes.func.isRequired,
+	selectedTreeNode: PropTypes.object.isRequired,
+	sidebarDocked: PropTypes.bool.isRequired
 };

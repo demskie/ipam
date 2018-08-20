@@ -3,250 +3,264 @@ import PropTypes from "prop-types";
 
 import { Dialog, Classes, Button, Intent, Label, TextArea, InputGroup, Tooltip, Position } from "@blueprintjs/core";
 import { Flex, Box } from "reflexbox";
-import classNames from "classnames";
 
 export class SubnetPrompt extends React.PureComponent {
+	create = (
+		<Dialog
+			className={Classes.DARK}
+			title=""
+			isOpen={this.props.subnetPromptEnabled}
+			onClose={() => {
+				this.props.handleUserAction({ action: "closeSubnetPrompt" });
+			}}
+		>
+			<div className={Classes.DIALOG_BODY}>
+				<Flex justify="center">
+					<Box p={2}>
+						<Label>
+							Subnet CIDR
+							<InputGroup
+								id="cidr-input"
+								placeholder="192.168.0.0/24"
+								rightElement={
+									<Tooltip
+										className="bp3-dark"
+										content={subnetCheatsheet}
+										position={Position.RIGHT}
+										intent={Intent.NONE}
+									>
+										{<Button className="bp3-minimal" icon="help" />}
+									</Tooltip>
+								}
+							/>
+						</Label>
+						<Label>
+							Description
+							<InputGroup id="description-input" placeholder="mcsubnettyface" />
+						</Label>
+						<Label>
+							VLAN ID
+							<InputGroup id="vlan-input" placeholder="1002" />
+						</Label>
+					</Box>
+					<Box p={2}>
+						<Label>
+							Scratch Notes
+							<TextArea
+								id="notes-input"
+								large={false}
+								style={{ width: "210px", maxWidth: "210px", height: "165px" }}
+							/>
+						</Label>
+					</Box>
+				</Flex>
+			</div>
+			<div className={Classes.DIALOG_FOOTER_ACTIONS}>
+				<Button
+					intent={Intent.SUCCESS}
+					onClick={() => {
+						this.props.handleUserAction({
+							action: "create",
+							subnet: document.getElementById("cidr-input").value,
+							description: document.getElementById("description-input").value,
+							vlan: document.getElementById("vlan-input").value,
+							notes: document.getElementById("notes-input").value
+						});
+					}}
+					style={{ marginRight: "40px", marginBottom: "10px" }}
+				>
+					Create Subnet
+				</Button>
+			</div>
+		</Dialog>
+	);
+
+	modify = (
+		<Dialog
+			className={Classes.DARK}
+			title=""
+			isOpen={this.props.subnetPromptEnabled}
+			onClose={() => {
+				this.props.handleUserAction({ action: "closeSubnetPrompt" });
+			}}
+		>
+			<div className={Classes.DIALOG_BODY}>
+				<Flex justify="center">
+					<Box p={2}>
+						<Label>
+							Subnet CIDR
+							<InputGroup
+								id="cidr-input"
+								placeholder=""
+								value={this.props.selectedTreeNode.net}
+								disabled={true}
+								rightElement={
+									<Tooltip
+										className="bp3-dark"
+										content={subnetCheatsheet}
+										position={Position.RIGHT}
+										intent={Intent.NONE}
+									>
+										{<Button className="bp3-minimal" icon="help" />}
+									</Tooltip>
+								}
+							/>
+						</Label>
+						<Label>
+							Description
+							<InputGroup
+								id="description-input"
+								placeholder=""
+								defaultValue={this.props.selectedTreeNode.desc}
+								onChange={ev => {
+									document.getElementById("description-input").value = ev.target.value;
+								}}
+							/>
+						</Label>
+						<Label>
+							VLAN ID
+							<InputGroup
+								id="vlan-input"
+								placeholder=""
+								defaultValue={this.props.selectedTreeNode.vlan}
+								onChange={ev => {
+									document.getElementById("vlan-input").value = ev.target.value;
+								}}
+							/>
+						</Label>
+					</Box>
+					<Box p={2}>
+						<Label>
+							Scratch Notes
+							<TextArea
+								id="notes-input"
+								large={false}
+								style={{ width: "210px", maxWidth: "210px", height: "165px" }}
+								defaultValue={this.props.selectedTreeNode.notes}
+								onChange={ev => {
+									document.getElementById("notes-input").value = ev.target.value;
+								}}
+							/>
+						</Label>
+					</Box>
+				</Flex>
+			</div>
+			<div className={Classes.DIALOG_FOOTER_ACTIONS}>
+				<Button
+					intent={Intent.WARNING}
+					onClick={() => {
+						this.props.handleUserAction({
+							action: "modify",
+							subnet: document.getElementById("cidr-input").value,
+							description: document.getElementById("description-input").value,
+							vlan: document.getElementById("vlan-input").value,
+							notes: document.getElementById("notes-input").value
+						});
+					}}
+					style={{ marginRight: "40px", marginBottom: "10px" }}
+				>
+					Modify Subnet
+				</Button>
+			</div>
+		</Dialog>
+	);
+
+	remove = (
+		<Dialog
+			className={Classes.DARK}
+			title=""
+			isOpen={this.props.subnetPromptEnabled}
+			onClose={() => {
+				this.props.handleUserAction({ action: "closeSubnetPrompt" });
+			}}
+		>
+			<div className={Classes.DIALOG_BODY}>
+				<Flex justify="center">
+					<Box p={2}>
+						<Label>
+							Subnet CIDR
+							<InputGroup
+								id="cidr-input"
+								placeholder=""
+								value={this.props.selectedTreeNode.net}
+								disabled={true}
+								rightElement={
+									<Tooltip
+										className="bp3-dark"
+										content={subnetCheatsheet}
+										position={Position.RIGHT}
+										intent={Intent.NONE}
+									>
+										{<Button className="bp3-minimal" icon="help" />}
+									</Tooltip>
+								}
+							/>
+						</Label>
+						<Label>
+							Description
+							<InputGroup
+								id="description-input"
+								placeholder=""
+								value={this.props.selectedTreeNode.desc}
+								disabled={true}
+							/>
+						</Label>
+						<Label>
+							VLAN ID
+							<InputGroup id="vlan-input" placeholder="" value={this.props.selectedTreeNode.vlan} disabled={true} />
+						</Label>
+					</Box>
+					<Box p={2}>
+						<Label>
+							Scratch Notes
+							<TextArea
+								id="notes-input"
+								large={false}
+								style={{ width: "210px", maxWidth: "210px", height: "165px" }}
+								value={this.props.selectedTreeNode.notes}
+								disabled={true}
+							/>
+						</Label>
+					</Box>
+				</Flex>
+			</div>
+			<div className={Classes.DIALOG_FOOTER_ACTIONS}>
+				<Button
+					intent={Intent.DANGER}
+					onClick={() => {
+						this.props.handleUserAction({
+							action: "delete",
+							subnet: document.getElementById("cidr-input").value
+						});
+					}}
+					style={{ marginRight: "40px", marginBottom: "10px" }}
+				>
+					Delete Subnet
+				</Button>
+			</div>
+		</Dialog>
+	);
+
 	render() {
-		const create = (
-			<Dialog
-				className={classNames(Classes.DARK)}
-				title=""
-				isOpen={this.props.isOpen}
-				onClose={() => {
-					this.props.sendUserAction({ action: "closeNestedSubnetsPrompt" });
-				}}
-			>
-				<div className={classNames(Classes.DIALOG_BODY)}>
-					<Flex justify="center">
-						<Box p={2}>
-							<Label>
-								Subnet CIDR
-								<InputGroup
-									id="cidr-input"
-									placeholder="192.168.0.0/24"
-									rightElement={
-										<Tooltip
-											className="bp3-dark"
-											content={subnetCheatsheet}
-											position={Position.RIGHT}
-											intent={Intent.NONE}
-										>
-											{<Button className="bp3-minimal" icon="help" />}
-										</Tooltip>
-									}
-								/>
-							</Label>
-							<Label>
-								Description
-								<InputGroup id="description-input" placeholder="mcsubnettyface" />
-							</Label>
-							<Label>
-								VLAN ID
-								<InputGroup id="vlan-input" placeholder="1002" />
-							</Label>
-						</Box>
-						<Box p={2}>
-							<Label>
-								Scratch Notes
-								<TextArea
-									id="notes-input"
-									large={false}
-									style={{ width: "210px", maxWidth: "210px", height: "165px" }}
-								/>
-							</Label>
-						</Box>
-					</Flex>
-				</div>
-				<div className={classNames(Classes.DIALOG_FOOTER_ACTIONS)}>
-					<Button
-						intent={Intent.SUCCESS}
-						onClick={() => {
-							this.props.sendUserAction({
-								action: "create",
-								subnet: document.getElementById("cidr-input").value,
-								description: document.getElementById("description-input").value,
-								vlan: document.getElementById("vlan-input").value,
-								notes: document.getElementById("notes-input").value
-							});
-						}}
-						style={{ marginRight: "40px", marginBottom: "10px" }}
-					>
-						Create Subnet
-					</Button>
-				</div>
-			</Dialog>
-		);
-		const modify = (
-			<Dialog
-				className={classNames(Classes.DARK)}
-				title=""
-				isOpen={this.props.isOpen}
-				onClose={() => {
-					this.props.sendUserAction({ action: "closeNestedSubnetsPrompt" });
-				}}
-			>
-				<div className={classNames(Classes.DIALOG_BODY)}>
-					<Flex justify="center">
-						<Box p={2}>
-							<Label>
-								Subnet CIDR
-								<InputGroup
-									id="cidr-input"
-									placeholder=""
-									value={this.props.subnetInfo.net}
-									disabled={true}
-									rightElement={
-										<Tooltip
-											className="bp3-dark"
-											content={subnetCheatsheet}
-											position={Position.RIGHT}
-											intent={Intent.NONE}
-										>
-											{<Button className="bp3-minimal" icon="help" />}
-										</Tooltip>
-									}
-								/>
-							</Label>
-							<Label>
-								Description
-								<InputGroup
-									id="description-input"
-									placeholder=""
-									defaultValue={this.props.subnetInfo.desc}
-									onChange={ev => {
-										document.getElementById("description-input").value = ev.target.value;
-									}}
-								/>
-							</Label>
-							<Label>
-								VLAN ID
-								<InputGroup
-									id="vlan-input"
-									placeholder=""
-									defaultValue={this.props.subnetInfo.vlan}
-									onChange={ev => {
-										document.getElementById("vlan-input").value = ev.target.value;
-									}}
-								/>
-							</Label>
-						</Box>
-						<Box p={2}>
-							<Label>
-								Scratch Notes
-								<TextArea
-									id="notes-input"
-									large={false}
-									style={{ width: "210px", maxWidth: "210px", height: "165px" }}
-									defaultValue={this.props.subnetInfo.notes}
-									onChange={ev => {
-										document.getElementById("notes-input").value = ev.target.value;
-									}}
-								/>
-							</Label>
-						</Box>
-					</Flex>
-				</div>
-				<div className={classNames(Classes.DIALOG_FOOTER_ACTIONS)}>
-					<Button
-						intent={Intent.WARNING}
-						onClick={() => {
-							this.props.sendUserAction({
-								action: "modify",
-								subnet: document.getElementById("cidr-input").value,
-								description: document.getElementById("description-input").value,
-								vlan: document.getElementById("vlan-input").value,
-								notes: document.getElementById("notes-input").value
-							});
-						}}
-						style={{ marginRight: "40px", marginBottom: "10px" }}
-					>
-						Modify Subnet
-					</Button>
-				</div>
-			</Dialog>
-		);
-		const remove = (
-			<Dialog
-				className={classNames(Classes.DARK)}
-				title=""
-				isOpen={this.props.isOpen}
-				onClose={() => {
-					this.props.sendUserAction({ action: "closeNestedSubnetsPrompt" });
-				}}
-			>
-				<div className={classNames(Classes.DIALOG_BODY)}>
-					<Flex justify="center">
-						<Box p={2}>
-							<Label>
-								Subnet CIDR
-								<InputGroup
-									id="cidr-input"
-									placeholder=""
-									value={this.props.subnetInfo.net}
-									disabled={true}
-									rightElement={
-										<Tooltip
-											className="bp3-dark"
-											content={subnetCheatsheet}
-											position={Position.RIGHT}
-											intent={Intent.NONE}
-										>
-											{<Button className="bp3-minimal" icon="help" />}
-										</Tooltip>
-									}
-								/>
-							</Label>
-							<Label>
-								Description
-								<InputGroup id="description-input" placeholder="" value={this.props.subnetInfo.desc} disabled={true} />
-							</Label>
-							<Label>
-								VLAN ID
-								<InputGroup id="vlan-input" placeholder="" value={this.props.subnetInfo.vlan} disabled={true} />
-							</Label>
-						</Box>
-						<Box p={2}>
-							<Label>
-								Scratch Notes
-								<TextArea
-									id="notes-input"
-									large={false}
-									style={{ width: "210px", maxWidth: "210px", height: "165px" }}
-									value={this.props.subnetInfo.notes}
-									disabled={true}
-								/>
-							</Label>
-						</Box>
-					</Flex>
-				</div>
-				<div className={classNames(Classes.DIALOG_FOOTER_ACTIONS)}>
-					<Button
-						intent={Intent.DANGER}
-						onClick={() => {
-							this.props.sendUserAction({
-								action: "delete",
-								subnet: document.getElementById("cidr-input").value
-							});
-						}}
-						style={{ marginRight: "40px", marginBottom: "10px" }}
-					>
-						Delete Subnet
-					</Button>
-				</div>
-			</Dialog>
-		);
-		switch (this.props.subnetAction) {
+		switch (this.props.subnetPromptAction) {
 			case "create":
-				return create;
+				return this.create;
 			case "modify":
-				return modify;
+				return this.modify;
 			case "delete":
-				return remove;
+				return this.remove;
 			default:
 				return null;
 		}
 	}
 }
+
+SubnetPrompt.propTypes = {
+	handleUserAction: PropTypes.func.isRequired,
+	selectedTreeNode: PropTypes.object.isRequired,
+	subnetPromptAction: PropTypes.string.isRequired,
+	subnetPromptEnabled: PropTypes.bool.isRequired
+};
 
 const subnetCheatsheet = (
 	<table>
@@ -326,10 +340,3 @@ const subnetCheatsheet = (
 		</tbody>
 	</table>
 );
-
-SubnetPrompt.propTypes = {
-	subnetAction: PropTypes.string,
-	subnetInfo: PropTypes.object,
-	isOpen: PropTypes.bool,
-	sendUserAction: PropTypes.func
-};
