@@ -2,7 +2,9 @@ package ping
 
 import (
 	"log"
+	"math"
 	"net"
+	"strconv"
 	"sync"
 	"time"
 
@@ -14,10 +16,9 @@ const defaultTimeLayout = "01-02-2006 15:04:05"
 
 // Pinger will scan a network using ICMP and remember the results
 type Pinger struct {
-	mtx            *sync.RWMutex
-	slowScanSemphr chan struct{}
-	data           map[string]result
-	requestChan    chan string
+	mtx         *sync.RWMutex
+	data        map[string]result
+	requestChan chan string
 }
 
 // NewPinger returns a new Pinger object
@@ -31,15 +32,10 @@ func NewPinger() (ping *Pinger) {
 }
 
 type result struct {
-	lastValue   string
-	attemptTime string
+	lastLatency    int
+	pendingUpdate  bool
+	lastUpdateTime string
 }
-
-// used with result.lastValue
-const (
-	SUCCESS = "success"
-	FAILURE = "failure"
-)
 
 // ScanNetwork will inform the backgroundScanner to look at these IPs next
 func (p *Pinger) ScanNetwork(network *net.IPNet) {
@@ -75,15 +71,17 @@ func (p *Pinger) InitializeBackgroundPinger(maxPingsPerSecond, goroutineCount in
 	workers := simplesync.NewWorkerPool(goroutineCount)
 	workers.Execute(func(threadNum int) {
 		for ipString := range p.requestChan {
+			start := time.Now()
 			reachable := ping(ipString)
 			p.mtx.Lock()
 			pingData := p.data[ipString]
-			pingData.attemptTime = time.Now().Format(defaultTimeLayout)
 			if reachable {
-				pingData.lastValue = SUCCESS
+				pingData.lastLatency = int(time.Since(start) / time.Millisecond)
 			} else {
-				pingData.lastValue = FAILURE
+				pingData.lastLatency = math.MinInt32
 			}
+			pingData.pendingUpdate = false
+			pingData.lastUpdateTime = time.Now().Format(defaultTimeLayout)
 			p.data[ipString] = pingData
 			p.mtx.Unlock()
 			<-time.NewTimer(interval).C
@@ -104,14 +102,6 @@ func GetNumberOfHosts(network *net.IPNet) int {
 	return addressCount
 }
 
-// GetHostResult returns a the result and formatted time of the latest ping attempt
-func (p *Pinger) GetHostResult(hostAddr string) (string, string) {
-	p.mtx.RLock()
-	data := p.data[hostAddr]
-	p.mtx.RUnlock()
-	return data.lastValue, data.attemptTime
-}
-
 // GetPingResultsForAddresses returns ping results for slice of addresses
 func (p *Pinger) GetPingResultsForAddresses(addresses []string) []string {
 	results := make([]string, len(addresses))
@@ -119,7 +109,7 @@ func (p *Pinger) GetPingResultsForAddresses(addresses []string) []string {
 	for i := 0; i < len(addresses); i++ {
 		val, exists := p.data[addresses[i]]
 		if exists {
-			results[i] = val.lastValue
+			results[i] = strconv.Itoa(val.lastLatency) + "ms"
 		} else {
 			results[i] = ""
 		}
@@ -135,7 +125,7 @@ func (p *Pinger) GetPingTimesForAddresses(addresses []string) []string {
 	for i := 0; i < len(addresses); i++ {
 		val, exists := p.data[addresses[i]]
 		if exists {
-			results[i] = val.attemptTime
+			results[i] = val.lastUpdateTime
 		} else {
 			results[i] = ""
 		}

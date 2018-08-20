@@ -1,18 +1,18 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-import { Dialog, Classes, Tab, Tabs } from "@blueprintjs/core";
+import { Dialog, Classes, Tab, Tabs, Button, InputGroup, Intent } from "@blueprintjs/core";
 import { Flex, Box } from "reflexbox";
-import classNames from "classnames";
 import { List } from "react-virtualized";
+import { TabList } from "./AdvancedOverlayMenus/TabList.js";
 
 export class AdvancedOverlay extends React.PureComponent {
 	constructor() {
 		super();
 		this.state = {
 			selectedTabId: "history",
-			panelHeight: window.document.body.clientHeight * 0.8,
-			panelWidth: window.document.body.clientWidth * 0.8 - 40
+			pingsweepInputValue: "",
+			pingsweepRowCount: 12
 		};
 	}
 
@@ -22,34 +22,34 @@ export class AdvancedOverlay extends React.PureComponent {
 		});
 		switch (newTab) {
 			case "history":
-				this.props.requestHistoryData();
+				this.props.handleUserAction({ action: "getHistoryData" });
 				break;
 			case "debug":
-				this.props.requestDebugData();
+				this.props.handleUserAction({ action: "getDebugData" });
 				break;
 			default:
 				console.log("unknown tab id:", newTab);
 		}
 	};
 
-	componentDidMount = () => {
-		window.addEventListener("resize", () => {
-			this.setState({
-				panelHeight: window.document.body.clientHeight * 0.8,
-				panelWidth: window.document.body.clientWidth * 0.8 - 40
-			});
-		});
-	};
-
 	render() {
+		const overlayWidth = this.props.advancedOverlayWidth;
+		const overlayHeight = this.props.advancedOverlayHeight;
+		const panelWidth = this.props.advancedOverlayWidth - 40;
+		const panelHeight = this.props.advancedOverlayHeight;
+		console.log({
+			selectedTabId: this.state.selectedTabId,
+			overlayWidth: overlayWidth + "px",
+			overlayHeight: overlayHeight + "px"
+		});
 		return (
 			<div id="advancedOverlay">
 				<Dialog
-					className={classNames(Classes.DARK)}
-					style={{ width: "80vw", minHeight: "80vh" }}
-					isOpen={this.props.isOpen}
+					className={Classes.DARK}
+					style={{ width: overlayWidth + "px", minHeight: overlayHeight + "px" }}
+					isOpen={this.props.advancedOverlayEnabled}
 					onClose={() => {
-						this.props.sendUserAction({ action: "closeAdvancedOverlay" });
+						this.props.handleUserAction({ action: "closeAdvancedOverlay" });
 					}}
 				>
 					<Flex justify="center">
@@ -58,77 +58,85 @@ export class AdvancedOverlay extends React.PureComponent {
 								id="advancedOverlayTabs"
 								className={Classes.LARGE}
 								onChange={this.handleTabChange}
-								selectedTabId={this.selectedTabId}
+								selectedTabId={this.state.selectedTabId}
 								renderActiveTabPanelOnly={true}
 							>
 								<Tab
 									id="history"
 									title="History"
-									panel={
-										<div
-											style={{
-												width: this.state.panelWidth + "px",
-												height: this.state.panelHeight + "px",
-												backgroundColor: "#232d35",
-												borderRadius: "9px",
-												paddingLeft: "10px",
-												paddingTop: "10px"
-											}}
-										>
-											<List
-												height={this.state.panelHeight - 10}
-												rowCount={this.props.historyData.length}
-												rowHeight={26}
-												rowRenderer={obj => {
-													return (
-														<div className="virtualRow" key={obj.key} style={obj.style}>
-															{this.props.historyData[obj.index]}
-														</div>
-													);
-												}}
-												width={this.state.panelWidth - 15}
-											/>
-										</div>
-									}
+									disabled={false}
+									panel={<TabList data={this.props.debugData} panelWidth={panelWidth} panelHeight={panelHeight} />}
 								/>
 								<Tab
 									id="debug"
 									title="Debug"
-									panel={
-										<div
-											style={{
-												width: this.state.panelWidth + "px",
-												height: this.state.panelHeight + "px",
-												backgroundColor: "#232d35",
-												borderRadius: "9px",
-												paddingLeft: "10px",
-												paddingTop: "10px"
-											}}
-										>
-											<List
-												height={this.state.panelHeight - 10}
-												rowCount={this.props.debugData.length}
-												rowHeight={26}
-												rowRenderer={obj => {
-													return (
-														<div className="virtualRow" key={obj.key} style={obj.style}>
-															{this.props.debugData[obj.index]}
-														</div>
-													);
-												}}
-												width={this.state.panelWidth - 15}
-											/>
-										</div>
-									}
+									disabled={false}
+									panel={<TabList data={this.props.debugData} panelWidth={panelWidth} panelHeight={panelHeight} />}
 								/>
 								<Tab
 									id="scan"
 									title="Pingsweep"
-									disabled={true}
+									disabled={false}
 									panel={
-										<div style={{ width: "calc(80vw - 40px)", height: "80vh" }}>
-											<h1 style={{ textAlign: "center" }}>{"MANUAL SCAN TEST"}</h1>
-										</div>
+										<Flex
+											column
+											align="center"
+											style={{
+												width: panelWidth + "px",
+												height: panelHeight + "px",
+												backgroundColor: "#232d35",
+												borderRadius: "9px"
+											}}
+										>
+											<Box>
+												<List
+													height={panelHeight}
+													rowCount={this.state.pingsweepRowCount + 1}
+													rowHeight={50}
+													rowRenderer={obj => {
+														if (obj.index === 0) {
+															return (
+																<div className="virtualScanRow" key={obj.key} style={obj.style}>
+																	{
+																		<Flex column align="center" style={{ paddingTop: "10px" }}>
+																			<Box>
+																				<InputGroup
+																					disabled={false}
+																					intent={Intent.NONE}
+																					large={true}
+																					leftIcon="search"
+																					onChange={ev => this.setState({ pingsweepInputValue: ev.target.value })}
+																					placeholder="192.168.128.0/24"
+																					rightElement={
+																						<Button
+																							className="bp3-minimal"
+																							icon="chevron-down"
+																							intent={Intent.PRIMARY}
+																							onClick={() => {
+																								console.log("pingsweep button was clicked");
+																							}}
+																						/>
+																					}
+																					type="search"
+																					value={this.state.pingsweepInputValue}
+																				/>
+																			</Box>
+																		</Flex>
+																	}
+																</div>
+															);
+														} else {
+															return (
+																<div className="virtualScanRow" key={obj.key} style={obj.style}>
+																	{"PING RESULT " + (obj.index - 1).toString()}
+																</div>
+															);
+														}
+													}}
+													width={panelWidth - 15}
+												/>
+											</Box>
+										</Flex>
 									}
 								/>
 								<Tab
@@ -136,7 +144,7 @@ export class AdvancedOverlay extends React.PureComponent {
 									title="Visualization"
 									disabled={true}
 									panel={
-										<div style={{ width: "calc(80vw - 40px)", height: "80vh" }}>
+										<div style={{ width: panelWidth + "px", height: panelWidth + "px" }}>
 											<h1 style={{ textAlign: "center" }}>{"MANUAL SCAN TEST"}</h1>
 										</div>
 									}
@@ -151,10 +159,11 @@ export class AdvancedOverlay extends React.PureComponent {
 }
 
 AdvancedOverlay.propTypes = {
-	historyData: PropTypes.array,
-	requestHistoryData: PropTypes.func,
-	debugData: PropTypes.array,
-	requestDebugData: PropTypes.func,
-	isOpen: PropTypes.bool,
-	sendUserAction: PropTypes.func
+	advancedOverlayEnabled: PropTypes.bool.isRequired,
+	advancedOverlayWidth: PropTypes.number.isRequired,
+	advancedOverlayHeight: PropTypes.number.isRequired,
+	debugData: PropTypes.array.isRequired,
+	handleUserAction: PropTypes.func.isRequired,
+	historyData: PropTypes.array.isRequired,
+	scanData: PropTypes.array.isRequired
 };

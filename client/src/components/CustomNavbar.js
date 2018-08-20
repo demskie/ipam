@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import fscreen from "fscreen";
 import { Button, Navbar, NavbarGroup, Alignment, Alert } from "@blueprintjs/core";
 
-export class RightSideToolbar extends React.Component {
+export class CustomNavbar extends React.PureComponent {
 	constructor() {
 		super();
 		this.state = {
@@ -41,8 +41,10 @@ export class RightSideToolbar extends React.Component {
 						<Button
 							className="bp3-minimal bp3-large"
 							icon="menu"
-							disabled={this.props.sidebarButtonDisabled}
-							onClick={this.props.toggleSidebarTrigger}
+							disabled={this.props.sidebarDocked}
+							onClick={() => {
+								this.props.handleUserAction({ action: "triggerSidebarToggle" });
+							}}
 						/>
 						<div className="bp3-navbar-heading" style={{ marginLeft: "10px" }}>
 							<b>IPAM</b>
@@ -50,7 +52,12 @@ export class RightSideToolbar extends React.Component {
 					</NavbarGroup>
 
 					<NavbarGroup align={Alignment.RIGHT}>
-						<Button text="Advanced Options" onClick={this.props.showAdvancedOverlay} />
+						<Button
+							text="Advanced Options"
+							onClick={() => {
+								this.props.handleUserAction({ action: "showAdvancedOverlay" });
+							}}
+						/>
 						<Button
 							className="bp3-minimal bp3-large"
 							icon="fullscreen"
@@ -73,8 +80,7 @@ export class RightSideToolbar extends React.Component {
 	}
 }
 
-RightSideToolbar.propTypes = {
-	sidebarButtonDisabled: PropTypes.bool,
-	toggleSidebarTrigger: PropTypes.func,
-	showAdvancedOverlay: PropTypes.func
+CustomNavbar.propTypes = {
+	handleUserAction: PropTypes.func.isRequired,
+	sidebarDocked: PropTypes.bool.isRequired
 };
