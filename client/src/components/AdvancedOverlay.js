@@ -1,18 +1,16 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-import { Dialog, Classes, Tab, Tabs, Button, InputGroup, Intent } from "@blueprintjs/core";
+import { Dialog, Classes, Tab, Tabs } from "@blueprintjs/core";
 import { Flex, Box } from "reflexbox";
-import { List } from "react-virtualized";
 import { TabList } from "./AdvancedOverlayMenus/TabList.js";
+import { Pingsweep } from "./AdvancedOverlayMenus/Pingsweep.js";
 
 export class AdvancedOverlay extends React.PureComponent {
 	constructor() {
 		super();
 		this.state = {
-			selectedTabId: "history",
-			pingsweepInputValue: "",
-			pingsweepRowCount: 12
+			selectedTabId: "history"
 		};
 	}
 
@@ -37,11 +35,6 @@ export class AdvancedOverlay extends React.PureComponent {
 		const overlayHeight = this.props.advancedOverlayHeight;
 		const panelWidth = this.props.advancedOverlayWidth - 40;
 		const panelHeight = this.props.advancedOverlayHeight;
-		console.log({
-			selectedTabId: this.state.selectedTabId,
-			overlayWidth: overlayWidth + "px",
-			overlayHeight: overlayHeight + "px"
-		});
 		return (
 			<div id="advancedOverlay">
 				<Dialog
@@ -78,65 +71,13 @@ export class AdvancedOverlay extends React.PureComponent {
 									title="Pingsweep"
 									disabled={false}
 									panel={
-										<Flex
-											column
-											align="center"
-											style={{
-												width: panelWidth + "px",
-												height: panelHeight + "px",
-												backgroundColor: "#232d35",
-												borderRadius: "9px"
-											}}
-										>
-											<Box>
-												<List
-													height={panelHeight}
-													rowCount={this.state.pingsweepRowCount + 1}
-													rowHeight={50}
-													rowRenderer={obj => {
-														if (obj.index === 0) {
-															return (
-																<div className="virtualScanRow" key={obj.key} style={obj.style}>
-																	{
-																		<Flex column align="center" style={{ paddingTop: "10px" }}>
-																			<Box>
-																				<InputGroup
-																					disabled={false}
-																					intent={Intent.NONE}
-																					large={true}
-																					leftIcon="search"
-																					onChange={ev => this.setState({ pingsweepInputValue: ev.target.value })}
-																					placeholder="192.168.128.0/24"
-																					rightElement={
-																						<Button
-																							className="bp3-minimal"
-																							icon="chevron-down"
-																							intent={Intent.PRIMARY}
-																							onClick={() => {
-																								console.log("pingsweep button was clicked");
-																							}}
-																						/>
-																					}
-																					type="search"
-																					value={this.state.pingsweepInputValue}
-																				/>
-																			</Box>
-																		</Flex>
-																	}
-																</div>
-															);
-														} else {
-															return (
-																<div className="virtualScanRow" key={obj.key} style={obj.style}>
-																	{"PING RESULT " + (obj.index - 1).toString()}
-																</div>
-															);
-														}
-													}}
-													width={panelWidth - 15}
-												/>
-											</Box>
-										</Flex>
+										<Pingsweep
+											//data={this.props.scanData}
+											scanData={mockScanData}
+											handleUserAction={this.props.handleUserAction}
+											panelWidth={panelWidth}
+											panelHeight={panelHeight}
+										/>
 									}
 								/>
 								<Tab
@@ -167,3 +108,72 @@ AdvancedOverlay.propTypes = {
 	historyData: PropTypes.array.isRequired,
 	scanData: PropTypes.array.isRequired
 };
+
+const mockScanData = [
+	["192.168.0.0", "23ms", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.1", "24ms", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.2", "unreachable", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.3", "26ms", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.4", "27ms", "thisIsMyHostname.lan", "pending"],
+	["192.168.0.5", "28ms", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.0", "23ms", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.1", "24ms", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.2", "unreachable", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.3", "26ms", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.4", "27ms", "thisIsMyHostname.lan", "pending"],
+	["192.168.0.5", "28ms", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.0", "23ms", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.1", "24ms", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.2", "unreachable", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.3", "26ms", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.4", "27ms", "thisIsMyHostname.lan", "pending"],
+	["192.168.0.5", "28ms", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.0", "23ms", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.1", "24ms", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.2", "unreachable", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.3", "26ms", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.4", "27ms", "thisIsMyHostname.lan", "pending"],
+	["192.168.0.5", "28ms", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.0", "23ms", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.1", "24ms", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.2", "unreachable", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.3", "26ms", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.4", "27ms", "thisIsMyHostname.lan", "pending"],
+	["192.168.0.5", "28ms", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.0", "23ms", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.1", "24ms", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.2", "unreachable", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.3", "26ms", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.4", "27ms", "thisIsMyHostname.lan", "pending"],
+	["192.168.0.5", "28ms", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.0", "23ms", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.1", "24ms", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.2", "unreachable", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.3", "26ms", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.4", "27ms", "thisIsMyHostname.lan", "pending"],
+	["192.168.0.5", "28ms", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.0", "23ms", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.1", "24ms", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.2", "unreachable", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.3", "26ms", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.4", "27ms", "thisIsMyHostname.lan", "pending"],
+	["192.168.0.5", "28ms", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.0", "23ms", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.1", "24ms", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.2", "unreachable", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.3", "26ms", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.4", "27ms", "thisIsMyHostname.lan", "pending"],
+	["192.168.0.5", "28ms", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.0", "23ms", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.1", "24ms", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.2", "unreachable", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.3", "26ms", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.4", "27ms", "thisIsMyHostname.lan", "pending"],
+	["192.168.0.5", "28ms", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.0", "23ms", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.1", "24ms", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.2", "unreachable", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.3", "26ms", "thisIsMyHostname.lan", "notPending"],
+	["192.168.0.4", "27ms", "thisIsMyHostname.lan", "pending"],
+	["192.168.0.5", "28ms", "thisIsMyHostname.lan", "notPending"]
+];

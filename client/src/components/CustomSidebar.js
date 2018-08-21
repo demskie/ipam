@@ -6,11 +6,7 @@ import { SubnetToolbar } from "./CustomSidebarComponents/SubnetToolbar.js";
 import { SubnetTree } from "./CustomSidebarComponents/SubnetTree.js";
 import { SubnetPrompt } from "./CustomSidebarComponents/SubnetPrompt.js";
 
-export class CustomSidebar extends React.Component {
-	constructor() {
-		super();
-		this.state = {};
-	}
+export class CustomSidebar extends React.PureComponent {
 	getSidebarHeightOffset = () => {
 		if (this.props.sidebarDocked) {
 			return "0px";
