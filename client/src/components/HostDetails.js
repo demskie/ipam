@@ -41,10 +41,10 @@ export class HostDetails extends React.PureComponent {
 			return <Cell />;
 		}
 		let value = this.props.hostData.pingResults[rowIndex];
-		if (value === undefined || value === null) {
+		if (value === undefined || value === null || value === "") {
 			return <Cell />;
 		}
-		if (value === "" || parseInt(value, 10) < 0) {
+		if (parseInt(value, 10) < 0) {
 			return (
 				<Cell>
 					<div style={{ textAlign: "center", color: "rgb(255, 0, 0)" }}>{"unreachable"}</div>

@@ -7,9 +7,9 @@ type SubnetJSON struct {
 	ID         string       `json:"id"`
 	Net        string       `json:"net"`
 	Desc       string       `json:"desc"`
+	Notes      string       `json:"notes"`
 	Vlan       string       `json:"vlan"`
 	ModTime    string       `json:"modTime"`
-	Notes      string       `json:"notes"`
 	ChildNodes []SubnetJSON `json:"childNodes"`
 }
 
@@ -30,9 +30,9 @@ func getNestedSubnetJSON(i int, sn *subnet) (int, SubnetJSON) {
 		ID:         strconv.Itoa(i),
 		Net:        sn.network.String(),
 		Desc:       sn.description,
+		Notes:      sn.details,
 		Vlan:       sn.vlan,
 		ModTime:    sn.modifiedTime,
-		Notes:      sn.details,
 		ChildNodes: make([]SubnetJSON, len(sn.children)),
 	}
 	i++

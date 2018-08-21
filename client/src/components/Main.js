@@ -29,8 +29,8 @@ export class Main extends React.Component {
 
 			subnetData: [],
 			selectedTreeNode: {},
-			subnetPromptEnabled: false,
 			subnetPromptAction: "",
+			subnetPromptEnabled: false,
 
 			hostData: {
 				addresses: new Array(128),
@@ -43,7 +43,10 @@ export class Main extends React.Component {
 
 			historyData: [],
 			debugData: [],
+
 			scanData: [],
+			scanTarget: "",
+
 			advancedOverlayEnabled: false,
 			advancedOverlayWidth: 0,
 			advancedOverlayHeight: 0,
@@ -81,18 +84,45 @@ export class Main extends React.Component {
 			switch (msg.requestType) {
 				case "DISPLAYERROR":
 					this.processWebsocketErrorMessage(msg.requestData);
+					console.log("DISPLAYERROR", msg.requestData);
+					notifications.show({
+						intent: Intent.DANGER,
+						message: msg.requestData[0].charAt(0).toUpperCase() + msg.requestData[0].substr(1),
+						timeout: 0
+					});
 					break;
 				case "DISPLAYSUBNETDATA":
-					this.processWebsocketSubnetData(msg.requestData);
+					console.log("DISPLAYSUBNETDATA");
+					this.setState({ subnetData: msg.requestData });
 					break;
 				case "DISPLAYHOSTDATA":
-					this.processWebsocketHostData(msg.requestData);
+					console.log("DISPLAYHOSTDATA");
+					this.setState({
+						hostData: {
+							addresses: msg.requestData[0],
+							aRecords: msg.requestData[1],
+							pingResults: msg.requestData[2],
+							lastAttempts: msg.requestData[3]
+						}
+					});
 					break;
 				case "DISPLAYHISTORYDATA":
-					this.processWebsocketHistoryData(msg.requestData);
+					console.log("DISPLAYHISTORYDATA");
+					this.setState({
+						historyData: msg.requestData
+					});
 					break;
 				case "DISPLAYDEBUGDATA":
-					this.processWebsocketDebugData(msg.requestData);
+					console.log("DISPLAYDEBUGDATA");
+					this.setState({
+						debugData: msg.requestData
+					});
+					break;
+				case "DISPLAYSCANDATA":
+					console.log("DISPLAYSCANDATA");
+					this.setState({
+						scanData: msg.requestData
+					});
 					break;
 				default:
 					console.log("received unknown message type:", msg.requestType);
@@ -102,9 +132,16 @@ export class Main extends React.Component {
 
 	handleWebsocketCreation = () => {
 		this.state.websocket.addEventListener("open", () => {
-			setInterval(this.requestSubnetData, 60000);
-			setInterval(this.requestHistoryData, 65432);
+			this.handleUserAction({ action: "getSubnetData" });
+			this.handleUserAction({ action: "getHistoryData" });
+			setInterval(this.handleUserAction({ action: "getSubnetData" }), 60000);
+			setInterval(this.handleUserAction({ action: "getHistoryData" }), 65432);
 		});
+		setTimeout(() => {
+			if (this.state.websocket.readyState !== 1 && window.location.hostname !== "localhost") {
+				this.setState({ alertVisible: true });
+			}
+		}, 5000);
 	};
 
 	handleWebsocketClose = () => {
@@ -115,45 +152,7 @@ export class Main extends React.Component {
 		});
 	};
 
-	processWebsocketErrorMessage = requestData => {
-		console.log("DISPLAYERROR\n", requestData);
-		notifications.show({
-			intent: Intent.DANGER,
-			message: requestData[0].charAt(0).toUpperCase() + requestData[0].substr(1),
-			timeout: 0
-		});
-	};
-
-	processWebsocketSubnetData = requestData => {
-		console.log("DISPLAYSUBNETDATA\n", requestData);
-		this.setState({ subnetData: requestData });
-	};
-
-	processWebsocketHostData = requestData => {
-		console.log("DISPLAYHOSTDATA\n", requestData);
-		this.setState({
-			hostDetails: {
-				addresses: requestData[0],
-				aRecords: requestData[1],
-				pingResults: requestData[2],
-				lastAttempts: requestData[3]
-			}
-		});
-	};
-
-	processWebsocketHistoryData = requestData => {
-		console.log("DISPLAYHISTORYDATA");
-		this.setState({
-			historyData: requestData
-		});
-	};
-
-	processWebsocketDebugData = requestData => {
-		console.log("DISPLAYDEBUGDATA");
-		this.setState({
-			debugData: requestData
-		});
-	};
+	processWebsocketErrorMessage = requestData => {};
 
 	watchForOutdatedCache = () => {
 		let interval = setInterval(() => {
@@ -170,7 +169,7 @@ export class Main extends React.Component {
 				});
 				clearInterval(interval);
 			}
-		}, 5000);
+		}, 1000);
 	};
 
 	displaySidebarOnce = () => {
@@ -195,13 +194,17 @@ export class Main extends React.Component {
 
 	handleUserAction = obj => {
 		switch (obj.action) {
+			case "select":
+				this.setState({ selectedTreeNode: obj.nodeData });
+				this.handleUserAction({ action: "getHostData", nodeData: obj.nodeData });
+				break;
 			case "create":
 				if (this.state.websocket.readyState === 1) {
 					console.debug("POSTNEWSUBNET", obj);
 					this.state.websocket.send(
 						JSON.stringify({
 							RequestType: "POSTNEWSUBNET",
-							RequestData: [obj.subnet, obj.description, obj.vlan, obj.notes]
+							RequestData: [obj.nodeData.net, obj.nodeData.desc, obj.nodeData.vlan, obj.nodeData.notes]
 						})
 					);
 				} else {
@@ -217,7 +220,7 @@ export class Main extends React.Component {
 					this.state.websocket.send(
 						JSON.stringify({
 							RequestType: "POSTMODIFYSUBNET",
-							RequestData: [obj.subnet, obj.description, obj.vlan, obj.notes]
+							RequestData: [obj.nodeData.net, obj.nodeData.desc, obj.nodeData.vlan, obj.nodeData.notes]
 						})
 					);
 				} else {
@@ -233,7 +236,7 @@ export class Main extends React.Component {
 					this.state.websocket.send(
 						JSON.stringify({
 							RequestType: "POSTDELETESUBNET",
-							RequestData: [obj.subnet]
+							RequestData: [obj.nodeData.net]
 						})
 					);
 				} else {
@@ -257,13 +260,12 @@ export class Main extends React.Component {
 				}
 				break;
 			case "getHostData":
-				this.setState({ selectedTreeNode: obj.nodeData });
 				if (this.state.websocket.readyState === 1) {
-					console.debug("GETHOSTDATA");
+					console.debug("GETHOSTDATA", obj);
 					this.state.websocket.send(
 						JSON.stringify({
 							requestType: "GETHOSTDATA",
-							requestData: [obj.nodeData.subnet]
+							requestData: [obj.nodeData.net]
 						})
 					);
 				} else {
@@ -296,6 +298,37 @@ export class Main extends React.Component {
 					console.log("GETDEBUGDATA failed because websocket was not open");
 				}
 				break;
+			case "getScanStart":
+				this.setState({ scanTarget: obj.value });
+				if (this.state.websocket.readyState === 1) {
+					this.state.websocket.send(
+						JSON.stringify({
+							requestType: "GETSCANSTART",
+							requestData: [obj.value]
+						})
+					);
+				} else {
+					console.log("GETSCANSTART failed because websocket was not open");
+				}
+				obj.scanner = setInterval(() => {
+					if (this.state.scanTarget !== obj.value) {
+						clearInterval(obj.scanner);
+					} else {
+						if (this.state.websocket.readyState === 1) {
+							this.state.websocket.send(
+								JSON.stringify({
+									requestType: "GETSCANUPDATE",
+									requestData: [obj.value]
+								})
+							);
+						} else {
+							console.log("GETSCANUPDATE failed because websocket was not open");
+						}
+					}
+				}, 1000);
+				break;
+			case "stopScanning":
+				break;
 			case "triggerSubnetMutationButton":
 				this.setState({
 					subnetPromptAction: obj.value,
@@ -315,11 +348,6 @@ export class Main extends React.Component {
 			case "closeSubnetPrompt":
 				this.setState({
 					subnetPromptEnabled: false
-				});
-				break;
-			case "setSelectedTreeNode":
-				this.setState({
-					selectedTreeNode: obj.value
 				});
 				break;
 			case "showAdvancedOverlay":
@@ -368,7 +396,7 @@ export class Main extends React.Component {
 					isOpen={this.state.alertVisible}
 					onClose={() => window.location.reload(true)}
 				>
-					<p>{"Lost connection to server"}</p>
+					<p>{"Could not connect to server"}</p>
 				</Alert>
 				<AdvancedOverlay
 					advancedOverlayEnabled={this.state.advancedOverlayEnabled}

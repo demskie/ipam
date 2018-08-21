@@ -11,12 +11,19 @@ func (ipam *IPAMServer) ExportSubnetCSVLines() []string {
 	results := make([]string, len(allSubnets))
 	buf := &bytes.Buffer{}
 	writer := csv.NewWriter(buf)
+	writer.Write([]string{
+		"NETWORK",
+		"DESCRIPTION",
+		"DETAILS",
+		"VLAN",
+		"LASTMODIFIED",
+	})
 	for i, skeleton := range allSubnets {
 		writer.Write([]string{
 			skeleton.Net,
 			skeleton.Desc,
-			skeleton.Vlan,
 			skeleton.Details,
+			skeleton.Vlan,
 			skeleton.Mod,
 		})
 		writer.Flush()

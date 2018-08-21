@@ -48,7 +48,7 @@ func NewIPAMServer() *IPAMServer {
 		dns:          dns.NewBucket(),
 		pinger:       ping.NewPinger(),
 		mutationMtx:  &sync.Mutex{},
-		mutationChan: make(chan MutatedData, 1),
+		mutationChan: nil,
 	}
 }
 
@@ -73,7 +73,13 @@ func (ipam *IPAMServer) PingSweepSubnets(pingsPerSecond, pingerGoroutineCount in
 }
 
 // ServeAndReceiveChan will start the HTTP Webserver and stream results back to the caller
-func (ipam *IPAMServer) ServeAndReceiveChan(addr string, debug bool) (changes chan MutatedData) {
+func (ipam *IPAMServer) ServeAndReceiveChan(addr string, debug bool) chan MutatedData {
+	if ipam.mutationChan != nil {
+		return ipam.mutationChan
+	}
+	ipam.mutationMtx.Lock()
+	defer ipam.mutationMtx.Unlock()
+	ipam.mutationChan = make(chan MutatedData, 1)
 	go func() {
 		go startDebugServer(debug)
 		ipam.startWebServer(addr)

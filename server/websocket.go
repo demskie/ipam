@@ -36,6 +36,7 @@ func (ipam *IPAMServer) handleWebsocketClient(w http.ResponseWriter, r *http.Req
 	defer conn.Close()
 	conn.EnableWriteCompression(true)
 	conn.SetCompressionLevel(1)
+	conn.SetReadLimit(1000000) // one megabyte
 	// reused bytes
 	var (
 		networkIn bytes.Buffer
@@ -46,11 +47,11 @@ func (ipam *IPAMServer) handleWebsocketClient(w http.ResponseWriter, r *http.Req
 		// receive data from client
 		msgType, newData, err := conn.ReadMessage()
 		if err != nil {
-			if err.Error() != "websocket: close 1001 (going away)" &&
-				!strings.Contains(err.Error(), "connection reset by peer") {
-				log.Printf("error receiving message from %v > %v\n", remoteIP, err)
+			if strings.Contains(err.Error(), "websocket: close 1001 (going away)") ||
+				strings.Contains(err.Error(), "connection reset by peer") {
+				return
 			}
-			return
+			log.Printf("error receiving message from %v > %v\n", remoteIP, err)
 		}
 		if msgType != websocket.TextMessage {
 			log.Printf("received an invalid message from %v\n", remoteIP)
@@ -258,9 +259,9 @@ func (ipam *IPAMServer) handlePostNewSubnet(conn *websocket.Conn, inMsg simpleJS
 	newSkeleton := &subnets.SubnetSkeleton{
 		Net:     inMsg.RequestData[0],
 		Desc:    inMsg.RequestData[1],
+		Details: inMsg.RequestData[2],
+		Vlan:    inMsg.RequestData[3],
 		Mod:     time.Now().Format(defaultTimeLayout),
-		Vlan:    inMsg.RequestData[2],
-		Details: inMsg.RequestData[3],
 	}
 	err = ipam.subnets.CreateSubnet(newSkeleton)
 	if err != nil {
@@ -288,11 +289,11 @@ func (ipam *IPAMServer) handlePostModifySubnet(conn *websocket.Conn, inMsg simpl
 	newSkeleton := &subnets.SubnetSkeleton{
 		Net:     inMsg.RequestData[0],
 		Desc:    inMsg.RequestData[1],
-		Vlan:    inMsg.RequestData[2],
-		Details: inMsg.RequestData[3],
+		Details: inMsg.RequestData[2],
+		Vlan:    inMsg.RequestData[3],
 	}
 	differences := oldSkeleton.ListDifferences(newSkeleton)
-	if len(differences) == 1 {
+	if differences == nil {
 		log.Printf("received an invalid request from %v\n", remoteIP)
 		sendErrorMessage(conn,
 			fmt.Sprintf("could not modify '%v' because there were no changes", network))

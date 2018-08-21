@@ -25,7 +25,7 @@ export class SubnetToolbar extends React.PureComponent {
 						icon="add"
 						text="Create"
 						onClick={() => {
-							this.props.handleUserAction({ action: "create" });
+							this.props.handleUserAction({ action: "triggerSubnetMutationButton", value: "create" });
 						}}
 					/>
 					<Button
@@ -34,7 +34,7 @@ export class SubnetToolbar extends React.PureComponent {
 						text="Modify"
 						disabled={Object.keys(this.props.selectedTreeNode).length === 0}
 						onClick={() => {
-							this.props.handleUserAction({ action: "modify" });
+							this.props.handleUserAction({ action: "triggerSubnetMutationButton", value: "modify" });
 						}}
 					/>
 					<Button
@@ -43,7 +43,7 @@ export class SubnetToolbar extends React.PureComponent {
 						text="Delete"
 						disabled={Object.keys(this.props.selectedTreeNode).length === 0}
 						onClick={() => {
-							this.props.handleUserAction({ action: "delete" });
+							this.props.handleUserAction({ action: "triggerSubnetMutationButton", value: "delete" });
 						}}
 					/>
 				</NavbarGroup>

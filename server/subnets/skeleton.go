@@ -7,7 +7,7 @@ import (
 
 // SubnetSkeleton is an inbetween data type to simplify marshalling
 type SubnetSkeleton struct {
-	Net, Desc, Vlan, Details, Mod string
+	Net, Desc, Details, Vlan, Mod string
 }
 
 func (subnet *subnet) toSkeleton() *SubnetSkeleton {
@@ -15,8 +15,8 @@ func (subnet *subnet) toSkeleton() *SubnetSkeleton {
 		return &SubnetSkeleton{
 			Net:     subnet.network.String(),
 			Desc:    subnet.description,
-			Vlan:    subnet.vlan,
 			Details: subnet.details,
+			Vlan:    subnet.vlan,
 			Mod:     subnet.modifiedTime,
 		}
 	}
@@ -39,11 +39,11 @@ func (skeleton *SubnetSkeleton) ListDifferences(newSkeleton *SubnetSkeleton) []s
 	if skeleton.Desc != newSkeleton.Desc {
 		differences = append(differences, fmt.Sprintf("desc='%v'", newSkeleton.Desc))
 	}
-	if skeleton.Vlan != newSkeleton.Vlan {
-		differences = append(differences, fmt.Sprintf("vlan='%v'", newSkeleton.Vlan))
-	}
 	if skeleton.Details != newSkeleton.Details {
 		differences = append(differences, fmt.Sprintf("details='%v'", newSkeleton.Details))
+	}
+	if skeleton.Vlan != newSkeleton.Vlan {
+		differences = append(differences, fmt.Sprintf("vlan='%v'", newSkeleton.Vlan))
 	}
 	if len(differences) > 1 {
 		return differences
@@ -56,7 +56,7 @@ func (skeleton *SubnetSkeleton) ToSlice() []string {
 	return []string{
 		fmt.Sprintf("net='%v'", skeleton.Net),
 		fmt.Sprintf("desc='%v'", skeleton.Desc),
-		fmt.Sprintf("vlan='%v'", skeleton.Vlan),
 		fmt.Sprintf("details='%v'", skeleton.Details),
+		fmt.Sprintf("vlan='%v'", skeleton.Vlan),
 	}
 }

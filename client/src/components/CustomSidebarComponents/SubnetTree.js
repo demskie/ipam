@@ -8,15 +8,6 @@ export class SubnetTree extends React.PureComponent {
 		this.state = {
 			expandedNodeIds: []
 		};
-		triggerCreate = () => {
-			props.handleUserAction({ action: "create" });
-		};
-		triggerModify = () => {
-			props.handleUserAction({ action: "modify" });
-		};
-		triggerDelete = () => {
-			props.handleUserAction({ action: "delete" });
-		};
 	}
 
 	generateLabel = (net, desc) => {
@@ -60,6 +51,7 @@ export class SubnetTree extends React.PureComponent {
 		let newNodeData = Object.assign({}, nodeData);
 		newNodeData.isSelected = true;
 		newNodeData.isExpanded = true;
+		this.props.handleUserAction({ action: "select", nodeData: newNodeData });
 		if (nodeData.childNodes !== undefined) {
 			let foundMatch = false;
 			for (let i in this.state.expandedNodeIds) {
@@ -74,7 +66,6 @@ export class SubnetTree extends React.PureComponent {
 				});
 			}
 		}
-		this.props.handleUserAction({ action: "getHostData", nodeData: newNodeData });
 	};
 
 	handleNodeCollapse = nodeData => {
@@ -98,6 +89,50 @@ export class SubnetTree extends React.PureComponent {
 		});
 	};
 
+	componentDidMount = () => {
+		window.oncontextmenu = ev => {
+			console.debug("context menu has opened", ev);
+			if (
+				ev.target !== undefined &&
+				(!ev.target.className.includes("subnetLabel", 0) && !ev.target.className.includes("bp3-tree", 0))
+			) {
+				return;
+			}
+			ev.preventDefault();
+			const menu = React.createElement(
+				Menu,
+				{ className: Classes.DARK },
+				React.createElement(MenuItem, {
+					className: Classes.DARK,
+					onClick: () => {
+						this.props.handleUserAction({ action: "triggerSubnetMutationButton", value: "create" });
+					},
+					intent: Intent.PRIMARY,
+					text: "Create New Subnet"
+				}),
+				React.createElement(MenuItem, {
+					className: Classes.DARK,
+					onClick: () => {
+						this.props.handleUserAction({ action: "triggerSubnetMutationButton", value: "modify" });
+					},
+					intent: Intent.PRIMARY,
+					text: "Modify This Subnet"
+				}),
+				React.createElement(MenuItem, {
+					className: Classes.DARK,
+					onClick: () => {
+						this.props.handleUserAction({ action: "triggerSubnetMutationButton", value: "delete" });
+					},
+					intent: Intent.PRIMARY,
+					text: "Delete This Subnet"
+				})
+			);
+			ContextMenu.show(menu, { left: ev.clientX, top: ev.clientY }, () => {
+				console.debug("context menu has closed", ev);
+			});
+		};
+	};
+
 	render() {
 		return (
 			<Tree
@@ -116,45 +151,4 @@ SubnetTree.propTypes = {
 	handleUserAction: PropTypes.func.isRequired,
 	selectedTreeNode: PropTypes.object.isRequired,
 	subnetData: PropTypes.array.isRequired
-};
-
-var triggerCreate = function() {};
-var triggerModify = function() {};
-var triggerDelete = function() {};
-
-window.oncontextmenu = ev => {
-	console.debug("context menu has opened", ev);
-	if (
-		Object.keys(this.props.selectedTreeNode).length === 0 ||
-		(ev.target !== undefined &&
-			(!ev.target.className.includes("subnetLabel", 0) && !ev.target.className.includes("bp3-tree", 0)))
-	) {
-		return;
-	}
-	ev.preventDefault();
-	const menu = React.createElement(
-		Menu,
-		{ className: Classes.DARK },
-		React.createElement(MenuItem, {
-			className: Classes.DARK,
-			onClick: setTimeout(triggerCreate, 0),
-			intent: Intent.PRIMARY,
-			text: "Create New Subnet"
-		}),
-		React.createElement(MenuItem, {
-			className: Classes.DARK,
-			onClick: setTimeout(triggerModify, 0),
-			intent: Intent.PRIMARY,
-			text: "Modify This Subnet"
-		}),
-		React.createElement(MenuItem, {
-			className: Classes.DARK,
-			onClick: setTimeout(triggerDelete, 0),
-			intent: Intent.PRIMARY,
-			text: "Delete This Subnet"
-		})
-	);
-	ContextMenu.show(menu, { left: ev.clientX, top: ev.clientY }, () => {
-		console.debug("context menu has closed", ev);
-	});
 };

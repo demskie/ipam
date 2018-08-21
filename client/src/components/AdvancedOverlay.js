@@ -25,6 +25,8 @@ export class AdvancedOverlay extends React.PureComponent {
 			case "debug":
 				this.props.handleUserAction({ action: "getDebugData" });
 				break;
+			case "scan":
+				break;
 			default:
 				console.log("unknown tab id:", newTab);
 		}
@@ -58,7 +60,7 @@ export class AdvancedOverlay extends React.PureComponent {
 									id="history"
 									title="History"
 									disabled={false}
-									panel={<TabList data={this.props.debugData} panelWidth={panelWidth} panelHeight={panelHeight} />}
+									panel={<TabList data={this.props.historyData} panelWidth={panelWidth} panelHeight={panelHeight} />}
 								/>
 								<Tab
 									id="debug"
@@ -72,8 +74,7 @@ export class AdvancedOverlay extends React.PureComponent {
 									disabled={false}
 									panel={
 										<Pingsweep
-											//data={this.props.scanData}
-											scanData={mockScanData}
+											scanData={this.props.scanData}
 											handleUserAction={this.props.handleUserAction}
 											panelWidth={panelWidth}
 											panelHeight={panelHeight}
