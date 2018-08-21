@@ -12,7 +12,10 @@ import (
 	"github.com/demskie/subnetmath"
 )
 
-const defaultTimeLayout = "01-02-2006 15:04:05"
+const (
+	defaultTimeLayout = "01-02-2006 15:04:05"
+	maximumHostCount  = 2048
+)
 
 // Pinger will scan a network using ICMP and remember the results
 type Pinger struct {
@@ -92,8 +95,8 @@ func (p *Pinger) InitializeBackgroundPinger(maxPingsPerSecond, goroutineCount in
 // GetNumberOfHosts limits the number of hosts to display information for
 func GetNumberOfHosts(network *net.IPNet) int {
 	addressCount := subnetmath.AddressCount(network)
-	if addressCount >= 1024 {
-		addressCount = 1023
+	if addressCount >= maximumHostCount {
+		addressCount = maximumHostCount - 1
 	} else if addressCount > 2 {
 		addressCount--
 	} else if addressCount == 0 {
@@ -132,4 +135,28 @@ func (p *Pinger) GetPingTimesForAddresses(addresses []string) []string {
 	}
 	p.mtx.RUnlock()
 	return results
+}
+
+// MarkHostsAsPending will sweep through all hosts in a subnet and mark them as pending update
+func (p *Pinger) MarkHostsAsPending(network *net.IPNet) {
+	var (
+		addressCount = subnetmath.AddressCount(network)
+		currentIP    = subnetmath.DuplicateAddr(network.IP)
+		ipString     = currentIP.String()
+	)
+	p.mtx.Lock()
+	for i := 0; i < addressCount; i++ {
+		val, exists := p.data[ipString]
+		if exists {
+			val.pendingUpdate = true
+			p.data[ipString] = val
+		} else {
+			p.data[ipString] = result{
+				pendingUpdate: true,
+			}
+		}
+		currentIP = subnetmath.AddToAddr(currentIP, 1)
+		ipString = currentIP.String()
+	}
+	p.mtx.Unlock()
 }

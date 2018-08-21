@@ -74,6 +74,10 @@ func (ipam *IPAMServer) handleWebsocketClient(w http.ResponseWriter, r *http.Req
 			ipam.handleGetHistoryData(conn)
 		case "GETDEBUGDATA":
 			ipam.handleGetDebugData(conn)
+		case "GETSCANSTART":
+			ipam.handleGetScanStart(conn, inMsg)
+		case "GETSCANUPDATE":
+			ipam.handleGetScanUpdate(conn, inMsg)
 		case "POSTNEWSUBNET":
 			ipam.handlePostNewSubnet(conn, inMsg)
 		case "POSTMODIFYSUBNET":
@@ -198,6 +202,42 @@ func (ipam *IPAMServer) handleGetDebugData(conn *websocket.Conn) {
 	} else {
 		conn.WriteMessage(websocket.TextMessage, b)
 	}
+}
+
+func (ipam *IPAMServer) handleGetScanStart(conn *websocket.Conn, inMsg simpleJSON) {
+	remoteIP, _, _ := net.SplitHostPort(conn.RemoteAddr().String())
+	if len(inMsg.RequestData) != 1 {
+		log.Printf("received an invalid request from %v\n", remoteIP)
+		return
+	}
+	inMsg.RequestData = removeWhitespace(inMsg.RequestData...)
+	addr, network, err := net.ParseCIDR(inMsg.RequestData[0])
+	if err != nil {
+		sendErrorMessage(conn, fmt.Sprintf("could not scan '%v' as it is not a valid CIDR subnet", inMsg.RequestData[0]))
+		return
+	} else if addr.Equal(network.IP) == false {
+		sendErrorMessage(conn, fmt.Sprintf("could not scan '%v' because it is host address (network address: '%v')", inMsg.RequestData[0], network))
+		return
+	}
+	// work in progress
+}
+
+func (ipam *IPAMServer) handleGetScanUpdate(conn *websocket.Conn, inMsg simpleJSON) {
+	remoteIP, _, _ := net.SplitHostPort(conn.RemoteAddr().String())
+	if len(inMsg.RequestData) != 1 {
+		log.Printf("received an invalid request from %v\n", remoteIP)
+		return
+	}
+	inMsg.RequestData = removeWhitespace(inMsg.RequestData...)
+	addr, network, err := net.ParseCIDR(inMsg.RequestData[0])
+	if err != nil {
+		sendErrorMessage(conn, fmt.Sprintf("could not scan '%v' as it is not a valid CIDR subnet", inMsg.RequestData[0]))
+		return
+	} else if addr.Equal(network.IP) == false {
+		sendErrorMessage(conn, fmt.Sprintf("could not scan '%v' because it is host address (network address: '%v')", inMsg.RequestData[0], network))
+		return
+	}
+	// work in progress
 }
 
 func (ipam *IPAMServer) handlePostNewSubnet(conn *websocket.Conn, inMsg simpleJSON) {
