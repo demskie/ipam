@@ -51,10 +51,10 @@ func (ipam *IPAMServer) handleWebsocketClient(w http.ResponseWriter, r *http.Req
 				strings.Contains(err.Error(), "connection reset by peer") {
 				return
 			}
-			log.Printf("error receiving message from %v > %v\n", remoteIP, err)
+			log.Printf("error receiving message from (%v) > %v\n", remoteIP, err)
 		}
 		if msgType != websocket.TextMessage {
-			log.Printf("received an invalid message from %v\n", remoteIP)
+			log.Printf("received an invalid message from (%v)\n", remoteIP)
 			return
 		}
 		networkIn.Reset()
@@ -62,7 +62,7 @@ func (ipam *IPAMServer) handleWebsocketClient(w http.ResponseWriter, r *http.Req
 		inMsg := simpleJSON{}
 		err = decJSON.Decode(&inMsg)
 		if err != nil {
-			log.Printf("error decoding incoming message from %v\n", remoteIP)
+			log.Printf("error decoding incoming message from (%v)\n", remoteIP)
 			return
 		}
 		// send response to client
@@ -86,7 +86,7 @@ func (ipam *IPAMServer) handleWebsocketClient(w http.ResponseWriter, r *http.Req
 		case "POSTDELETESUBNET":
 			ipam.handlePostDeleteSubnet(conn, inMsg)
 		default:
-			log.Printf("received unknown request from %v \n", remoteIP)
+			log.Printf("received unknown request from (%v)\n", remoteIP)
 		}
 	}
 }
@@ -99,7 +99,7 @@ func sendErrorMessage(conn *websocket.Conn, message string) {
 	}
 	b, err := json.Marshal(outMsg)
 	if err != nil {
-		log.Printf("error encoding outgoing error message to %v\n", remoteIP)
+		log.Printf("error encoding outgoing error message to (%v)\n", remoteIP)
 	} else {
 		conn.WriteMessage(websocket.TextMessage, b)
 	}
@@ -126,7 +126,7 @@ func (ipam *IPAMServer) handleGetSubnetData(conn *websocket.Conn) {
 	}
 	b, err := json.Marshal(outMsg)
 	if err != nil {
-		log.Printf("error encoding outgoing message to %v\n", remoteIP)
+		log.Printf("error encoding outgoing message to (%v)\n", remoteIP)
 	} else {
 		conn.WriteMessage(websocket.TextMessage, b)
 	}
@@ -144,10 +144,10 @@ func (ipam *IPAMServer) handleGetHostData(conn *websocket.Conn, inMsg simpleJSON
 		network = subnetmath.BlindlyParseCIDR(inMsg.RequestData[0])
 	}
 	if network == nil {
-		log.Printf("received an invalid request from %v\n", remoteIP)
+		log.Printf("received an invalid request from (%v)\n", remoteIP)
 		return
 	}
-	log.Printf("%v has requested hostData for %v\n", remoteIP, network)
+	log.Printf("%v has requested hostData for (%v)\n", remoteIP, network)
 	addressCount := ping.GetNumberOfHosts(network)
 	currentIP := subnetmath.DuplicateNetwork(network).IP
 	sliceOfAddresses := make([]string, addressCount)
@@ -166,7 +166,7 @@ func (ipam *IPAMServer) handleGetHostData(conn *websocket.Conn, inMsg simpleJSON
 	}
 	b, err := json.Marshal(outMsg)
 	if err != nil {
-		log.Printf("error encoding outgoing message to %v\n", remoteIP)
+		log.Printf("error encoding outgoing message to (%v)\n", remoteIP)
 	} else {
 		conn.WriteMessage(websocket.TextMessage, b)
 	}
@@ -174,7 +174,7 @@ func (ipam *IPAMServer) handleGetHostData(conn *websocket.Conn, inMsg simpleJSON
 
 func (ipam *IPAMServer) handleGetHistoryData(conn *websocket.Conn) {
 	remoteIP, _, _ := net.SplitHostPort(conn.RemoteAddr().String())
-	log.Printf("%v has requested historyData\n", remoteIP)
+	log.Printf("(%v) has requested historyData\n", remoteIP)
 	outMsg := simpleJSON{
 		RequestType: "DISPLAYHISTORYDATA",
 		RequestData: ipam.history.GetAllUserActions(),
@@ -184,7 +184,7 @@ func (ipam *IPAMServer) handleGetHistoryData(conn *websocket.Conn) {
 	}
 	b, err := json.Marshal(outMsg)
 	if err != nil {
-		log.Printf("error encoding outgoing message to %v\n", remoteIP)
+		log.Printf("error encoding outgoing message to (%v)\n", remoteIP)
 	} else {
 		conn.WriteMessage(websocket.TextMessage, b)
 	}
@@ -192,32 +192,27 @@ func (ipam *IPAMServer) handleGetHistoryData(conn *websocket.Conn) {
 
 func (ipam *IPAMServer) handleGetDebugData(conn *websocket.Conn) {
 	remoteIP, _, _ := net.SplitHostPort(conn.RemoteAddr().String())
-	log.Printf("%v has requested debugData\n", remoteIP)
+	log.Printf("(%v) has requested debugData\n", remoteIP)
 	outMsg := simpleJSON{
 		RequestType: "DISPLAYDEBUGDATA",
 		RequestData: strings.Split(ipam.debug.GetString(), "\n"),
 	}
 	b, err := json.Marshal(outMsg)
 	if err != nil {
-		log.Printf("error encoding outgoing message to %v\n", remoteIP)
+		log.Printf("error encoding outgoing message to (%v)\n", remoteIP)
 	} else {
 		conn.WriteMessage(websocket.TextMessage, b)
 	}
 }
 
 func sendScanResults(ipam *IPAMServer, conn *websocket.Conn, network *net.IPNet, remoteIP string) {
-	<-ipam.semaphore
-	go func() {
-		ipam.pinger.ScanNetwork(network)
-		ipam.semaphore <- struct{}{}
-	}()
 	outMsg := nestedStringsJSON{
 		RequestType: "DISPLAYSCANDATA",
 		RequestData: ipam.pinger.GetScanResults(network),
 	}
 	b, err := json.Marshal(outMsg)
 	if err != nil {
-		log.Printf("error encoding outgoing message to %v\n", remoteIP)
+		log.Printf("error encoding outgoing message to (%v)\n", remoteIP)
 	} else {
 		conn.WriteMessage(websocket.TextMessage, b)
 	}
@@ -226,7 +221,7 @@ func sendScanResults(ipam *IPAMServer, conn *websocket.Conn, network *net.IPNet,
 func (ipam *IPAMServer) handleGetScanStart(conn *websocket.Conn, inMsg simpleJSON) {
 	remoteIP, _, _ := net.SplitHostPort(conn.RemoteAddr().String())
 	if len(inMsg.RequestData) != 1 {
-		log.Printf("received an invalid request from %v\n", remoteIP)
+		log.Printf("received an invalid request from (%v)\n", remoteIP)
 		return
 	}
 	inMsg.RequestData = removeWhitespace(inMsg.RequestData...)
@@ -239,13 +234,18 @@ func (ipam *IPAMServer) handleGetScanStart(conn *websocket.Conn, inMsg simpleJSO
 		return
 	}
 	ipam.pinger.MarkHostsAsPending(network)
+	ipam.semaphore <- struct{}{}
+	go func() {
+		ipam.pinger.ScanNetwork(network)
+		<-ipam.semaphore
+	}()
 	sendScanResults(ipam, conn, network, remoteIP)
 }
 
 func (ipam *IPAMServer) handleGetScanData(conn *websocket.Conn, inMsg simpleJSON) {
 	remoteIP, _, _ := net.SplitHostPort(conn.RemoteAddr().String())
 	if len(inMsg.RequestData) != 1 {
-		log.Printf("received an invalid request from %v\n", remoteIP)
+		log.Printf("received an invalid request from (%v)\n", remoteIP)
 		return
 	}
 	inMsg.RequestData = removeWhitespace(inMsg.RequestData...)
@@ -263,7 +263,7 @@ func (ipam *IPAMServer) handleGetScanData(conn *websocket.Conn, inMsg simpleJSON
 func (ipam *IPAMServer) handlePostNewSubnet(conn *websocket.Conn, inMsg simpleJSON) {
 	remoteIP, _, _ := net.SplitHostPort(conn.RemoteAddr().String())
 	if len(inMsg.RequestData) != 4 {
-		log.Printf("received an invalid request from %v\n", remoteIP)
+		log.Printf("received an invalid request from (%v)\n", remoteIP)
 		return
 	}
 	inMsg.RequestData = removeWhitespace(inMsg.RequestData...)
@@ -295,13 +295,13 @@ func (ipam *IPAMServer) handlePostNewSubnet(conn *websocket.Conn, inMsg simpleJS
 func (ipam *IPAMServer) handlePostModifySubnet(conn *websocket.Conn, inMsg simpleJSON) {
 	remoteIP, _, _ := net.SplitHostPort(conn.RemoteAddr().String())
 	if len(inMsg.RequestData) != 4 {
-		log.Printf("received an invalid request from %v\n", remoteIP)
+		log.Printf("received an invalid request from (%v)\n", remoteIP)
 		return
 	}
 	inMsg.RequestData = removeWhitespace(inMsg.RequestData...)
 	network := subnetmath.BlindlyParseCIDR(inMsg.RequestData[0])
 	if network == nil {
-		log.Printf("received an invalid request from %v\n", remoteIP)
+		log.Printf("received an invalid request from (%v)\n", remoteIP)
 		return
 	}
 	oldSkeleton := ipam.subnets.GetSubnetSkeleton(network)
@@ -313,7 +313,7 @@ func (ipam *IPAMServer) handlePostModifySubnet(conn *websocket.Conn, inMsg simpl
 	}
 	differences := oldSkeleton.ListDifferences(newSkeleton)
 	if differences == nil {
-		log.Printf("received an invalid request from %v\n", remoteIP)
+		log.Printf("received an invalid request from (%v)\n", remoteIP)
 		sendErrorMessage(conn,
 			fmt.Sprintf("could not modify '%v' because there were no changes", network))
 		return
@@ -330,7 +330,7 @@ func (ipam *IPAMServer) handlePostModifySubnet(conn *websocket.Conn, inMsg simpl
 func (ipam *IPAMServer) handlePostDeleteSubnet(conn *websocket.Conn, inMsg simpleJSON) {
 	remoteIP, _, _ := net.SplitHostPort(conn.RemoteAddr().String())
 	if len(inMsg.RequestData) != 1 {
-		log.Printf("received an invalid request from %v\n", remoteIP)
+		log.Printf("received an invalid request from (%v)\n", remoteIP)
 		return
 	}
 	inMsg.RequestData = removeWhitespace(inMsg.RequestData...)

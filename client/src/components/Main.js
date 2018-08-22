@@ -83,8 +83,12 @@ export class Main extends React.Component {
 			let msg = JSON.parse(ev.data);
 			switch (msg.requestType) {
 				case "DISPLAYERROR":
-					this.processWebsocketErrorMessage(msg.requestData);
 					console.log("DISPLAYERROR", msg.requestData);
+					if (msg.requestData[0].toLowerCase().search("could not scan") !== -1) {
+						this.setState({
+							scanTarget: ""
+						});
+					}
 					notifications.show({
 						intent: Intent.DANGER,
 						message: msg.requestData[0].charAt(0).toUpperCase() + msg.requestData[0].substr(1),
@@ -134,8 +138,12 @@ export class Main extends React.Component {
 		this.state.websocket.addEventListener("open", () => {
 			this.handleUserAction({ action: "getSubnetData" });
 			this.handleUserAction({ action: "getHistoryData" });
-			setInterval(this.handleUserAction({ action: "getSubnetData" }), 60000);
-			setInterval(this.handleUserAction({ action: "getHistoryData" }), 65432);
+			setInterval(() => {
+				this.handleUserAction({ action: "getSubnetData" });
+			}, 60000);
+			setInterval(() => {
+				this.handleUserAction({ action: "getHistoryData" });
+			}, 65432);
 		});
 		setTimeout(() => {
 			if (this.state.websocket.readyState !== 1 && window.location.hostname !== "localhost") {
@@ -293,6 +301,14 @@ export class Main extends React.Component {
 				}
 				break;
 			case "getScanStart":
+				if (obj.value.search("/32") !== -1 || obj.value.search("/128") !== -1) {
+					notifications.show({
+						intent: Intent.WARNING,
+						message: "cannot scan '" + obj.value + "' as it is not large enough",
+						timeout: 0
+					});
+					break;
+				}
 				this.setState({ scanTarget: obj.value, scanData: [] });
 				if (this.state.websocket.readyState === 1) {
 					this.state.websocket.send(
@@ -322,9 +338,10 @@ export class Main extends React.Component {
 						for (let i = 0; i < this.state.scanData.length; i++) {
 							if (this.state.scanData[i][2] === "true") {
 								unresolvedPings = true;
+								break;
 							}
 						}
-						if (unresolvedPings === true && this.state.scanTarget !== "" && this.state.scanData.length > 0) {
+						if (unresolvedPings === false && this.state.scanData.length > 0) {
 							this.setState({
 								scanTarget: ""
 							});

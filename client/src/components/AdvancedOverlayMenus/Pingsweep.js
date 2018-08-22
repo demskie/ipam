@@ -103,7 +103,7 @@ export class Pingsweep extends React.PureComponent {
 																intent={Intent.PRIMARY}
 																onClick={() => {
 																	this.props.handleUserAction({
-																		action: "startScanning",
+																		action: "getScanStart",
 																		value: this.state.pingsweepInputValue
 																	});
 																}}
