@@ -23,13 +23,14 @@ const (
 
 // IPAMServer is the object used to mutate and read data
 type IPAMServer struct {
+	mutationMtx  *sync.Mutex
+	mutationChan chan MutatedData
 	subnets      *subnets.Tree
 	history      *history.UserActions
 	debug        *history.ServerLogger
 	dns          *dns.Bucket
 	pinger       *ping.Pinger
-	mutationMtx  *sync.Mutex
-	mutationChan chan MutatedData
+	semaphore    chan struct{}
 }
 
 // MutatedData contains the raw lines of the changed subnets.csv and history.txt files
@@ -42,13 +43,14 @@ type MutatedData struct {
 // NewIPAMServer returns a new server object
 func NewIPAMServer() *IPAMServer {
 	return &IPAMServer{
+		mutationMtx:  &sync.Mutex{},
+		mutationChan: nil,
 		subnets:      subnets.NewTree(),
 		history:      history.NewUserActions(),
 		debug:        history.NewServerLogger(),
 		dns:          dns.NewBucket(),
 		pinger:       ping.NewPinger(),
-		mutationMtx:  &sync.Mutex{},
-		mutationChan: nil,
+		semaphore:    make(chan struct{}, 10000),
 	}
 }
 

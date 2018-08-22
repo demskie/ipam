@@ -160,3 +160,29 @@ func (p *Pinger) MarkHostsAsPending(network *net.IPNet) {
 	}
 	p.mtx.Unlock()
 }
+
+// GetScanResults returns a string slice of host addresses and their reachability status
+func (p *Pinger) GetScanResults(network *net.IPNet) [][]string {
+	var (
+		results   = make([][]string, GetNumberOfHosts(network))
+		currentIP = subnetmath.DuplicateAddr(network.IP)
+		ipString  = currentIP.String()
+	)
+	p.mtx.RLock()
+	for i := 0; i < len(results); i++ {
+		val, exists := p.data[ipString]
+		if exists {
+			results[i] = []string{
+				ipString,
+				strconv.FormatInt(int64(val.lastLatency), 10),
+				strconv.FormatBool(val.pendingUpdate),
+			}
+		} else {
+			p.data[ipString] = result{}
+		}
+		currentIP = subnetmath.AddToAddr(currentIP, 1)
+		ipString = currentIP.String()
+	}
+	p.mtx.RUnlock()
+	return results
+}

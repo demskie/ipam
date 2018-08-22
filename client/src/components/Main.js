@@ -142,17 +142,12 @@ export class Main extends React.Component {
 				this.setState({ alertVisible: true });
 			}
 		}, 5000);
-	};
-
-	handleWebsocketClose = () => {
 		this.state.websocket.addEventListener("close", () => {
 			if (window.location.hostname !== "localhost") {
 				this.setState({ alertVisible: true });
 			}
 		});
 	};
-
-	processWebsocketErrorMessage = requestData => {};
 
 	watchForOutdatedCache = () => {
 		let interval = setInterval(() => {
@@ -187,7 +182,6 @@ export class Main extends React.Component {
 		this.updateDimensions();
 		this.handleWebsocketMessage();
 		this.handleWebsocketCreation();
-		this.handleWebsocketClose();
 		this.watchForOutdatedCache();
 		this.displaySidebarOnce();
 	};
@@ -299,7 +293,7 @@ export class Main extends React.Component {
 				}
 				break;
 			case "getScanStart":
-				this.setState({ scanTarget: obj.value });
+				this.setState({ scanTarget: obj.value, scanData: [] });
 				if (this.state.websocket.readyState === 1) {
 					this.state.websocket.send(
 						JSON.stringify({
@@ -317,17 +311,26 @@ export class Main extends React.Component {
 						if (this.state.websocket.readyState === 1) {
 							this.state.websocket.send(
 								JSON.stringify({
-									requestType: "GETSCANUPDATE",
+									requestType: "GETSCANDATA",
 									requestData: [obj.value]
 								})
 							);
 						} else {
 							console.log("GETSCANUPDATE failed because websocket was not open");
 						}
+						let unresolvedPings = false;
+						for (let i = 0; i < this.state.scanData.length; i++) {
+							if (this.state.scanData[i][2] === "true") {
+								unresolvedPings = true;
+							}
+						}
+						if (unresolvedPings === true && this.state.scanTarget !== "" && this.state.scanData.length > 0) {
+							this.setState({
+								scanTarget: ""
+							});
+						}
 					}
 				}, 1000);
-				break;
-			case "stopScanning":
 				break;
 			case "triggerSubnetMutationButton":
 				this.setState({
@@ -406,6 +409,7 @@ export class Main extends React.Component {
 					handleUserAction={this.handleUserAction}
 					historyData={this.state.historyData}
 					scanData={this.state.scanData}
+					scanTarget={this.state.scanTarget}
 				/>
 			</React.Fragment>
 		);

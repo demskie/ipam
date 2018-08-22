@@ -35,9 +35,9 @@ export class Pingsweep extends React.PureComponent {
 					break;
 				}
 				let textColor = "rgb(0, 240, 0)";
-				if (this.props.scanData[i][3] === "pending") {
+				if (this.props.scanData[i][2] === "true") {
 					textColor = "rgb(255, 165, 0)";
-				} else if (this.props.scanData[i][1] === "unreachable") {
+				} else if (parseInt(this.props.scanData[i][1], 10) < 0) {
 					textColor = "rgb(255, 0, 0)";
 				}
 				results.push(
@@ -64,7 +64,6 @@ export class Pingsweep extends React.PureComponent {
 					</Box>
 				);
 			}
-
 			return <Flex>{results}</Flex>;
 		};
 		return (
@@ -136,17 +135,9 @@ export class Pingsweep extends React.PureComponent {
 	}
 }
 
-const _ = [
-	["192.168.0.0", "23ms", "thisIsMyHostname.lan", "notPending"],
-	["192.168.0.1", "24ms", "thisIsMyHostname.lan", "notPending"],
-	["192.168.0.2", "unreachable", "thisIsMyHostname.lan", "notPending"],
-	["192.168.0.3", "26ms", "thisIsMyHostname.lan", "notPending"],
-	["192.168.0.4", "27ms", "thisIsMyHostname.lan", "pending"],
-	["192.168.0.5", "28ms", "thisIsMyHostname.lan", "notPending"]
-];
-
 Pingsweep.propTypes = {
 	scanData: PropTypes.array.isRequired,
+	scanTarget: PropTypes.string.isRequired,
 	handleUserAction: PropTypes.func.isRequired,
 	panelWidth: PropTypes.number.isRequired,
 	panelHeight: PropTypes.number.isRequired

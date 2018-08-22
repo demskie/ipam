@@ -77,8 +77,8 @@ func (ipam *IPAMServer) handleWebsocketClient(w http.ResponseWriter, r *http.Req
 			ipam.handleGetDebugData(conn)
 		case "GETSCANSTART":
 			ipam.handleGetScanStart(conn, inMsg)
-		case "GETSCANUPDATE":
-			ipam.handleGetScanUpdate(conn, inMsg)
+		case "GETSCANDATA":
+			ipam.handleGetScanData(conn, inMsg)
 		case "POSTNEWSUBNET":
 			ipam.handlePostNewSubnet(conn, inMsg)
 		case "POSTMODIFYSUBNET":
@@ -132,7 +132,7 @@ func (ipam *IPAMServer) handleGetSubnetData(conn *websocket.Conn) {
 	}
 }
 
-type outgoingHostDataJSON struct {
+type nestedStringsJSON struct {
 	RequestType string     `json:"requestType"`
 	RequestData [][]string `json:"requestData"`
 }
@@ -155,7 +155,7 @@ func (ipam *IPAMServer) handleGetHostData(conn *websocket.Conn, inMsg simpleJSON
 		sliceOfAddresses[i] = currentIP.String()
 		currentIP = subnetmath.AddToAddr(currentIP, 1)
 	}
-	outMsg := outgoingHostDataJSON{
+	outMsg := nestedStringsJSON{
 		RequestType: "DISPLAYHOSTDATA",
 		RequestData: [][]string{
 			sliceOfAddresses,
@@ -205,6 +205,24 @@ func (ipam *IPAMServer) handleGetDebugData(conn *websocket.Conn) {
 	}
 }
 
+func sendScanResults(ipam *IPAMServer, conn *websocket.Conn, network *net.IPNet, remoteIP string) {
+	<-ipam.semaphore
+	go func() {
+		ipam.pinger.ScanNetwork(network)
+		ipam.semaphore <- struct{}{}
+	}()
+	outMsg := nestedStringsJSON{
+		RequestType: "DISPLAYSCANDATA",
+		RequestData: ipam.pinger.GetScanResults(network),
+	}
+	b, err := json.Marshal(outMsg)
+	if err != nil {
+		log.Printf("error encoding outgoing message to %v\n", remoteIP)
+	} else {
+		conn.WriteMessage(websocket.TextMessage, b)
+	}
+}
+
 func (ipam *IPAMServer) handleGetScanStart(conn *websocket.Conn, inMsg simpleJSON) {
 	remoteIP, _, _ := net.SplitHostPort(conn.RemoteAddr().String())
 	if len(inMsg.RequestData) != 1 {
@@ -220,10 +238,11 @@ func (ipam *IPAMServer) handleGetScanStart(conn *websocket.Conn, inMsg simpleJSO
 		sendErrorMessage(conn, fmt.Sprintf("could not scan '%v' because it is host address (network address: '%v')", inMsg.RequestData[0], network))
 		return
 	}
-	// work in progress
+	ipam.pinger.MarkHostsAsPending(network)
+	sendScanResults(ipam, conn, network, remoteIP)
 }
 
-func (ipam *IPAMServer) handleGetScanUpdate(conn *websocket.Conn, inMsg simpleJSON) {
+func (ipam *IPAMServer) handleGetScanData(conn *websocket.Conn, inMsg simpleJSON) {
 	remoteIP, _, _ := net.SplitHostPort(conn.RemoteAddr().String())
 	if len(inMsg.RequestData) != 1 {
 		log.Printf("received an invalid request from %v\n", remoteIP)
@@ -238,7 +257,7 @@ func (ipam *IPAMServer) handleGetScanUpdate(conn *websocket.Conn, inMsg simpleJS
 		sendErrorMessage(conn, fmt.Sprintf("could not scan '%v' because it is host address (network address: '%v')", inMsg.RequestData[0], network))
 		return
 	}
-	// work in progress
+	sendScanResults(ipam, conn, network, remoteIP)
 }
 
 func (ipam *IPAMServer) handlePostNewSubnet(conn *websocket.Conn, inMsg simpleJSON) {
