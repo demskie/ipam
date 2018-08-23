@@ -12,7 +12,7 @@ func (ipam *IPAMServer) ExportSubnetCSVLines() []string {
 	buf := &bytes.Buffer{}
 	writer := csv.NewWriter(buf)
 	writer.Write([]string{
-		"NETWORK",
+		"SUBNET",
 		"DESCRIPTION",
 		"DETAILS",
 		"VLAN",

@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
 	"strings"
 
+	"github.com/demskie/ipam/server/dns"
 	"github.com/demskie/ipam/server/subnets"
 )
 
@@ -25,17 +27,10 @@ func (ipam *IPAMServer) IngestSubnetCSVLines(csvlines []string) error {
 		}
 	}
 	for lineNum, columns := range subnetColumns {
-		if len(columns) < 3 {
+		if len(columns) < 5 {
 			return fmt.Errorf("line %v is not formatted correctly", lineNum+1)
 		}
-		subnetString, description, modifiedTime := columns[0], columns[1], columns[2]
-		var vlan, details string
-		if len(columns) >= 5 {
-			vlan, details = columns[3], columns[4]
-		} else if len(columns) >= 4 {
-			vlan = columns[3]
-		}
-		ip, subzero, err := net.ParseCIDR(subnetString)
+		ip, subzero, err := net.ParseCIDR(columns[0])
 		if err != nil {
 			return fmt.Errorf("error parsing line %v > %v", lineNum+1, err)
 		} else if subzero.IP.Equal(ip) == false {
@@ -43,10 +38,10 @@ func (ipam *IPAMServer) IngestSubnetCSVLines(csvlines []string) error {
 		}
 		skeleton := &subnets.SubnetSkeleton{
 			Net:     subzero.String(),
-			Desc:    description,
-			Details: details,
-			Vlan:    vlan,
-			Mod:     modifiedTime,
+			Desc:    columns[1],
+			Details: columns[2],
+			Vlan:    columns[3],
+			Mod:     columns[4],
 		}
 		err = newTree.CreateSubnet(skeleton)
 		if err != nil {
@@ -57,12 +52,22 @@ func (ipam *IPAMServer) IngestSubnetCSVLines(csvlines []string) error {
 	return nil
 }
 
-// IngestUserHistory is a wrapper around the import method defined in ipam/server/history
+// IngestUserHistory is a wrapper around the OverwriteUserHistory method defined in ipam/server/history
 func (ipam *IPAMServer) IngestUserHistory(history []string) {
 	ipam.history.OverwriteUserHistory(history)
 }
 
-// IngestTinyDNSLines is a wrapper around the import method defined in ipam/server/dns
+// IngestTinyDNSLines is a wrapper around the ParseTinyDNS method defined in ipam/server/dns
 func (ipam *IPAMServer) IngestTinyDNSLines(dnslines []string) (processed, skipped int) {
 	return ipam.dns.ParseTinyDNS(dnslines)
+}
+
+// IngestZoneFile is a wrapper around the ParseZoneFile method defined in ipam/server/dns
+func (ipam *IPAMServer) IngestZoneFile(zonefile *os.File, origin string) (processed, skipped int) {
+	return ipam.dns.ParseZoneFile(zonefile, origin, zonefile.Name())
+}
+
+// IngestNewBucket is a wrapper around the Swap method defined in ipam/server/history
+func (ipam *IPAMServer) IngestNewBucket(newBucket *dns.Bucket) {
+	ipam.dns.Swap(newBucket)
 }

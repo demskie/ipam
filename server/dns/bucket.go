@@ -38,14 +38,6 @@ func (b *Bucket) GetReverseRecord(hostname string) string {
 	return b.reverseRecords[hostname]
 }
 
-// Reset zeroizes the bucket
-func (b *Bucket) Reset() {
-	b.mtx.Lock()
-	b.forwardRecords = map[string][]string{}
-	b.reverseRecords = map[string]string{}
-	b.mtx.Unlock()
-}
-
 // GetForwardRecordsForAddresses returns A Records for slice of addresses
 func (b *Bucket) GetForwardRecordsForAddresses(addresses []string) []string {
 	results := make([]string, len(addresses))
@@ -60,4 +52,20 @@ func (b *Bucket) GetForwardRecordsForAddresses(addresses []string) []string {
 	}
 	b.mtx.RUnlock()
 	return results
+}
+
+// Reset zeroizes the bucket
+func (b *Bucket) Reset() {
+	b.mtx.Lock()
+	b.forwardRecords = map[string][]string{}
+	b.reverseRecords = map[string]string{}
+	b.mtx.Unlock()
+}
+
+// Swap all existing data with the new data in provided bucket
+func (b *Bucket) Swap(newBucket *Bucket) {
+	b.mtx.Lock()
+	b.forwardRecords = newBucket.forwardRecords
+	b.reverseRecords = newBucket.reverseRecords
+	b.mtx.Unlock()
 }
