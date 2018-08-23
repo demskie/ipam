@@ -69,3 +69,12 @@ func (b *Bucket) Swap(newBucket *Bucket) {
 	b.reverseRecords = newBucket.reverseRecords
 	b.mtx.Unlock()
 }
+
+func appendToSliceIfMissing(slc []string, s1 string) []string {
+	for _, s2 := range slc {
+		if s2 == s1 {
+			return slc
+		}
+	}
+	return append(slc, s1)
+}

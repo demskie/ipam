@@ -26,7 +26,7 @@ func (b *Bucket) ParseZoneFile(f *os.File, origin, filename string) (processed, 
 				if token.RR.(*miekgdns.A).Hdr.Name != "" {
 					lastHostname = token.RR.(*miekgdns.A).Hdr.Name
 				}
-				b.forwardRecords[lastHostname] = append(b.forwardRecords[lastHostname], addr.String())
+				b.forwardRecords[addr.String()] = appendToSliceIfMissing(b.forwardRecords[addr.String()], lastHostname)
 				b.reverseRecords[addr.String()] = lastHostname
 				processed++
 			case miekgdns.TypeAAAA:
@@ -34,7 +34,7 @@ func (b *Bucket) ParseZoneFile(f *os.File, origin, filename string) (processed, 
 				if token.RR.(*miekgdns.AAAA).Hdr.Name != "" {
 					lastHostname = token.RR.(*miekgdns.AAAA).Hdr.Name
 				}
-				b.forwardRecords[lastHostname] = append(b.forwardRecords[lastHostname], addr.String())
+				b.forwardRecords[addr.String()] = appendToSliceIfMissing(b.forwardRecords[addr.String()], lastHostname)
 				b.reverseRecords[addr.String()] = lastHostname
 				processed++
 			default:

@@ -8,8 +8,6 @@ import (
 func (b *Bucket) ParseTinyDNS(lines []string) (processed, skipped int) {
 	b.mtx.Lock()
 	defer b.mtx.Unlock()
-	b.forwardRecords = map[string][]string{}
-	b.reverseRecords = map[string]string{}
 	for _, line := range lines {
 		if len(line) == 0 {
 			skipped++
@@ -46,13 +44,4 @@ func (b *Bucket) ParseTinyDNS(lines []string) (processed, skipped int) {
 		}
 	}
 	return processed, skipped
-}
-
-func appendToSliceIfMissing(slc []string, s1 string) []string {
-	for _, s2 := range slc {
-		if s2 == s1 {
-			return slc
-		}
-	}
-	return append(slc, s1)
 }

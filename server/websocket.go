@@ -147,7 +147,7 @@ func (ipam *IPAMServer) handleGetHostData(conn *websocket.Conn, inMsg simpleJSON
 		log.Printf("received an invalid request from (%v)\n", remoteIP)
 		return
 	}
-	log.Printf("%v has requested hostData for (%v)\n", remoteIP, network)
+	log.Printf("(%v) has requested hostData for %v\n", remoteIP, network)
 	addressCount := ping.GetNumberOfHosts(network)
 	currentIP := subnetmath.DuplicateNetwork(network).IP
 	sliceOfAddresses := make([]string, addressCount)

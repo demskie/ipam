@@ -65,8 +65,8 @@ export class SubnetPrompt extends React.PureComponent {
 								nodeData: {
 									net: document.getElementById("cidr-input").value,
 									desc: document.getElementById("description-input").value,
-									vlan: document.getElementById("vlan-input").value,
-									notes: document.getElementById("notes-input").value
+									notes: document.getElementById("notes-input").value,
+									vlan: document.getElementById("vlan-input").value
 								}
 							});
 						}}
@@ -158,8 +158,8 @@ export class SubnetPrompt extends React.PureComponent {
 								nodeData: {
 									net: document.getElementById("cidr-input").value,
 									desc: document.getElementById("description-input").value,
-									vlan: document.getElementById("vlan-input").value,
-									notes: document.getElementById("notes-input").value
+									notes: document.getElementById("notes-input").value,
+									vlan: document.getElementById("vlan-input").value
 								}
 							});
 						}}
@@ -240,8 +240,8 @@ export class SubnetPrompt extends React.PureComponent {
 								nodeData: {
 									net: document.getElementById("cidr-input").value,
 									desc: document.getElementById("description-input").value,
-									vlan: document.getElementById("vlan-input").value,
-									notes: document.getElementById("notes-input").value
+									notes: document.getElementById("notes-input").value,
+									vlan: document.getElementById("vlan-input").value
 								}
 							});
 						}}

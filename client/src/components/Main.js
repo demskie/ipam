@@ -206,7 +206,7 @@ export class Main extends React.Component {
 					this.state.websocket.send(
 						JSON.stringify({
 							RequestType: "POSTNEWSUBNET",
-							RequestData: [obj.nodeData.net, obj.nodeData.desc, obj.nodeData.vlan, obj.nodeData.notes]
+							RequestData: [obj.nodeData.net, obj.nodeData.desc, obj.nodeData.notes, obj.nodeData.vlan]
 						})
 					);
 				} else {
@@ -222,7 +222,7 @@ export class Main extends React.Component {
 					this.state.websocket.send(
 						JSON.stringify({
 							RequestType: "POSTMODIFYSUBNET",
-							RequestData: [obj.nodeData.net, obj.nodeData.desc, obj.nodeData.vlan, obj.nodeData.notes]
+							RequestData: [obj.nodeData.net, obj.nodeData.desc, obj.nodeData.notes, obj.nodeData.vlan]
 						})
 					);
 				} else {
