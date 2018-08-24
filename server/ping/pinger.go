@@ -79,7 +79,7 @@ func (p *Pinger) InitializeBackgroundPinger(maxPingsPerSecond, goroutineCount in
 			p.mtx.Lock()
 			pingData := p.data[ipString]
 			if reachable {
-				pingData.lastLatency = int(time.Since(start) / time.Millisecond)
+				pingData.lastLatency = 1 + int(time.Since(start)/time.Millisecond)
 			} else {
 				pingData.lastLatency = math.MinInt32
 			}

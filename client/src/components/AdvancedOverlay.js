@@ -5,6 +5,7 @@ import { Dialog, Classes, Tab, Tabs } from "@blueprintjs/core";
 import { Flex, Box } from "reflexbox";
 import { TabList } from "./AdvancedOverlayMenus/TabList.js";
 import { Pingsweep } from "./AdvancedOverlayMenus/Pingsweep.js";
+import { Visualization } from "./AdvancedOverlayMenus/Visualization.js";
 
 export class AdvancedOverlay extends React.PureComponent {
 	constructor() {
@@ -82,16 +83,7 @@ export class AdvancedOverlay extends React.PureComponent {
 										/>
 									}
 								/>
-								<Tab
-									id="usage"
-									title="Visualization"
-									disabled={true}
-									panel={
-										<div style={{ width: panelWidth + "px", height: panelWidth + "px" }}>
-											<h1 style={{ textAlign: "center" }}>{"MANUAL SCAN TEST"}</h1>
-										</div>
-									}
-								/>
+								<Tab id="usage" title="Visualization" disabled={true} panel={<div />} />
 							</Tabs>
 						</Box>
 					</Flex>
@@ -109,5 +101,6 @@ AdvancedOverlay.propTypes = {
 	handleUserAction: PropTypes.func.isRequired,
 	historyData: PropTypes.array.isRequired,
 	scanData: PropTypes.array.isRequired,
-	scanTarget: PropTypes.string.isRequired
+	scanTarget: PropTypes.string.isRequired,
+	subnetData: PropTypes.array.isRequired
 };

@@ -18,7 +18,7 @@ export class TabList extends React.PureComponent {
 				<List
 					height={this.props.panelHeight}
 					rowCount={this.props.data.length}
-					rowHeight={26}
+					rowHeight={30}
 					rowRenderer={obj => {
 						return (
 							<div className="virtualRow" key={obj.key} style={obj.style}>

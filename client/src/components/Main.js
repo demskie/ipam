@@ -427,6 +427,7 @@ export class Main extends React.Component {
 					historyData={this.state.historyData}
 					scanData={this.state.scanData}
 					scanTarget={this.state.scanTarget}
+					subnetData={this.state.subnetData}
 				/>
 			</React.Fragment>
 		);
