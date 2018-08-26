@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/demskie/ipam/server/custom"
 	"github.com/demskie/ipam/server/dns"
 	"github.com/demskie/ipam/server/history"
 	"github.com/demskie/ipam/server/ping"
@@ -30,6 +31,7 @@ type IPAMServer struct {
 	debug        *history.ServerLogger
 	dns          *dns.Bucket
 	pinger       *ping.Pinger
+	custom       *custom.Datastore
 	semaphore    chan struct{}
 }
 
@@ -50,6 +52,7 @@ func NewIPAMServer() *IPAMServer {
 		debug:        history.NewServerLogger(),
 		dns:          dns.NewBucket(),
 		pinger:       ping.NewPinger(),
+		custom:       custom.NewDatastore(),
 		semaphore:    make(chan struct{}, 10000),
 	}
 }

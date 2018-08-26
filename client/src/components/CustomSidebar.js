@@ -2,9 +2,9 @@ import React from "react";
 import PropTypes from "prop-types";
 
 import Sidebar from "react-sidebar";
-import { SubnetToolbar } from "./CustomSidebarComponents/SubnetToolbar.js";
-import { SubnetTree } from "./CustomSidebarComponents/SubnetTree.js";
-import { SubnetPrompt } from "./CustomSidebarComponents/SubnetPrompt.js";
+import { SubnetToolbar } from "./CustomSidebarElements/SubnetToolbar.js";
+import { SubnetTree } from "./CustomSidebarElements/SubnetTree.js";
+import { SubnetPrompt } from "./CustomSidebarElements/SubnetPrompt.js";
 
 export class CustomSidebar extends React.PureComponent {
 	getSidebarHeightOffset = () => {

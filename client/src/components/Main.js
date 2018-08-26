@@ -32,12 +32,7 @@ export class Main extends React.Component {
 			subnetPromptAction: "",
 			subnetPromptEnabled: false,
 
-			hostData: {
-				addresses: new Array(128),
-				aRecords: new Array(128),
-				pingResults: new Array(128),
-				lastAttempts: new Array(128)
-			},
+			hostData: [],
 			hostDetailsWidth: 0,
 			hostDetailsHeight: 0,
 
@@ -97,17 +92,14 @@ export class Main extends React.Component {
 					break;
 				case "DISPLAYSUBNETDATA":
 					console.log("DISPLAYSUBNETDATA");
-					this.setState({ subnetData: msg.requestData });
+					this.setState({
+						subnetData: msg.requestData
+					});
 					break;
 				case "DISPLAYHOSTDATA":
 					console.log("DISPLAYHOSTDATA");
 					this.setState({
-						hostData: {
-							addresses: msg.requestData[0],
-							aRecords: msg.requestData[1],
-							pingResults: msg.requestData[2],
-							lastAttempts: msg.requestData[3]
-						}
+						hostData: msg.requestData
 					});
 					break;
 				case "DISPLAYHISTORYDATA":

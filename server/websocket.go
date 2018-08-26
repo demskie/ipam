@@ -164,6 +164,7 @@ func (ipam *IPAMServer) handleGetHostData(conn *websocket.Conn, inMsg simpleJSON
 			ipam.pinger.GetPingTimesForAddresses(sliceOfAddresses),
 		},
 	}
+	outMsg.RequestData = ipam.custom.AppendCustomData(outMsg.RequestData)
 	b, err := json.Marshal(outMsg)
 	if err != nil {
 		log.Printf("error encoding outgoing message to (%v)\n", remoteIP)

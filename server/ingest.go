@@ -71,3 +71,44 @@ func (ipam *IPAMServer) IngestZoneFile(zonefile *os.File, origin string) (proces
 func (ipam *IPAMServer) IngestNewBucket(newBucket *dns.Bucket) {
 	ipam.dns.Swap(newBucket)
 }
+
+// CustomData represents a single element of data
+type CustomData struct {
+	Header  string
+	Address string
+	Value   string
+}
+
+// IngestCustomData parses and completely overwrites existing customData
+// headerOrder allows the caller to specify the preferred order of headers displayed on the clientside
+func (ipam *IPAMServer) IngestCustomData(customData []CustomData, headerOrder ...string) {
+	nestedMap := map[string]map[string]string{}
+	for _, cd := range customData {
+		_, exists := nestedMap[cd.Header]
+		if !exists {
+			nestedMap[cd.Header] = map[string]string{}
+		}
+		nestedMap[cd.Header][cd.Address] = cd.Value
+	}
+	newHeaderOrder := make([]string, 0, len(nestedMap))
+	for _, newHeader := range headerOrder {
+		newHeaderOrder = append(newHeaderOrder, newHeader)
+	}
+	for key := range nestedMap {
+		matched := false
+		for _, hdr := range newHeaderOrder {
+			if hdr == key {
+				matched = true
+				break
+			}
+		}
+		if matched == false {
+			newHeaderOrder = append(newHeaderOrder, key)
+		}
+	}
+	newCustomData := make([]map[string]string, len(newHeaderOrder))
+	for i := range newCustomData {
+		newCustomData[i] = nestedMap[newHeaderOrder[i]]
+	}
+	ipam.custom.SwapDatastore(newHeaderOrder, newCustomData)
+}

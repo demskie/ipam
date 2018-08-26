@@ -2,17 +2,35 @@ import React from "react";
 import PropTypes from "prop-types";
 import { Cell, Column, Table, RenderMode } from "@blueprintjs/table";
 
+const addressWidth = 240;
+const pingResultWidth = 120;
+const lastAttemptWidth = 360;
+
 export class HostDetails extends React.PureComponent {
-	columnWidthArrays = () => {
-		let width = this.props.hostDetailsWidth / 4;
-		return [width, width, width, width];
+	columnWidthArray = () => {
+		let widthArray = new Array(this.props.hostData.length);
+		let availableSpace = this.props.hostDetailsWidth;
+		widthArray[0] = addressWidth;
+		availableSpace -= addressWidth;
+		widthArray[2] = pingResultWidth;
+		availableSpace -= pingResultWidth;
+		widthArray[3] = lastAttemptWidth;
+		availableSpace -= lastAttemptWidth;
+		if (availableSpace < lastAttemptWidth) {
+			availableSpace = lastAttemptWidth;
+		}
+		widthArray[1] = availableSpace;
+		for (let i = 4; i < this.props.hostData.length; i++) {
+			widthArray[i] = this.mediumWidth();
+		}
+		return widthArray;
 	};
 
 	addressRenderer = rowIndex => {
-		if (rowIndex >= this.props.hostData.addresses.length) {
+		if (this.props.hostData.length < 1 || rowIndex >= this.props.hostData[0].length) {
 			return <Cell />;
 		}
-		let value = this.props.hostData.addresses[rowIndex];
+		let value = this.props.hostData[0][rowIndex];
 		if (value === undefined || value === null) {
 			return <Cell />;
 		}
@@ -22,11 +40,12 @@ export class HostDetails extends React.PureComponent {
 			</Cell>
 		);
 	};
+
 	aRecordRenderer = rowIndex => {
-		if (rowIndex >= this.props.hostData.aRecords.length) {
+		if (this.props.hostData.length < 2 || rowIndex >= this.props.hostData[1].length) {
 			return <Cell />;
 		}
-		let value = this.props.hostData.aRecords[rowIndex];
+		let value = this.props.hostData[1][rowIndex];
 		if (value === undefined || value === null) {
 			return <Cell />;
 		}
@@ -36,11 +55,12 @@ export class HostDetails extends React.PureComponent {
 			</Cell>
 		);
 	};
+
 	pingResultRenderer = rowIndex => {
-		if (rowIndex >= this.props.hostData.pingResults.length) {
+		if (this.props.hostData.length < 3 || rowIndex >= this.props.hostData[2].length) {
 			return <Cell />;
 		}
-		let value = this.props.hostData.pingResults[rowIndex];
+		let value = this.props.hostData[2][rowIndex];
 		if (value === undefined || value === null || value === "") {
 			return <Cell />;
 		}
@@ -57,11 +77,12 @@ export class HostDetails extends React.PureComponent {
 			</Cell>
 		);
 	};
+
 	lastAttemptRenderer = rowIndex => {
-		if (rowIndex >= this.props.hostData.lastAttempts.length) {
+		if (this.props.hostData.length < 4 || rowIndex >= this.props.hostData[3].length) {
 			return <Cell />;
 		}
-		let value = this.props.hostData.lastAttempts[rowIndex];
+		let value = this.props.hostData[3][rowIndex];
 		if (value === undefined || value === null) {
 			return <Cell />;
 		}
@@ -79,6 +100,28 @@ export class HostDetails extends React.PureComponent {
 		);
 	};
 
+	extraColumns = () => {
+		let arrayOfColumns = [];
+		for (let i = 4; i < this.props.hostData.length; i++) {
+			arrayOfColumns.push(
+				<Column
+					name={<div style={{ textAlign: "center" }}>{this.props.hostData[i][0]}</div>}
+					cellRenderer={rowIndex => {
+						if (rowIndex >= this.props.hostData[i].length + 1) {
+							return <Cell />;
+						}
+						return (
+							<Cell>
+								<div style={{ textAlign: "center" }}>{this.props.hostData[i][rowIndex + 1]}</div>
+							</Cell>
+						);
+					}}
+				/>
+			);
+		}
+		return arrayOfColumns;
+	};
+
 	render() {
 		return (
 			<div id="hostDetails" style={{ height: this.props.hostDetailsHeight }}>
@@ -87,7 +130,7 @@ export class HostDetails extends React.PureComponent {
 					numRows={this.props.hostData.addresses.length}
 					renderMode={RenderMode.NONE}
 					enableGhostCells={true}
-					columnWidths={this.columnWidthArrays()}
+					columnWidths={this.columnWidthArray()}
 					enableColumnResizing={true}
 					enableRowHeader={false}
 				>
@@ -101,6 +144,7 @@ export class HostDetails extends React.PureComponent {
 						name={<div style={{ textAlign: "center" }}>{"Last Attempt"}</div>}
 						cellRenderer={this.lastAttemptRenderer}
 					/>
+					{this.extraColumns()}
 				</Table>
 			</div>
 		);
@@ -108,7 +152,7 @@ export class HostDetails extends React.PureComponent {
 }
 
 HostDetails.propTypes = {
-	hostData: PropTypes.object.isRequired,
+	hostData: PropTypes.array.isRequired,
 	hostDetailsWidth: PropTypes.number.isRequired,
 	hostDetailsHeight: PropTypes.number.isRequired
 };
