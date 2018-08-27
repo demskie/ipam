@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"os"
+	"strings"
 
 	miekgdns "github.com/miekg/dns"
 )
@@ -25,6 +26,9 @@ func (b *Bucket) ParseZoneFile(f *os.File, origin, filename string) (processed, 
 				addr := token.RR.(*miekgdns.A).A
 				if token.RR.(*miekgdns.A).Hdr.Name != "" {
 					lastHostname = token.RR.(*miekgdns.A).Hdr.Name
+					if strings.HasSuffix(lastHostname, ".") {
+						lastHostname = lastHostname[:len(lastHostname)-1]
+					}
 				}
 				b.forwardRecords[addr.String()] = appendToSliceIfMissing(b.forwardRecords[addr.String()], lastHostname)
 				b.reverseRecords[addr.String()] = lastHostname
@@ -33,6 +37,9 @@ func (b *Bucket) ParseZoneFile(f *os.File, origin, filename string) (processed, 
 				addr := token.RR.(*miekgdns.AAAA).AAAA
 				if token.RR.(*miekgdns.AAAA).Hdr.Name != "" {
 					lastHostname = token.RR.(*miekgdns.AAAA).Hdr.Name
+					if strings.HasSuffix(lastHostname, ".") {
+						lastHostname = lastHostname[:len(lastHostname)-1]
+					}
 				}
 				b.forwardRecords[addr.String()] = appendToSliceIfMissing(b.forwardRecords[addr.String()], lastHostname)
 				b.reverseRecords[addr.String()] = lastHostname
