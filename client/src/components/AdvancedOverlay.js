@@ -8,31 +8,6 @@ import { Pingsweep } from "./AdvancedOverlayMenus/Pingsweep.js";
 import { Visualization } from "./AdvancedOverlayMenus/Visualization.js";
 
 export class AdvancedOverlay extends React.PureComponent {
-	constructor() {
-		super();
-		this.state = {
-			selectedTabId: "history"
-		};
-	}
-
-	handleTabChange = newTab => {
-		this.setState({
-			selectedTabId: newTab
-		});
-		switch (newTab) {
-			case "history":
-				this.props.handleUserAction({ action: "getHistoryData" });
-				break;
-			case "debug":
-				this.props.handleUserAction({ action: "getDebugData" });
-				break;
-			case "scan":
-				break;
-			default:
-				console.log("unknown tab id:", newTab);
-		}
-	};
-
 	render() {
 		const overlayWidth = this.props.advancedOverlayWidth;
 		const overlayHeight = this.props.advancedOverlayHeight;
@@ -53,22 +28,28 @@ export class AdvancedOverlay extends React.PureComponent {
 							<Tabs
 								id="advancedOverlayTabs"
 								className={Classes.LARGE}
-								onChange={this.handleTabChange}
-								selectedTabId={this.state.selectedTabId}
+								onChange={nextTab => {
+									switch (nextTab) {
+										case "scan":
+											break;
+										case "history":
+											this.props.handleUserAction({ action: "getHistoryData" });
+											break;
+										case "debug":
+											this.props.handleUserAction({ action: "getDebugData" });
+											break;
+										default:
+											console.log("unknown tab id:", nextTab);
+											return;
+									}
+									this.props.handleUserAction({
+										action: "setSelectedTabId",
+										value: nextTab
+									});
+								}}
+								selectedTabId={this.props.selectedTabId}
 								renderActiveTabPanelOnly={true}
 							>
-								<Tab
-									id="history"
-									title="History"
-									disabled={false}
-									panel={<TabList data={this.props.historyData} panelWidth={panelWidth} panelHeight={panelHeight} />}
-								/>
-								<Tab
-									id="debug"
-									title="Debug"
-									disabled={false}
-									panel={<TabList data={this.props.debugData} panelWidth={panelWidth} panelHeight={panelHeight} />}
-								/>
 								<Tab
 									id="scan"
 									title="Pingsweep"
@@ -82,6 +63,18 @@ export class AdvancedOverlay extends React.PureComponent {
 											panelHeight={panelHeight}
 										/>
 									}
+								/>
+								<Tab
+									id="history"
+									title="History"
+									disabled={false}
+									panel={<TabList data={this.props.historyData} panelWidth={panelWidth} panelHeight={panelHeight} />}
+								/>
+								<Tab
+									id="debug"
+									title="Debug"
+									disabled={false}
+									panel={<TabList data={this.props.debugData} panelWidth={panelWidth} panelHeight={panelHeight} />}
 								/>
 								<Tab id="usage" title="Visualization" disabled={true} panel={<div />} />
 							</Tabs>
@@ -102,5 +95,6 @@ AdvancedOverlay.propTypes = {
 	historyData: PropTypes.array.isRequired,
 	scanData: PropTypes.array.isRequired,
 	scanTarget: PropTypes.string.isRequired,
+	selectedTabId: PropTypes.string.isRequired,
 	subnetData: PropTypes.array.isRequired
 };

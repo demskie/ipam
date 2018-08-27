@@ -1,5 +1,4 @@
 .DS_Store
 *.lock
-*.lock
 node_modules/
 client/yarn.lock

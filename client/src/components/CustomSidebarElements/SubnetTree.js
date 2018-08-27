@@ -104,6 +104,24 @@ export class SubnetTree extends React.PureComponent {
 				{ className: Classes.DARK },
 				React.createElement(MenuItem, {
 					className: Classes.DARK,
+					onClick: setTimeout(() => {
+						this.props.handleUserAction({
+							action: "getScanStart",
+							value: this.props.selectedTreeNode.net
+						});
+						this.props.handleUserAction({
+							action: "setSelectedTabId",
+							value: "scan"
+						});
+						this.props.handleUserAction({
+							action: "showAdvancedOverlay"
+						});
+					}, 500),
+					intent: Intent.PRIMARY,
+					text: "Scan Subnet"
+				}),
+				React.createElement(MenuItem, {
+					className: Classes.DARK,
 					onClick: () => {
 						this.props.handleUserAction({ action: "triggerSubnetMutationButton", value: "create" });
 					},

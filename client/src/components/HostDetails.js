@@ -4,7 +4,7 @@ import { Cell, Column, Table, RenderMode } from "@blueprintjs/table";
 
 const addressWidth = 240;
 const pingResultWidth = 120;
-const lastAttemptWidth = 360;
+const lastAttemptWidth = 240;
 
 export class HostDetails extends React.PureComponent {
 	columnWidthArray = () => {
@@ -18,6 +18,8 @@ export class HostDetails extends React.PureComponent {
 		availableSpace -= lastAttemptWidth;
 		if (availableSpace < lastAttemptWidth) {
 			availableSpace = lastAttemptWidth;
+		} else if (availableSpace > 480) {
+			availableSpace = 480;
 		}
 		widthArray[1] = availableSpace;
 		for (let i = 4; i < this.props.hostData.length; i++) {
@@ -127,7 +129,7 @@ export class HostDetails extends React.PureComponent {
 			<div id="hostDetails" style={{ height: this.props.hostDetailsHeight }}>
 				<Table
 					className="bp3-dark"
-					numRows={this.props.hostData.addresses.length}
+					numRows={this.props.hostData.length}
 					renderMode={RenderMode.NONE}
 					enableGhostCells={true}
 					columnWidths={this.columnWidthArray()}

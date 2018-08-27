@@ -41,6 +41,7 @@ export class Main extends React.Component {
 
 			scanData: [],
 			scanTarget: "",
+			selectedTabId: "scan",
 
 			advancedOverlayEnabled: false,
 			advancedOverlayWidth: 0,
@@ -104,15 +105,19 @@ export class Main extends React.Component {
 					break;
 				case "DISPLAYHISTORYDATA":
 					console.log("DISPLAYHISTORYDATA");
-					this.setState({
-						historyData: msg.requestData
-					});
+					setTimeout(() => {
+						this.setState({
+							historyData: msg.requestData
+						});
+					}, 250);
 					break;
 				case "DISPLAYDEBUGDATA":
 					console.log("DISPLAYDEBUGDATA");
-					this.setState({
-						debugData: msg.requestData
-					});
+					setTimeout(() => {
+						this.setState({
+							debugData: msg.requestData
+						});
+					}, 250);
 					break;
 				case "DISPLAYSCANDATA":
 					console.log("DISPLAYSCANDATA");
@@ -133,9 +138,6 @@ export class Main extends React.Component {
 			setInterval(() => {
 				this.handleUserAction({ action: "getSubnetData" });
 			}, 60000);
-			setInterval(() => {
-				this.handleUserAction({ action: "getHistoryData" });
-			}, 65432);
 		});
 		setTimeout(() => {
 			if (this.state.websocket.readyState !== 1 && window.location.hostname !== "localhost") {
@@ -173,7 +175,7 @@ export class Main extends React.Component {
 				this.setState({
 					sidebarOpen: true
 				});
-			}, 0);
+			}, 1000);
 		}
 	};
 
@@ -187,194 +189,7 @@ export class Main extends React.Component {
 	};
 
 	handleUserAction = obj => {
-		switch (obj.action) {
-			case "select":
-				this.setState({ selectedTreeNode: obj.nodeData });
-				this.handleUserAction({ action: "getHostData", nodeData: obj.nodeData });
-				break;
-			case "create":
-				if (this.state.websocket.readyState === 1) {
-					console.debug("POSTNEWSUBNET", obj);
-					this.state.websocket.send(
-						JSON.stringify({
-							RequestType: "POSTNEWSUBNET",
-							RequestData: [obj.nodeData.net, obj.nodeData.desc, obj.nodeData.notes, obj.nodeData.vlan]
-						})
-					);
-				} else {
-					console.log("caught userAction while websocket was closed:", obj);
-				}
-				this.setState({
-					subnetPromptEnabled: false
-				});
-				break;
-			case "modify":
-				if (this.state.websocket.readyState === 1) {
-					console.debug("POSTMODIFYSUBNET", obj);
-					this.state.websocket.send(
-						JSON.stringify({
-							RequestType: "POSTMODIFYSUBNET",
-							RequestData: [obj.nodeData.net, obj.nodeData.desc, obj.nodeData.notes, obj.nodeData.vlan]
-						})
-					);
-				} else {
-					console.log("caught userAction while websocket was closed:", obj);
-				}
-				this.setState({
-					subnetPromptEnabled: false
-				});
-				break;
-			case "delete":
-				if (this.state.websocket.readyState === 1) {
-					console.debug("POSTDELETESUBNET", obj);
-					this.state.websocket.send(
-						JSON.stringify({
-							RequestType: "POSTDELETESUBNET",
-							RequestData: [obj.nodeData.net]
-						})
-					);
-				} else {
-					console.log("caught userAction while websocket was closed:", obj);
-				}
-				this.setState({
-					subnetPromptEnabled: false
-				});
-				break;
-			case "getSubnetData":
-				if (this.state.websocket.readyState === 1) {
-					console.debug("GETSUBNETDATA");
-					this.state.websocket.send(
-						JSON.stringify({
-							requestType: "GETSUBNETDATA",
-							requestData: []
-						})
-					);
-				} else {
-					console.log("GETSUBNETDATA failed because websocket was not open");
-				}
-				break;
-			case "getHostData":
-				if (this.state.websocket.readyState === 1) {
-					console.debug("GETHOSTDATA", obj);
-					this.state.websocket.send(
-						JSON.stringify({
-							requestType: "GETHOSTDATA",
-							requestData: [obj.nodeData.net]
-						})
-					);
-				} else {
-					console.log("GETHOSTDATA failed because websocket was not open");
-				}
-				break;
-			case "getHistoryData":
-				if (this.state.websocket.readyState === 1) {
-					console.debug("GETHISTORYDATA");
-					this.state.websocket.send(
-						JSON.stringify({
-							requestType: "GETHISTORYDATA",
-							requestData: []
-						})
-					);
-				} else {
-					console.log("GETHISTORYDATA failed because websocket was not open");
-				}
-				break;
-			case "getDebugData":
-				if (this.state.websocket.readyState === 1) {
-					console.debug("GETDEBUGDATA");
-					this.state.websocket.send(
-						JSON.stringify({
-							requestType: "GETDEBUGDATA",
-							requestData: []
-						})
-					);
-				} else {
-					console.log("GETDEBUGDATA failed because websocket was not open");
-				}
-				break;
-			case "getScanStart":
-				if (obj.value.search("/32") !== -1 || obj.value.search("/128") !== -1) {
-					notifications.show({
-						intent: Intent.WARNING,
-						message: "cannot scan '" + obj.value + "' as it is not large enough",
-						timeout: 0
-					});
-					break;
-				}
-				this.setState({ scanTarget: obj.value, scanData: [] });
-				if (this.state.websocket.readyState === 1) {
-					this.state.websocket.send(
-						JSON.stringify({
-							requestType: "GETSCANSTART",
-							requestData: [obj.value]
-						})
-					);
-				} else {
-					console.log("GETSCANSTART failed because websocket was not open");
-				}
-				obj.scanner = setInterval(() => {
-					if (this.state.scanTarget !== obj.value) {
-						clearInterval(obj.scanner);
-					} else {
-						if (this.state.websocket.readyState === 1) {
-							this.state.websocket.send(
-								JSON.stringify({
-									requestType: "GETSCANDATA",
-									requestData: [obj.value]
-								})
-							);
-						} else {
-							console.log("GETSCANUPDATE failed because websocket was not open");
-						}
-						let unresolvedPings = false;
-						for (let i = 0; i < this.state.scanData.length; i++) {
-							if (this.state.scanData[i][2] === "true") {
-								unresolvedPings = true;
-								break;
-							}
-						}
-						if (unresolvedPings === false && this.state.scanData.length > 0) {
-							this.setState({
-								scanTarget: ""
-							});
-						}
-					}
-				}, 1000);
-				break;
-			case "triggerSubnetMutationButton":
-				this.setState({
-					subnetPromptAction: obj.value,
-					subnetPromptEnabled: true
-				});
-				break;
-			case "triggerSidebarToggle":
-				this.setState({
-					sidebarOpen: !this.state.sidebarOpen
-				});
-				break;
-			case "setSidebarOpen":
-				this.setState({
-					sidebarOpen: obj.value
-				});
-				break;
-			case "closeSubnetPrompt":
-				this.setState({
-					subnetPromptEnabled: false
-				});
-				break;
-			case "showAdvancedOverlay":
-				this.setState({
-					advancedOverlayEnabled: true
-				});
-				break;
-			case "closeAdvancedOverlay":
-				this.setState({
-					advancedOverlayEnabled: false
-				});
-				break;
-			default:
-				console.log("Error! unknown user action:", obj);
-		}
+		reactToUserAction(this, obj);
 	};
 
 	render() {
@@ -419,9 +234,222 @@ export class Main extends React.Component {
 					historyData={this.state.historyData}
 					scanData={this.state.scanData}
 					scanTarget={this.state.scanTarget}
+					selectedTabId={this.state.selectedTabId}
 					subnetData={this.state.subnetData}
 				/>
 			</React.Fragment>
 		);
 	}
 }
+
+const reactToUserAction = (parent, obj) => {
+	switch (obj.action) {
+		case "select":
+			parent.setState({ selectedTreeNode: obj.nodeData });
+			parent.handleUserAction({ action: "getHostData", nodeData: obj.nodeData });
+			break;
+
+		case "create":
+			if (parent.state.websocket.readyState === 1) {
+				console.debug("POSTNEWSUBNET", obj);
+				parent.state.websocket.send(
+					JSON.stringify({
+						RequestType: "POSTNEWSUBNET",
+						RequestData: [obj.nodeData.net, obj.nodeData.desc, obj.nodeData.notes, obj.nodeData.vlan]
+					})
+				);
+			} else {
+				console.log("caught userAction while websocket was closed:", obj);
+			}
+			parent.setState({
+				subnetPromptEnabled: false
+			});
+			break;
+
+		case "modify":
+			if (parent.state.websocket.readyState === 1) {
+				console.debug("POSTMODIFYSUBNET", obj);
+				parent.state.websocket.send(
+					JSON.stringify({
+						RequestType: "POSTMODIFYSUBNET",
+						RequestData: [obj.nodeData.net, obj.nodeData.desc, obj.nodeData.notes, obj.nodeData.vlan]
+					})
+				);
+			} else {
+				console.log("caught userAction while websocket was closed:", obj);
+			}
+			parent.setState({
+				subnetPromptEnabled: false
+			});
+			break;
+
+		case "delete":
+			if (parent.state.websocket.readyState === 1) {
+				console.debug("POSTDELETESUBNET", obj);
+				parent.state.websocket.send(
+					JSON.stringify({
+						RequestType: "POSTDELETESUBNET",
+						RequestData: [obj.nodeData.net]
+					})
+				);
+			} else {
+				console.log("caught userAction while websocket was closed:", obj);
+			}
+			parent.setState({
+				subnetPromptEnabled: false
+			});
+			break;
+
+		case "getSubnetData":
+			if (parent.state.websocket.readyState === 1) {
+				console.debug("GETSUBNETDATA");
+				parent.state.websocket.send(
+					JSON.stringify({
+						requestType: "GETSUBNETDATA",
+						requestData: []
+					})
+				);
+			} else {
+				console.log("GETSUBNETDATA failed because websocket was not open");
+			}
+			break;
+
+		case "getHostData":
+			if (parent.state.websocket.readyState === 1) {
+				console.debug("GETHOSTDATA", obj);
+				parent.state.websocket.send(
+					JSON.stringify({
+						requestType: "GETHOSTDATA",
+						requestData: [obj.nodeData.net]
+					})
+				);
+			} else {
+				console.log("GETHOSTDATA failed because websocket was not open");
+			}
+			break;
+
+		case "getHistoryData":
+			if (parent.state.websocket.readyState === 1) {
+				console.debug("GETHISTORYDATA");
+				parent.state.websocket.send(
+					JSON.stringify({
+						requestType: "GETHISTORYDATA",
+						requestData: []
+					})
+				);
+			} else {
+				console.log("GETHISTORYDATA failed because websocket was not open");
+			}
+			break;
+
+		case "getDebugData":
+			if (parent.state.websocket.readyState === 1) {
+				console.debug("GETDEBUGDATA");
+				parent.state.websocket.send(
+					JSON.stringify({
+						requestType: "GETDEBUGDATA",
+						requestData: []
+					})
+				);
+			} else {
+				console.log("GETDEBUGDATA failed because websocket was not open");
+			}
+			break;
+
+		case "getScanStart":
+			if (obj.value.search("/32") !== -1 || obj.value.search("/128") !== -1) {
+				notifications.show({
+					intent: Intent.WARNING,
+					message: "cannot scan '" + obj.value + "' as it is not large enough",
+					timeout: 0
+				});
+				break;
+			}
+			parent.setState({ scanTarget: obj.value, scanData: [] });
+			if (parent.state.websocket.readyState === 1) {
+				parent.state.websocket.send(
+					JSON.stringify({
+						requestType: "GETSCANSTART",
+						requestData: [obj.value]
+					})
+				);
+			} else {
+				console.log("GETSCANSTART failed because websocket was not open");
+			}
+			obj.scanner = setInterval(() => {
+				if (parent.state.scanTarget !== obj.value) {
+					clearInterval(obj.scanner);
+				} else {
+					if (parent.state.websocket.readyState === 1) {
+						parent.state.websocket.send(
+							JSON.stringify({
+								requestType: "GETSCANDATA",
+								requestData: [obj.value]
+							})
+						);
+					} else {
+						console.log("GETSCANUPDATE failed because websocket was not open");
+					}
+					let unresolvedPings = false;
+					for (let i = 0; i < parent.state.scanData.length; i++) {
+						if (parent.state.scanData[i][2] === "true") {
+							unresolvedPings = true;
+							break;
+						}
+					}
+					if (unresolvedPings === false && parent.state.scanData.length > 0) {
+						parent.setState({
+							scanTarget: ""
+						});
+					}
+				}
+			}, 1000);
+			break;
+
+		case "setSelectedTabId":
+			parent.setState({
+				selectedTabId: obj.value
+			});
+			break;
+
+		case "triggerSubnetMutationButton":
+			parent.setState({
+				subnetPromptAction: obj.value,
+				subnetPromptEnabled: true
+			});
+			break;
+
+		case "triggerSidebarToggle":
+			parent.setState({
+				sidebarOpen: !parent.state.sidebarOpen
+			});
+			break;
+
+		case "setSidebarOpen":
+			parent.setState({
+				sidebarOpen: obj.value
+			});
+			break;
+
+		case "closeSubnetPrompt":
+			parent.setState({
+				subnetPromptEnabled: false
+			});
+			break;
+
+		case "showAdvancedOverlay":
+			parent.setState({
+				advancedOverlayEnabled: true
+			});
+			break;
+
+		case "closeAdvancedOverlay":
+			parent.setState({
+				advancedOverlayEnabled: false
+			});
+			break;
+
+		default:
+			console.log("Error! unknown user action:", obj);
+	}
+};
