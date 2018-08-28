@@ -6,24 +6,24 @@ import (
 
 // Bucket stores the A Records and PTR Records
 type Bucket struct {
-	mtx            *sync.RWMutex
-	forwardRecords map[string][]string
-	reverseRecords map[string]string
+	mtx             *sync.RWMutex
+	addrToHostnames map[string][]string
+	hostnameToAddr  map[string]string
 }
 
 // NewBucket returns a new empty bucket
 func NewBucket() *Bucket {
 	return &Bucket{
-		mtx:            &sync.RWMutex{},
-		forwardRecords: make(map[string][]string, 0),
-		reverseRecords: make(map[string]string, 0),
+		mtx:             &sync.RWMutex{},
+		addrToHostnames: make(map[string][]string, 0),
+		hostnameToAddr:  make(map[string]string, 0),
 	}
 }
 
-// GetForwardRecords will get a slice of A Records for the ipAddress if there are any
-func (b *Bucket) GetForwardRecords(ipAddress string) []string {
+// GetHostnamesFromAddress returns any hostnames associated with an addresses
+func (b *Bucket) GetHostnamesFromAddress(ipAddress string) []string {
 	b.mtx.RLock()
-	val, exists := b.forwardRecords[ipAddress]
+	val, exists := b.addrToHostnames[ipAddress]
 	b.mtx.RUnlock()
 	if exists {
 		return val
@@ -31,19 +31,12 @@ func (b *Bucket) GetForwardRecords(ipAddress string) []string {
 	return []string{}
 }
 
-// GetReverseRecord returns the PTR record of a hostname if there is one
-func (b *Bucket) GetReverseRecord(hostname string) string {
-	b.mtx.RLock()
-	defer b.mtx.RUnlock()
-	return b.reverseRecords[hostname]
-}
-
-// GetForwardRecordsForAddresses returns A Records for slice of addresses
-func (b *Bucket) GetForwardRecordsForAddresses(addresses []string) []string {
+// GetFirstHostnameForAddresses returns the first valid hostname for a slice of addresses
+func (b *Bucket) GetFirstHostnameForAddresses(addresses []string) []string {
 	results := make([]string, len(addresses))
 	b.mtx.RLock()
 	for i := 0; i < len(addresses); i++ {
-		val, exists := b.forwardRecords[addresses[i]]
+		val, exists := b.addrToHostnames[addresses[i]]
 		if exists {
 			results[i] = val[0]
 		} else {
@@ -54,19 +47,27 @@ func (b *Bucket) GetForwardRecordsForAddresses(addresses []string) []string {
 	return results
 }
 
+// GetAddressesFromHostname returns any addresses from a hostname
+func (b *Bucket) GetAddressesFromHostname(hostname string) string {
+	b.mtx.RLock()
+	defer b.mtx.RUnlock()
+	return b.hostnameToAddr[hostname]
+}
+
 // Reset zeroizes the bucket
 func (b *Bucket) Reset() {
 	b.mtx.Lock()
-	b.forwardRecords = map[string][]string{}
-	b.reverseRecords = map[string]string{}
+	b.addrToHostnames = map[string][]string{}
+	b.hostnameToAddr = map[string]string{}
 	b.mtx.Unlock()
 }
 
 // Swap all existing data with the new data in provided bucket
 func (b *Bucket) Swap(newBucket *Bucket) {
+	newBucket.mtx = b.mtx
 	b.mtx.Lock()
-	b.forwardRecords = newBucket.forwardRecords
-	b.reverseRecords = newBucket.reverseRecords
+	b.addrToHostnames = newBucket.addrToHostnames
+	b.hostnameToAddr = newBucket.hostnameToAddr
 	b.mtx.Unlock()
 }
 

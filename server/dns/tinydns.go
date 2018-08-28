@@ -19,16 +19,16 @@ func (b *Bucket) ParseTinyDNS(lines []string) (processed, skipped int) {
 			if len(s) == 3 {
 				host := strings.TrimSuffix(s[0], ".")
 				addr := strings.TrimSuffix(s[1], ".")
-				b.forwardRecords[addr] = appendToSliceIfMissing(b.forwardRecords[addr], host)
-				b.reverseRecords[addr] = host
+				b.addrToHostnames[addr] = appendToSliceIfMissing(b.addrToHostnames[addr], host)
+				b.hostnameToAddr[host] = addr
 				processed++
 			}
-		case "+", "C":
+		case "+":
 			s := strings.Split(line[1:], ":")
 			if len(s) == 3 {
 				first := strings.TrimSuffix(s[0], ".")
 				second := strings.TrimSuffix(s[1], ".")
-				b.forwardRecords[second] = appendToSliceIfMissing(b.forwardRecords[second], first)
+				b.addrToHostnames[second] = appendToSliceIfMissing(b.addrToHostnames[second], first)
 				processed++
 			}
 		case "^":
@@ -36,7 +36,7 @@ func (b *Bucket) ParseTinyDNS(lines []string) (processed, skipped int) {
 			if len(s) == 3 {
 				first := strings.TrimSuffix(s[0], ".in-addr.arpa")
 				second := strings.TrimSuffix(s[1], ".")
-				b.reverseRecords[first] = second
+				b.hostnameToAddr[second] = first
 				processed++
 			}
 		default:

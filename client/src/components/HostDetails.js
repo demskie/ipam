@@ -2,28 +2,25 @@ import React from "react";
 import PropTypes from "prop-types";
 import { Cell, Column, Table, RenderMode } from "@blueprintjs/table";
 
-const addressWidth = 240;
+const addressWidth = 150;
+const aRecordWidth = 260;
 const pingResultWidth = 120;
-const lastAttemptWidth = 240;
+const lastAttemptWidth = 160;
+const extraDataWidth = 160;
 
 export class HostDetails extends React.PureComponent {
 	columnWidthArray = () => {
 		let widthArray = new Array(this.props.hostData.length);
-		let availableSpace = this.props.hostDetailsWidth;
-		widthArray[0] = addressWidth;
-		availableSpace -= addressWidth;
-		widthArray[2] = pingResultWidth;
-		availableSpace -= pingResultWidth;
-		widthArray[3] = lastAttemptWidth;
-		availableSpace -= lastAttemptWidth;
-		if (availableSpace < lastAttemptWidth) {
-			availableSpace = lastAttemptWidth;
-		} else if (availableSpace > 480) {
-			availableSpace = 480;
+		if (widthArray.length <= 4) {
+			const width = this.props.hostDetailsWidth / 4;
+			return [width, width, width, width];
 		}
-		widthArray[1] = availableSpace;
+		widthArray[0] = addressWidth;
+		widthArray[1] = aRecordWidth;
+		widthArray[2] = pingResultWidth;
+		widthArray[3] = lastAttemptWidth;
 		for (let i = 4; i < this.props.hostData.length; i++) {
-			widthArray[i] = this.mediumWidth();
+			widthArray[i] = extraDataWidth;
 		}
 		return widthArray;
 	};
@@ -125,16 +122,24 @@ export class HostDetails extends React.PureComponent {
 	};
 
 	render() {
+		const getRowCount = () => {
+			if (this.props.hostData[0] !== undefined) {
+				return this.props.hostData[0].length;
+			}
+			return 0;
+		};
 		return (
 			<div id="hostDetails" style={{ height: this.props.hostDetailsHeight }}>
 				<Table
 					className="bp3-dark"
-					numRows={this.props.hostData.length}
-					renderMode={RenderMode.NONE}
+					numRows={getRowCount()}
+					renderMode={RenderMode.BATCH}
 					enableGhostCells={true}
 					columnWidths={this.columnWidthArray()}
 					enableColumnResizing={true}
 					enableRowHeader={false}
+					numFrozenColumns={2}
+					numFrozenRows={0}
 				>
 					<Column name={<div style={{ textAlign: "center" }}>{"Address"}</div>} cellRenderer={this.addressRenderer} />
 					<Column name={<div style={{ textAlign: "center" }}>{"A Record"}</div>} cellRenderer={this.aRecordRenderer} />

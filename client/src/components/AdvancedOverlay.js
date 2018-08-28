@@ -5,7 +5,7 @@ import { Dialog, Classes, Tab, Tabs } from "@blueprintjs/core";
 import { Flex, Box } from "reflexbox";
 import { TabList } from "./AdvancedOverlayMenus/TabList.js";
 import { Pingsweep } from "./AdvancedOverlayMenus/Pingsweep.js";
-import { Visualization } from "./AdvancedOverlayMenus/Visualization.js";
+//import { Visualization } from "./AdvancedOverlayMenus/Visualization.js";
 
 export class AdvancedOverlay extends React.PureComponent {
 	render() {

@@ -159,7 +159,7 @@ func (ipam *IPAMServer) handleGetHostData(conn *websocket.Conn, inMsg simpleJSON
 		RequestType: "DISPLAYHOSTDATA",
 		RequestData: [][]string{
 			sliceOfAddresses,
-			ipam.dns.GetForwardRecordsForAddresses(sliceOfAddresses),
+			ipam.dns.GetFirstHostnameForAddresses(sliceOfAddresses),
 			ipam.pinger.GetPingResultsForAddresses(sliceOfAddresses),
 			ipam.pinger.GetPingTimesForAddresses(sliceOfAddresses),
 		},

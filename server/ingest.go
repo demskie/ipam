@@ -110,5 +110,5 @@ func (ipam *IPAMServer) IngestCustomData(customData []CustomData, headerOrder ..
 	for i := range newCustomData {
 		newCustomData[i] = nestedMap[newHeaderOrder[i]]
 	}
-	ipam.custom.SwapDatastore(newHeaderOrder, newCustomData)
+	ipam.custom.SwapDatastore(newCustomData, newHeaderOrder)
 }

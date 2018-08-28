@@ -25,9 +25,9 @@ func NewDatastore() *Datastore {
 }
 
 // SwapDatastore replaces everything with supplied data
-func (d *Datastore) SwapDatastore(headers []string, data []map[string]string) {
-	newCustomHeaders := make([]header, len(headers))
+func (d *Datastore) SwapDatastore(data []map[string]string, headers []string) {
 	newCustomData := make([]map[address]value, len(headers))
+	newCustomHeaders := make([]header, len(headers))
 	for i := range headers {
 		newCustomHeaders[i] = header(headers[i])
 		newCustomData[i] = map[address]value{}
@@ -36,14 +36,17 @@ func (d *Datastore) SwapDatastore(headers []string, data []map[string]string) {
 		}
 	}
 	d.mtx.Lock()
-	d.customHeaders = newCustomHeaders
 	d.customData = newCustomData
+	d.customHeaders = newCustomHeaders
 	d.mtx.Unlock()
 }
 
 // AppendCustomData returns a new string slice for sending to client
 func (d *Datastore) AppendCustomData(existingData [][]string) [][]string {
 	newData := make([][]string, len(existingData))
+	for i := range newData {
+		newData[i] = existingData[i]
+	}
 	sliceOfAddresses := existingData[0]
 	d.mtx.RLock()
 	for i, hdr := range d.customHeaders {

@@ -5,6 +5,8 @@ import { Card, Elevation, Button, InputGroup, Intent } from "@blueprintjs/core";
 import { Flex, Box } from "reflexbox";
 import { List } from "react-virtualized";
 
+var lastNonEmptyTarget = "";
+
 export class Pingsweep extends React.PureComponent {
 	constructor() {
 		super();
@@ -22,9 +24,12 @@ export class Pingsweep extends React.PureComponent {
 	};
 
 	render() {
+		if (this.props.scanTarget !== "") {
+			lastNonEmptyTarget = this.props.scanTarget;
+		}
 		const cardWidth = 190;
 		const cardHeight = 80;
-		const pingSweepCardsPerRow = Math.floor(this.props.panelWidth / cardWidth);
+		const pingSweepCardsPerRow = Math.floor(this.props.panelWidth / (cardWidth + 20));
 		const pingSweepRowCount = this.calculateRowCount(pingSweepCardsPerRow);
 		const generateRow = rowIndex => {
 			const start = rowIndex * pingSweepCardsPerRow;
@@ -95,7 +100,7 @@ export class Pingsweep extends React.PureComponent {
 														large={true}
 														leftIcon="search"
 														onChange={ev => this.setState({ pingsweepInputValue: ev.target.value })}
-														placeholder="192.168.128.0/24"
+														placeholder={lastNonEmptyTarget}
 														rightElement={
 															<Button
 																className="bp3-minimal"

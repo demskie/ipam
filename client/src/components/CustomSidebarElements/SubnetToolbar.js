@@ -22,6 +22,27 @@ export class SubnetToolbar extends React.PureComponent {
 				<NavbarGroup align={Alignment.LEFT}>
 					<Button
 						className="bp3-minimal"
+						icon="geosearch"
+						text="Scan"
+						disabled={Object.keys(this.props.selectedTreeNode).length === 0}
+						onClick={() => {
+							setTimeout(() => {
+								this.props.handleUserAction({
+									action: "getScanStart",
+									value: this.props.selectedTreeNode.net
+								});
+								this.props.handleUserAction({
+									action: "setSelectedTabId",
+									value: "scan"
+								});
+								this.props.handleUserAction({
+									action: "showAdvancedOverlay"
+								});
+							}, 500);
+						}}
+					/>
+					<Button
+						className="bp3-minimal"
 						icon="add"
 						text="Create"
 						onClick={() => {

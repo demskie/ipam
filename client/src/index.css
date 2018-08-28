@@ -56,3 +56,7 @@ label.bp3-label .bp3-popover-wrapper {
 		position: sticky;
 	}
 }
+
+.bp3-menu {
+	min-width: 80px;
+}

@@ -74,7 +74,7 @@ func (ipam *IPAMServer) handleRestfulHosts(w http.ResponseWriter, r *http.Reques
 		sliceOfAddresses[i] = currentIP.String()
 		currentIP = subnetmath.AddToAddr(currentIP, 1)
 	}
-	forwardRecords := ipam.dns.GetForwardRecordsForAddresses(sliceOfAddresses)
+	forwardRecords := ipam.dns.GetFirstHostnameForAddresses(sliceOfAddresses)
 	pingResults := ipam.pinger.GetPingResultsForAddresses(sliceOfAddresses)
 	lastPingAttempts := ipam.pinger.GetPingTimesForAddresses(sliceOfAddresses)
 	results := make([]hostJSON, len(sliceOfAddresses))

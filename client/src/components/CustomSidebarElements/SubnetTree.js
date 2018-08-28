@@ -104,29 +104,23 @@ export class SubnetTree extends React.PureComponent {
 				{ className: Classes.DARK },
 				React.createElement(MenuItem, {
 					className: Classes.DARK,
-					onClick: setTimeout(() => {
-						this.props.handleUserAction({
-							action: "getScanStart",
-							value: this.props.selectedTreeNode.net
-						});
-						this.props.handleUserAction({
-							action: "setSelectedTabId",
-							value: "scan"
-						});
-						this.props.handleUserAction({
-							action: "showAdvancedOverlay"
-						});
-					}, 500),
-					intent: Intent.PRIMARY,
-					text: "Scan Subnet"
-				}),
-				React.createElement(MenuItem, {
-					className: Classes.DARK,
 					onClick: () => {
-						this.props.handleUserAction({ action: "triggerSubnetMutationButton", value: "create" });
+						setTimeout(() => {
+							this.props.handleUserAction({
+								action: "getScanStart",
+								value: this.props.selectedTreeNode.net
+							});
+							this.props.handleUserAction({
+								action: "setSelectedTabId",
+								value: "scan"
+							});
+							this.props.handleUserAction({
+								action: "showAdvancedOverlay"
+							});
+						}, 500);
 					},
 					intent: Intent.PRIMARY,
-					text: "Create New Subnet"
+					text: "Scan Subnet"
 				}),
 				React.createElement(MenuItem, {
 					className: Classes.DARK,
@@ -134,7 +128,7 @@ export class SubnetTree extends React.PureComponent {
 						this.props.handleUserAction({ action: "triggerSubnetMutationButton", value: "modify" });
 					},
 					intent: Intent.PRIMARY,
-					text: "Modify This Subnet"
+					text: "Modify Subnet"
 				}),
 				React.createElement(MenuItem, {
 					className: Classes.DARK,
@@ -142,7 +136,7 @@ export class SubnetTree extends React.PureComponent {
 						this.props.handleUserAction({ action: "triggerSubnetMutationButton", value: "delete" });
 					},
 					intent: Intent.PRIMARY,
-					text: "Delete This Subnet"
+					text: "Delete Subnet"
 				})
 			);
 			ContextMenu.show(menu, { left: ev.clientX, top: ev.clientY }, () => {

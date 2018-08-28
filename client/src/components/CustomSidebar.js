@@ -23,7 +23,7 @@ export class CustomSidebar extends React.PureComponent {
 				}}
 				styles={{
 					sidebar: {
-						width: this.props.sidebarWidth + "px",
+						width: "500px",
 						backgroundColor: "#30404D"
 					}
 				}}
@@ -60,7 +60,6 @@ CustomSidebar.propTypes = {
 	selectedTreeNode: PropTypes.object.isRequired,
 	sidebarOpen: PropTypes.bool.isRequired,
 	sidebarDocked: PropTypes.bool.isRequired,
-	sidebarWidth: PropTypes.number.isRequired,
 	subnetData: PropTypes.array.isRequired,
 	subnetPromptAction: PropTypes.string.isRequired,
 	subnetPromptEnabled: PropTypes.bool.isRequired

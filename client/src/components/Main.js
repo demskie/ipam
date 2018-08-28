@@ -6,7 +6,7 @@ import { Alert, Intent, Toaster, Classes, Position } from "@blueprintjs/core";
 import { CustomSidebar } from "./CustomSidebar.js";
 import { CustomNavbar } from "./CustomNavbar.js";
 
-const sidebarMinimumWidth = 500;
+const sidebarWidth = 500;
 
 const notifications = Toaster.create({
 	autoFocus: false,
@@ -25,7 +25,6 @@ export class Main extends React.Component {
 
 			sidebarOpen: false,
 			sidebarDocked: false,
-			sidebarWidth: 0,
 
 			subnetData: [],
 			selectedTreeNode: {},
@@ -40,7 +39,7 @@ export class Main extends React.Component {
 			debugData: [],
 
 			scanData: [],
-			scanTarget: "",
+			scanTarget: "192.168.128.0/24",
 			selectedTabId: "scan",
 
 			advancedOverlayEnabled: false,
@@ -53,12 +52,10 @@ export class Main extends React.Component {
 
 	updateDimensions = () => {
 		let dockedBool;
-		let sidebarWidth = document.getElementById("root").clientWidth / 3;
-		if (sidebarWidth >= sidebarMinimumWidth) {
+		if (sidebarWidth >= document.getElementById("root").clientWidth / 4) {
 			dockedBool = true;
 		} else {
 			dockedBool = false;
-			sidebarWidth = sidebarMinimumWidth;
 		}
 		let tableWidth = document.getElementById("root").clientWidth;
 		if (dockedBool) {
@@ -66,7 +63,6 @@ export class Main extends React.Component {
 		}
 		this.setState({
 			sidebarDocked: dockedBool,
-			sidebarWidth: sidebarWidth,
 			hostDetailsWidth: tableWidth,
 			hostDetailsHeight: document.getElementById("root").clientHeight - 50,
 			advancedOverlayWidth: document.getElementById("root").clientWidth * 0.8,
@@ -186,6 +182,7 @@ export class Main extends React.Component {
 		this.handleWebsocketCreation();
 		this.watchForOutdatedCache();
 		this.displaySidebarOnce();
+		disablePageNavigationGesture();
 	};
 
 	handleUserAction = obj => {
@@ -210,7 +207,6 @@ export class Main extends React.Component {
 					selectedTreeNode={this.state.selectedTreeNode}
 					sidebarOpen={this.state.sidebarOpen}
 					sidebarDocked={this.state.sidebarDocked}
-					sidebarWidth={this.state.sidebarWidth}
 					subnetData={this.state.subnetData}
 					subnetPromptAction={this.state.subnetPromptAction}
 					subnetPromptEnabled={this.state.subnetPromptEnabled}
@@ -251,7 +247,6 @@ const reactToUserAction = (parent, obj) => {
 
 		case "create":
 			if (parent.state.websocket.readyState === 1) {
-				console.debug("POSTNEWSUBNET", obj);
 				parent.state.websocket.send(
 					JSON.stringify({
 						RequestType: "POSTNEWSUBNET",
@@ -268,7 +263,6 @@ const reactToUserAction = (parent, obj) => {
 
 		case "modify":
 			if (parent.state.websocket.readyState === 1) {
-				console.debug("POSTMODIFYSUBNET", obj);
 				parent.state.websocket.send(
 					JSON.stringify({
 						RequestType: "POSTMODIFYSUBNET",
@@ -285,7 +279,6 @@ const reactToUserAction = (parent, obj) => {
 
 		case "delete":
 			if (parent.state.websocket.readyState === 1) {
-				console.debug("POSTDELETESUBNET", obj);
 				parent.state.websocket.send(
 					JSON.stringify({
 						RequestType: "POSTDELETESUBNET",
@@ -302,7 +295,6 @@ const reactToUserAction = (parent, obj) => {
 
 		case "getSubnetData":
 			if (parent.state.websocket.readyState === 1) {
-				console.debug("GETSUBNETDATA");
 				parent.state.websocket.send(
 					JSON.stringify({
 						requestType: "GETSUBNETDATA",
@@ -316,7 +308,6 @@ const reactToUserAction = (parent, obj) => {
 
 		case "getHostData":
 			if (parent.state.websocket.readyState === 1) {
-				console.debug("GETHOSTDATA", obj);
 				parent.state.websocket.send(
 					JSON.stringify({
 						requestType: "GETHOSTDATA",
@@ -330,7 +321,6 @@ const reactToUserAction = (parent, obj) => {
 
 		case "getHistoryData":
 			if (parent.state.websocket.readyState === 1) {
-				console.debug("GETHISTORYDATA");
 				parent.state.websocket.send(
 					JSON.stringify({
 						requestType: "GETHISTORYDATA",
@@ -344,7 +334,6 @@ const reactToUserAction = (parent, obj) => {
 
 		case "getDebugData":
 			if (parent.state.websocket.readyState === 1) {
-				console.debug("GETDEBUGDATA");
 				parent.state.websocket.send(
 					JSON.stringify({
 						requestType: "GETDEBUGDATA",
@@ -452,4 +441,28 @@ const reactToUserAction = (parent, obj) => {
 		default:
 			console.log("Error! unknown user action:", obj);
 	}
+};
+
+const disablePageNavigationGesture = () => {
+	// https://stackoverflow.com/questions/12381563/how-to-stop-browser-back-button-using-javascript
+	(function(global) {
+		if (typeof global === "undefined") {
+			throw new Error("window is undefined");
+		}
+		var _hash = "!";
+		var noBackPlease = function() {
+			global.location.href += "#";
+			global.setTimeout(function() {
+				global.location.href += "!";
+			}, 50);
+		};
+		global.onhashchange = function() {
+			if (global.location.hash !== _hash) {
+				global.location.hash = _hash;
+			}
+		};
+		global.onload = function() {
+			noBackPlease();
+		};
+	})(window);
 };

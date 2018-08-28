@@ -30,8 +30,8 @@ func (b *Bucket) ParseZoneFile(f *os.File, origin, filename string) (processed, 
 						lastHostname = lastHostname[:len(lastHostname)-1]
 					}
 				}
-				b.forwardRecords[addr.String()] = appendToSliceIfMissing(b.forwardRecords[addr.String()], lastHostname)
-				b.reverseRecords[addr.String()] = lastHostname
+				b.addrToHostnames[addr.String()] = appendToSliceIfMissing(b.addrToHostnames[addr.String()], lastHostname)
+				b.hostnameToAddr[lastHostname] = addr.String()
 				processed++
 			case miekgdns.TypeAAAA:
 				addr := token.RR.(*miekgdns.AAAA).AAAA
@@ -41,8 +41,8 @@ func (b *Bucket) ParseZoneFile(f *os.File, origin, filename string) (processed, 
 						lastHostname = lastHostname[:len(lastHostname)-1]
 					}
 				}
-				b.forwardRecords[addr.String()] = appendToSliceIfMissing(b.forwardRecords[addr.String()], lastHostname)
-				b.reverseRecords[addr.String()] = lastHostname
+				b.addrToHostnames[addr.String()] = appendToSliceIfMissing(b.addrToHostnames[addr.String()], lastHostname)
+				b.hostnameToAddr[lastHostname] = addr.String()
 				processed++
 			default:
 				skipped++
