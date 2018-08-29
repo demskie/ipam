@@ -81,7 +81,7 @@ type CustomData struct {
 
 // IngestCustomData parses and completely overwrites existing customData
 // headerOrder allows the caller to specify the preferred order of headers displayed on the clientside
-func (ipam *IPAMServer) IngestCustomData(customData []CustomData, headerOrder ...string) {
+func (ipam *IPAMServer) IngestCustomData(customData []CustomData, leftoverLines [][]string, headerOrder ...string) {
 	nestedMap := map[string]map[string]string{}
 	for _, cd := range customData {
 		_, exists := nestedMap[cd.Header]
@@ -110,5 +110,5 @@ func (ipam *IPAMServer) IngestCustomData(customData []CustomData, headerOrder ..
 	for i := range newCustomData {
 		newCustomData[i] = nestedMap[newHeaderOrder[i]]
 	}
-	ipam.custom.SwapDatastore(newCustomData, newHeaderOrder)
+	ipam.custom.SwapDatastore(newCustomData, leftoverLines, newHeaderOrder)
 }
