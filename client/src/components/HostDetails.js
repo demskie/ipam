@@ -138,7 +138,12 @@ export class HostDetails extends React.PureComponent {
 					columnWidths={this.columnWidthArray()}
 					enableColumnResizing={true}
 					enableRowHeader={false}
-					numFrozenColumns={2}
+					numFrozenColumns={() => {
+						if (this.props.hostData[4] === undefined) {
+							return 0;
+						}
+						return 2;
+					}}
 					numFrozenRows={0}
 				>
 					<Column name={<div style={{ textAlign: "center" }}>{"Address"}</div>} cellRenderer={this.addressRenderer} />

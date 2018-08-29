@@ -46,6 +46,9 @@ func (d *Datastore) SwapDatastore(data []map[string]string, unmatched [][]string
 			newCustomData[i][address(k)] = value(v)
 		}
 	}
+	if len(newCustomData) > 0 && len(newCustomData[0]) == 0 && len(unmatched) == 0 {
+		newCustomHeaders = []header{}
+	}
 	d.mtx.Lock()
 	d.customData = newCustomData
 	d.unmatchedData = deepCopyNestedStrings(unmatched)

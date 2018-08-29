@@ -8,7 +8,7 @@ import { CustomNavbar } from "./CustomNavbar.js";
 
 const sidebarWidth = 500;
 const sidebarShouldBeDocked = () => {
-	return sidebarWidth <= document.getElementById("root").clientWidth / 4;
+	return sidebarWidth <= document.getElementById("root").clientWidth / 3;
 };
 
 const notifications = Toaster.create({
