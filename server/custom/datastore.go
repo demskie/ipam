@@ -74,18 +74,15 @@ func (d *Datastore) AppendCustomData(existingData [][]string) [][]string {
 }
 
 // SearchAllCustomData will return any hosts and unmatched lines of hostData that include the query string
-func (d *Datastore) SearchAllCustomData(query string, stopChan chan struct{}) (matchedHosts []string, unmatchedLines [][]string) {
+func (d *Datastore) SearchAllCustomData(query string, stopChan chan struct{}) (matchedAddrs map[string]struct{}, unmatchedLines [][]string) {
 	d.mtx.RLock()
-	matchedHostsMap := map[address]struct{}{}
+	matchedAddrs = map[string]struct{}{}
 	for i := range d.customData {
 		for addr, val := range d.customData[i] {
 			if strings.Contains(strings.ToLower(string(val)), query) {
-				matchedHostsMap[addr] = struct{}{}
+				matchedAddrs[string(addr)] = struct{}{}
 			}
 		}
-	}
-	for addr := range matchedHostsMap {
-		matchedHosts = append(matchedHosts, string(addr))
 	}
 	unmatchedLines = make([][]string, 0, len(d.customHeaders))
 	for _, slc := range d.unmatchedData {
@@ -98,5 +95,5 @@ func (d *Datastore) SearchAllCustomData(query string, stopChan chan struct{}) (m
 		}
 	}
 	d.mtx.RUnlock()
-	return matchedHosts, unmatchedLines
+	return matchedAddrs, unmatchedLines
 }

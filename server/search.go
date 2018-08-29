@@ -3,7 +3,6 @@ package server
 import (
 	"strings"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/demskie/ipam/server/ping"
 	"github.com/demskie/subnetmath"
 )
@@ -28,7 +27,18 @@ func (ipam *IPAMServer) searchHostData(query string, stopChan chan struct{}) [][
 		return ipam.custom.AppendCustomData(hostData)
 	}
 	query = strings.ToLower(query)
-	matchedHosts, unmatchedLines := ipam.custom.SearchAllCustomData(query, stopChan)
-	spew.Dump(matchedHosts, unmatchedLines) // TODO: finish func
-	return nil
+	matchedAddrs, unmatchedLines := ipam.custom.SearchAllCustomData(query, stopChan)
+	matchedAddrs = ipam.dns.SearchAllHostnames(query, matchedAddrs)
+	sliceOfAddresses := make([]string, 0, len(matchedAddrs))
+	for addr := range matchedAddrs {
+		sliceOfAddresses = append(sliceOfAddresses, addr)
+	}
+	hostData := [][]string{
+		sliceOfAddresses,
+		ipam.dns.GetFirstHostnameForAddresses(sliceOfAddresses),
+		ipam.pinger.GetPingResultsForAddresses(sliceOfAddresses),
+		ipam.pinger.GetPingTimesForAddresses(sliceOfAddresses),
+	}
+	hostData = ipam.custom.AppendCustomData(hostData)
+	return append(unmatchedLines, hostData...)
 }

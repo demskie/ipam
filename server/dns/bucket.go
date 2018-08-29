@@ -1,6 +1,7 @@
 package dns
 
 import (
+	"strings"
 	"sync"
 )
 
@@ -78,4 +79,15 @@ func appendToSliceIfMissing(slc []string, s1 string) []string {
 		}
 	}
 	return append(slc, s1)
+}
+
+func (b *Bucket) SearchAllHostnames(query string, matchedAddrs map[string]struct{}) map[string]struct{} {
+	b.mtx.RLock()
+	for hostname, addr := range b.hostnameToAddr {
+		if strings.Contains(strings.ToLower(hostname), query) {
+			matchedAddrs[addr] = struct{}{}
+		}
+	}
+	b.mtx.RUnlock()
+	return matchedAddrs
 }
