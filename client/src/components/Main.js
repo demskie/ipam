@@ -7,6 +7,9 @@ import { CustomSidebar } from "./CustomSidebar.js";
 import { CustomNavbar } from "./CustomNavbar.js";
 
 const sidebarWidth = 500;
+const sidebarShouldBeDocked = () => {
+	return sidebarWidth <= document.getElementById("root").clientWidth / 4;
+};
 
 const notifications = Toaster.create({
 	autoFocus: false,
@@ -52,7 +55,7 @@ export class Main extends React.Component {
 
 	updateDimensions = () => {
 		let dockedBool;
-		if (sidebarWidth >= document.getElementById("root").clientWidth / 4) {
+		if (sidebarShouldBeDocked()) {
 			dockedBool = true;
 		} else {
 			dockedBool = false;
@@ -409,9 +412,22 @@ const reactToUserAction = (parent, obj) => {
 			break;
 
 		case "triggerSidebarToggle":
-			parent.setState({
-				sidebarOpen: !parent.state.sidebarOpen
-			});
+			if (parent.state.sidebarDocked) {
+				parent.setState({
+					sidebarDocked: false,
+					sidebarOpen: false
+				});
+			} else if (sidebarShouldBeDocked()) {
+				parent.setState({
+					sidebarDocked: true,
+					sidebarOpen: true
+				});
+			} else {
+				parent.setState({
+					sidebarDocked: false,
+					sidebarOpen: !parent.state.sidebarOpen
+				});
+			}
 			break;
 
 		case "setSidebarOpen":

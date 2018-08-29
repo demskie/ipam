@@ -41,7 +41,7 @@ export class CustomNavbar extends React.PureComponent {
 						<Button
 							className="bp3-minimal bp3-large"
 							icon="menu"
-							disabled={this.props.sidebarDocked}
+							disabled={false}
 							onClick={() => {
 								this.props.handleUserAction({ action: "triggerSidebarToggle" });
 							}}
