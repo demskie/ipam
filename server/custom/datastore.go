@@ -11,48 +11,100 @@ type value string
 
 // Datastore object is used to send custom data to client
 type Datastore struct {
-	mtx           *sync.RWMutex
-	customHeaders []header
-	customData    []map[address]value
-	unmatchedData [][]string
+	mtx          *sync.RWMutex
+	headers      []header
+	structured   map[address][]value
+	unstructured [][]value
 }
 
 // NewDatastore creates a new datastore object
 func NewDatastore() *Datastore {
 	return &Datastore{
-		mtx:           &sync.RWMutex{},
-		customHeaders: make([]header, 0),
-		customData:    make([]map[address]value, 0),
-		unmatchedData: make([][]string, 0),
+		mtx:          &sync.RWMutex{},
+		headers:      make([]header, 0),
+		structured:   make(map[address][]value, 0),
+		unstructured: make([][]value, 0),
 	}
 }
 
-func deepCopyNestedStrings(old [][]string) (new [][]string) {
-	new = make([][]string, 0, len(old))
-	for _, slc := range old {
-		new = append(new, slc[:])
-	}
-	return new
+// DeviceData represents a single element of data for a device with an address
+type DeviceData struct {
+	Header  string
+	Address string
+	Value   string
 }
 
-// SwapDatastore replaces everything with supplied data
-func (d *Datastore) SwapDatastore(data []map[string]string, unmatched [][]string, headers []string) {
-	newCustomData := make([]map[address]value, len(headers))
-	newCustomHeaders := make([]header, len(headers))
-	for i := range headers {
-		newCustomHeaders[i] = header(headers[i])
-		newCustomData[i] = map[address]value{}
-		for k, v := range data[i] {
-			newCustomData[i][address(k)] = value(v)
+// UnknownDeviceData is used when the address is not known
+type UnknownDeviceData struct {
+	Header string
+	ID     int
+	Value  string
+}
+
+func createHeaderMap(devicesWithAddr []DeviceData, devicesWithoutAddr []UnknownDeviceData, headerOrder []string) map[string]int {
+	headerMap := map[string]int{}
+	for _, hdr := range headerOrder {
+		_, exists := headerMap[hdr]
+		if !exists {
+			headerMap[hdr] = len(headerMap)
 		}
 	}
-	if len(newCustomData) > 0 && len(newCustomData[0]) == 0 && len(unmatched) == 0 {
-		newCustomHeaders = []header{}
+	for _, dd := range devicesWithAddr {
+		_, exists := headerMap[dd.Header]
+		if !exists {
+			headerMap[dd.Header] = len(headerMap)
+		}
 	}
+	for _, udd := range devicesWithoutAddr {
+		_, exists := headerMap[udd.Header]
+		if !exists {
+			headerMap[udd.Header] = len(headerMap)
+		}
+	}
+	return headerMap
+}
+
+func createStructuredData(devicesWithAddr []DeviceData, headerMap map[string]int) map[address][]value {
+	structuredData := map[address][]value{}
+	for _, dd := range devicesWithAddr {
+		_, exists := structuredData[address(dd.Address)]
+		if !exists {
+			structuredData[address(dd.Address)] = make([]value, len(headerMap))
+		}
+		structuredData[address(dd.Address)][headerMap[dd.Header]] = value(dd.Value)
+	}
+	return structuredData
+}
+
+func createUnstructuredData(devicesWithoutAddr []UnknownDeviceData, headerMap map[string]int) [][]value {
+	uniqueDevices := map[int][]value{}
+	for _, udd := range devicesWithoutAddr {
+		_, exists := uniqueDevices[udd.ID]
+		if !exists {
+			uniqueDevices[udd.ID] = make([]value, len(headerMap))
+		}
+		uniqueDevices[udd.ID][headerMap[udd.Header]] = value(udd.Value)
+	}
+	unstructuredData := make([][]value, 0, len(uniqueDevices))
+	for _, values := range uniqueDevices {
+		unstructuredData = append(unstructuredData, values)
+	}
+	return unstructuredData
+}
+
+// RecreateDatastore replaces everything with supplied data
+func (d *Datastore) RecreateDatastore(devicesWithAddr []DeviceData, devicesWithoutAddr []UnknownDeviceData, preferredHeaderOrder []string) {
+	headerMap := createHeaderMap(devicesWithAddr, devicesWithoutAddr, preferredHeaderOrder)
+	headers := make([]header, len(headerMap))
+	for hdr, i := range headerMap {
+		headers[i] = header(hdr)
+	}
+	structured := createStructuredData(devicesWithAddr, headerMap)
+	unstructured := createUnstructuredData(devicesWithoutAddr, headerMap)
 	d.mtx.Lock()
-	d.customData = newCustomData
-	d.unmatchedData = deepCopyNestedStrings(unmatched)
-	d.customHeaders = newCustomHeaders
+	d.headers = headers
+	d.structured = structured
+	d.unstructured = unstructured
 	d.mtx.Unlock()
 }
 
@@ -64,11 +116,11 @@ func (d *Datastore) AppendCustomData(existingData [][]string) [][]string {
 	}
 	sliceOfAddresses := existingData[0]
 	d.mtx.RLock()
-	for i, hdr := range d.customHeaders {
+	for i, hdr := range d.headers {
 		newSlice := make([]string, 0, len(sliceOfAddresses)+1)
 		newSlice = append(newSlice, string(hdr))
 		for _, addr := range sliceOfAddresses {
-			newSlice = append(newSlice, string(d.customData[i][address(addr)]))
+			newSlice = append(newSlice, string(d.structured[address(addr)][i]))
 		}
 		newData = append(newData, newSlice)
 	}
@@ -76,27 +128,39 @@ func (d *Datastore) AppendCustomData(existingData [][]string) [][]string {
 	return newData
 }
 
-// SearchAllCustomData will return any hosts and unmatched lines of hostData that include the query string
-func (d *Datastore) SearchAllCustomData(query string, stopChan chan struct{}) (matchedAddrs map[string]struct{}, unmatchedLines [][]string) {
+const searchLimit = 10000
+
+// SearchAllCustomData will return any hosts and unknownHosts of hostData that include the query string
+func (d *Datastore) SearchAllCustomData(query string, stopChan chan struct{}) (matchedAddrs map[string]struct{}, matchedUnknownDevices [][]string) {
 	d.mtx.RLock()
 	matchedAddrs = map[string]struct{}{}
-	for i := range d.customData {
-		for addr, val := range d.customData[i] {
+	for addr, device := range d.structured {
+		if len(matchedAddrs) > searchLimit {
+			break
+		}
+		for _, val := range device {
 			if strings.Contains(strings.ToLower(string(val)), query) {
 				matchedAddrs[string(addr)] = struct{}{}
+				break
 			}
 		}
 	}
-	unmatchedLines = make([][]string, 0, len(d.customHeaders))
-	for _, slc := range d.unmatchedData {
-		for _, s := range slc {
-			if strings.Contains(strings.ToLower(s), query) {
-				newSlc := append([]string{"unknown", "-", "-", "-"}, slc...)
-				unmatchedLines = append(unmatchedLines, newSlc)
+	matchedUnknownDevices = [][]string{}
+	for _, device := range d.unstructured {
+		if len(matchedUnknownDevices) > searchLimit {
+			break
+		}
+		for _, val := range device {
+			if strings.Contains(strings.ToLower(string(val)), query) {
+				newSlice := make([]string, len(d.headers))
+				for i := range device {
+					newSlice[i] = string(device[i])
+				}
+				matchedUnknownDevices = append(matchedUnknownDevices, newSlice)
 				break
 			}
 		}
 	}
 	d.mtx.RUnlock()
-	return matchedAddrs, unmatchedLines
+	return matchedAddrs, matchedUnknownDevices
 }
