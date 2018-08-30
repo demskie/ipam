@@ -74,6 +74,6 @@ func (ipam *IPAMServer) IngestNewBucket(newBucket *dns.Bucket) {
 }
 
 // IngestCustomData is a wrapper around the RecreateDatastore method defined in ipam/server/custom
-func (ipam *IPAMServer) IngestCustomData(devicesWithAddr []custom.DeviceData, devicesWithoutAddr []custom.UnknownDeviceData, preferredHeaderOrder ...string) error {
+func (ipam *IPAMServer) IngestCustomData(devicesWithAddr []custom.DeviceData, devicesWithoutAddr []custom.UnknownDeviceData, preferredHeaderOrder ...string) {
 	ipam.custom.RecreateDatastore(devicesWithAddr, devicesWithoutAddr, preferredHeaderOrder)
 }
