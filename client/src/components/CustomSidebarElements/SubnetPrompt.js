@@ -5,6 +5,80 @@ import { Dialog, Classes, Button, Intent, Label, TextArea, InputGroup, Tooltip, 
 import { Flex, Box } from "reflexbox";
 
 export class SubnetPrompt extends React.PureComponent {
+	show = () => {
+		return (
+			<Dialog
+				className={Classes.DARK}
+				title=""
+				isOpen={this.props.subnetPromptEnabled}
+				onClose={() => {
+					this.props.handleUserAction({ action: "closeSubnetPrompt" });
+				}}
+			>
+				<div className={Classes.DIALOG_BODY}>
+					<Flex justify="center">
+						<Box p={2}>
+							<Label>
+								Subnet CIDR
+								<InputGroup
+									id="cidr-input"
+									placeholder=""
+									value={this.props.selectedTreeNode.net}
+									disabled={true}
+									rightElement={
+										<Tooltip
+											className="bp3-dark"
+											content={subnetCheatsheet}
+											position={Position.RIGHT}
+											intent={Intent.NONE}
+										>
+											{<Button className="bp3-minimal" icon="help" />}
+										</Tooltip>
+									}
+								/>
+							</Label>
+							<Label>
+								Description
+								<InputGroup
+									id="description-input"
+									placeholder=""
+									value={this.props.selectedTreeNode.desc}
+									disabled={true}
+								/>
+							</Label>
+							<Label>
+								VLAN ID
+								<InputGroup id="vlan-input" placeholder="" value={this.props.selectedTreeNode.vlan} disabled={true} />
+							</Label>
+						</Box>
+						<Box p={2}>
+							<Label>
+								Scratch Notes
+								<TextArea
+									id="notes-input"
+									large={false}
+									style={{ width: "210px", maxWidth: "210px", height: "165px" }}
+									value={this.props.selectedTreeNode.notes}
+									disabled={true}
+								/>
+							</Label>
+						</Box>
+					</Flex>
+				</div>
+				<div className={Classes.DIALOG_FOOTER_ACTIONS}>
+					<Button
+						intent={Intent.NONE}
+						onClick={() => {
+							this.props.handleUserAction({ action: "closeSubnetPrompt" });
+						}}
+						style={{ marginRight: "40px", marginBottom: "10px" }}
+					>
+						Exit
+					</Button>
+				</div>
+			</Dialog>
+		);
+	};
 	create = () => {
 		return (
 			<Dialog
@@ -255,6 +329,8 @@ export class SubnetPrompt extends React.PureComponent {
 	};
 	render() {
 		switch (this.props.subnetPromptAction) {
+			case "show":
+				return this.show();
 			case "create":
 				return this.create();
 			case "modify":

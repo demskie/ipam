@@ -48,9 +48,12 @@ export class SubnetTree extends React.PureComponent {
 	};
 
 	handleNodeClick = nodeData => {
+		const lastClickedTime = nodeData.lastClickedTime;
+		const nowClickedTime = Date.now();
 		let newNodeData = Object.assign({}, nodeData);
 		newNodeData.isSelected = true;
 		newNodeData.isExpanded = true;
+		newNodeData.lastClickedTime = nowClickedTime;
 		this.props.handleUserAction({ action: "select", nodeData: newNodeData });
 		if (nodeData.childNodes !== undefined) {
 			let foundMatch = false;
@@ -65,6 +68,9 @@ export class SubnetTree extends React.PureComponent {
 					expandedNodeIds: [newNodeData.id, ...this.state.expandedNodeIds]
 				});
 			}
+		}
+		if (lastClickedTime !== undefined && nowClickedTime - lastClickedTime > 1000) {
+			this.props.handleUserAction({ action: "triggerSubnetPromptAction", value: "show" });
 		}
 	};
 
@@ -105,6 +111,14 @@ export class SubnetTree extends React.PureComponent {
 				React.createElement(MenuItem, {
 					className: Classes.DARK,
 					onClick: () => {
+						this.props.handleUserAction({ action: "triggerSubnetPromptAction", value: "show" });
+					},
+					intent: Intent.PRIMARY,
+					text: "Show Subnet"
+				}),
+				React.createElement(MenuItem, {
+					className: Classes.DARK,
+					onClick: () => {
 						setTimeout(() => {
 							this.props.handleUserAction({
 								action: "getScanStart",
@@ -125,7 +139,7 @@ export class SubnetTree extends React.PureComponent {
 				React.createElement(MenuItem, {
 					className: Classes.DARK,
 					onClick: () => {
-						this.props.handleUserAction({ action: "triggerSubnetMutationButton", value: "modify" });
+						this.props.handleUserAction({ action: "triggerSubnetPromptAction", value: "modify" });
 					},
 					intent: Intent.PRIMARY,
 					text: "Modify Subnet"
@@ -133,7 +147,7 @@ export class SubnetTree extends React.PureComponent {
 				React.createElement(MenuItem, {
 					className: Classes.DARK,
 					onClick: () => {
-						this.props.handleUserAction({ action: "triggerSubnetMutationButton", value: "delete" });
+						this.props.handleUserAction({ action: "triggerSubnetPromptAction", value: "delete" });
 					},
 					intent: Intent.PRIMARY,
 					text: "Delete Subnet"

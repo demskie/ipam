@@ -22,6 +22,15 @@ export class SubnetToolbar extends React.PureComponent {
 				<NavbarGroup align={Alignment.LEFT}>
 					<Button
 						className="bp3-minimal"
+						icon="eye-open"
+						text="Show"
+						disabled={Object.keys(this.props.selectedTreeNode).length === 0}
+						onClick={() => {
+							this.props.handleUserAction({ action: "triggerSubnetPromptAction", value: "show" });
+						}}
+					/>
+					<Button
+						className="bp3-minimal"
 						icon="geosearch"
 						text="Scan"
 						disabled={Object.keys(this.props.selectedTreeNode).length === 0}
@@ -46,7 +55,7 @@ export class SubnetToolbar extends React.PureComponent {
 						icon="add"
 						text="Create"
 						onClick={() => {
-							this.props.handleUserAction({ action: "triggerSubnetMutationButton", value: "create" });
+							this.props.handleUserAction({ action: "triggerSubnetPromptAction", value: "create" });
 						}}
 					/>
 					<Button
@@ -55,7 +64,7 @@ export class SubnetToolbar extends React.PureComponent {
 						text="Modify"
 						disabled={Object.keys(this.props.selectedTreeNode).length === 0}
 						onClick={() => {
-							this.props.handleUserAction({ action: "triggerSubnetMutationButton", value: "modify" });
+							this.props.handleUserAction({ action: "triggerSubnetPromptAction", value: "modify" });
 						}}
 					/>
 					<Button
@@ -64,7 +73,7 @@ export class SubnetToolbar extends React.PureComponent {
 						text="Delete"
 						disabled={Object.keys(this.props.selectedTreeNode).length === 0}
 						onClick={() => {
-							this.props.handleUserAction({ action: "triggerSubnetMutationButton", value: "delete" });
+							this.props.handleUserAction({ action: "triggerSubnetPromptAction", value: "delete" });
 						}}
 					/>
 				</NavbarGroup>

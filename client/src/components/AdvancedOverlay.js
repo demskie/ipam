@@ -51,6 +51,18 @@ export class AdvancedOverlay extends React.PureComponent {
 								renderActiveTabPanelOnly={true}
 							>
 								<Tab
+									id="history"
+									title="History"
+									disabled={false}
+									panel={<TabList data={this.props.historyData} panelWidth={panelWidth} panelHeight={panelHeight} />}
+								/>
+								<Tab
+									id="debug"
+									title="Debug"
+									disabled={false}
+									panel={<TabList data={this.props.debugData} panelWidth={panelWidth} panelHeight={panelHeight} />}
+								/>
+								<Tab
 									id="scan"
 									title="Pingsweep"
 									disabled={false}
@@ -63,18 +75,6 @@ export class AdvancedOverlay extends React.PureComponent {
 											panelHeight={panelHeight}
 										/>
 									}
-								/>
-								<Tab
-									id="history"
-									title="History"
-									disabled={false}
-									panel={<TabList data={this.props.historyData} panelWidth={panelWidth} panelHeight={panelHeight} />}
-								/>
-								<Tab
-									id="debug"
-									title="Debug"
-									disabled={false}
-									panel={<TabList data={this.props.debugData} panelWidth={panelWidth} panelHeight={panelHeight} />}
 								/>
 								<Tab id="usage" title="Visualization" disabled={true} panel={<div />} />
 							</Tabs>
