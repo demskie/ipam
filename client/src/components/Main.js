@@ -29,6 +29,8 @@ export class Main extends React.Component {
 			sidebarOpen: false,
 			sidebarDocked: false,
 
+			searchValue: "",
+
 			subnetData: [],
 			selectedTreeNode: {},
 			subnetPromptAction: "",
@@ -43,7 +45,7 @@ export class Main extends React.Component {
 
 			scanData: [],
 			scanTarget: "192.168.128.0/24",
-			selectedTabId: "scan",
+			selectedTabId: "history",
 
 			advancedOverlayEnabled: false,
 			advancedOverlayWidth: 0,
@@ -404,7 +406,7 @@ const reactToUserAction = (parent, obj) => {
 			});
 			break;
 
-		case "triggerSubnetMutationButton":
+		case "triggerSubnetPromptAction":
 			parent.setState({
 				subnetPromptAction: obj.value,
 				subnetPromptEnabled: true

@@ -1,14 +1,22 @@
 import React from "react";
 import PropTypes from "prop-types";
 import fscreen from "fscreen";
-import { Button, Navbar, NavbarGroup, Alignment, Alert } from "@blueprintjs/core";
+import debounce from "debounce";
+import { Button, Navbar, NavbarGroup, Alignment, Alert, InputGroup, Intent } from "@blueprintjs/core";
+import { CustomSpinner } from "./CustomSpinner/CustomSpinner.js";
+
+var searchInputValue;
+var searchPendingIntervalFunc;
 
 export class CustomNavbar extends React.PureComponent {
 	constructor() {
 		super();
 		this.state = {
 			fullscreenButtonDisabled: false,
-			fullscreenAlertIsOpen: false
+			fullscreenAlertIsOpen: false,
+			spinnerCycleTime: 0,
+			spinnerPercent: 0,
+			spinnerIntent: Intent.NONE
 		};
 	}
 
@@ -33,6 +41,46 @@ export class CustomNavbar extends React.PureComponent {
 		});
 	};
 
+	handleSearchIntervalStart = () => {
+		if (searchInputValue === "") {
+			this.setState({
+				spinnerCycleTime: 0,
+				spinnerPercent: 0,
+				spinnerIntent: Intent.NONE
+			});
+			clearInterval(searchPendingIntervalFunc);
+			return;
+		}
+		this.setState({
+			spinnerCycleTime: 0,
+			spinnerPercent: 0.0001,
+			spinnerIntent: Intent.PRIMARY
+		});
+		clearInterval(searchPendingIntervalFunc);
+		searchPendingIntervalFunc = setInterval(() => {
+			const spinnerPercent = this.state.spinnerPercent;
+			this.setState({
+				spinnerPercent: spinnerPercent + 100 / 3000
+			});
+		}, 100);
+	};
+
+	debouncedSearchValueMutation = debounce(() => {
+		if (searchInputValue != "") {
+			console.log(searchInputValue);
+			this.setState({
+				spinnerCycleTime: 1.5,
+				spinnerPercent: 0.25,
+				spinnerIntent: Intent.PRIMARY
+			});
+		}
+		clearInterval(searchPendingIntervalFunc);
+	}, 3000);
+
+	componentWillUnmount = () => {
+		clearInterval(searchPendingIntervalFunc);
+	};
+
 	render() {
 		return (
 			<div style={{ height: "50px" }}>
@@ -52,8 +100,30 @@ export class CustomNavbar extends React.PureComponent {
 					</NavbarGroup>
 
 					<NavbarGroup align={Alignment.RIGHT}>
+						<InputGroup
+							id="searchInput"
+							leftIcon="search"
+							onChange={ev => {
+								searchInputValue = ev.target.value;
+								this.handleSearchIntervalStart();
+								this.debouncedSearchValueMutation();
+							}}
+							placeholder="Search..."
+							rightElement={
+								<CustomSpinner
+									cycleTime={this.state.spinnerCycleTime}
+									floatPercent={this.state.spinnerPercent}
+									intent={this.state.spinnerIntent}
+									margin={5}
+									pixelSize={20}
+								/>
+							}
+							round={true}
+							style={{ width: "220px" }}
+						/>
 						<Button
-							text="Advanced Options"
+							text="Advanced"
+							style={{ marginLeft: "20px" }}
 							onClick={() => {
 								this.props.handleUserAction({ action: "showAdvancedOverlay" });
 							}}
