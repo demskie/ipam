@@ -132,7 +132,6 @@ export class HostDetails extends React.PureComponent {
 	};
 
 	render() {
-		console.debug("hostData", this.props.hostData);
 		return (
 			<div id="hostDetails" style={{ height: this.props.hostDetailsHeight }}>
 				<Table

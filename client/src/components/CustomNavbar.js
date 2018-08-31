@@ -41,7 +41,6 @@ export class CustomNavbar extends React.PureComponent {
 	};
 
 	clearSpinnerWhenFinished = () => {
-		console.log("searchInputValue", searchInputValue, "lastReceivedSearchResult", this.props.lastReceivedSearchResult);
 		if (
 			searchInputValue === this.props.lastReceivedSearchResult &&
 			this.state.spinnerCycleTime !== 0 &&
@@ -57,8 +56,8 @@ export class CustomNavbar extends React.PureComponent {
 	};
 
 	debouncedSearchValueMutation = debounce(() => {
+		this.props.handleUserAction({ action: "getSearchData", value: searchInputValue });
 		if (searchInputValue !== "") {
-			this.props.handleUserAction({ action: "getSearchData", value: searchInputValue });
 			this.setState({
 				spinnerCycleTime: 1.5,
 				spinnerPercent: 0.25,

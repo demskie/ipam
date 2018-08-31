@@ -164,7 +164,6 @@ export class SubnetTree extends React.PureComponent {
 	};
 
 	render() {
-		console.debug("subnetData", this.props.subnetData);
 		return (
 			<Tree
 				className="bp3-dark"

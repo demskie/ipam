@@ -281,7 +281,11 @@ func (ipam *IPAMServer) handleGetSearchData(conn *websocket.Conn, inMsg simpleJS
 	originalRequest := inMsg.RequestData[0]
 	inMsg.RequestData[0] = strings.TrimSpace(inMsg.RequestData[0])
 	inMsg.RequestData[0] = strings.ToLower(inMsg.RequestData[0])
-	log.Printf("(%v) has requested searchData for '%v'", remoteIP, inMsg.RequestData[0])
+	if inMsg.RequestData[0] == "" {
+		log.Printf("(%v) has requested cancellation on the last search query\n", remoteIP)
+		return
+	}
+	log.Printf("(%v) has requested searchData for '%v'\n", remoteIP, inMsg.RequestData[0])
 	if inMsg.RequestData[0] == "" {
 		log.Printf("received an invalid request from (%v)\n", remoteIP)
 		return

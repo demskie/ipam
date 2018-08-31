@@ -29,6 +29,8 @@ export class Main extends React.Component {
 			sidebarOpen: false,
 			sidebarDocked: false,
 
+			emptySearchField: true,
+			lastTransmittedSearchQuery: "",
 			lastReceivedSearchResult: "",
 
 			subnetData: [],
@@ -93,10 +95,12 @@ export class Main extends React.Component {
 					});
 					break;
 				case "DISPLAYSUBNETDATA":
-					console.log("DISPLAYSUBNETDATA");
-					this.setState({
-						subnetData: msg.requestData
-					});
+					if (this.state.emptySearchField) {
+						console.log("DISPLAYSUBNETDATA");
+						this.setState({
+							subnetData: msg.requestData
+						});
+					}
 					break;
 				case "DISPLAYHOSTDATA":
 					console.log("DISPLAYHOSTDATA");
@@ -315,12 +319,14 @@ const reactToUserAction = (parent, obj) => {
 
 		case "getSubnetData":
 			if (parent.state.websocket.readyState === 1) {
-				parent.state.websocket.send(
-					JSON.stringify({
-						requestType: "GETSUBNETDATA",
-						requestData: []
-					})
-				);
+				if (parent.state.emptySearchField) {
+					parent.state.websocket.send(
+						JSON.stringify({
+							requestType: "GETSUBNETDATA",
+							requestData: []
+						})
+					);
+				}
 			} else {
 				console.log("GETSUBNETDATA failed because websocket was not open");
 			}
@@ -367,6 +373,17 @@ const reactToUserAction = (parent, obj) => {
 
 		case "getSearchData":
 			if (parent.state.websocket.readyState === 1) {
+				if (obj.value === "") {
+					parent.setState({
+						emptySearchField: true,
+						lastTransmittedSearchQuery: ""
+					});
+				} else {
+					parent.setState({
+						emptySearchField: false,
+						lastTransmittedSearchQuery: obj.value
+					});
+				}
 				parent.state.websocket.send(
 					JSON.stringify({
 						requestType: "GETSEARCHDATA",
