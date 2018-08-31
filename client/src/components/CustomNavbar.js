@@ -67,14 +67,28 @@ export class CustomNavbar extends React.PureComponent {
 
 	debouncedSearchValueMutation = debounce(() => {
 		if (searchInputValue != "") {
-			console.log(searchInputValue);
+			clearInterval(searchPendingIntervalFunc);
+			this.props.handleUserAction({ action: "search", value: searchInputValue });
 			this.setState({
 				spinnerCycleTime: 1.5,
 				spinnerPercent: 0.25,
 				spinnerIntent: Intent.PRIMARY
 			});
+			let i = 0;
+			const waitForResult = setInterval(() => {
+				if (i > 10000 / 100 || this.props.searchResult == searchInputValue) {
+					clearInterval(waitForResult);
+					this.setState({
+						spinnerCycleTime: 0,
+						spinnerPercent: 1,
+						spinnerIntent: Intent.DANGER
+					});
+				}
+				i++;
+			}, 100);
+		} else {
+			this.props.handleUserAction({ action: "getSubnetData" });
 		}
-		clearInterval(searchPendingIntervalFunc);
 	}, 3000);
 
 	componentWillUnmount = () => {
@@ -152,5 +166,6 @@ export class CustomNavbar extends React.PureComponent {
 
 CustomNavbar.propTypes = {
 	handleUserAction: PropTypes.func.isRequired,
-	sidebarDocked: PropTypes.bool.isRequired
+	sidebarDocked: PropTypes.bool.isRequired,
+	searchResult: PropTypes.string.isRequired
 };

@@ -1,14 +1,36 @@
 package server
 
 import (
+	"strconv"
 	"strings"
 
 	"github.com/demskie/ipam/server/ping"
+	"github.com/demskie/ipam/server/subnets"
 	"github.com/demskie/subnetmath"
 )
 
+func (ipam *IPAMServer) searchSubnetData(query string, stopChan chan struct{}) []subnets.SubnetJSON {
+	results := []subnets.SubnetJSON{}
+	allSubnets := ipam.subnets.GetAllSubnets()
+	for _, sn := range allSubnets {
+		if strings.Contains(strings.ToLower(sn.Net), query) ||
+			strings.Contains(strings.ToLower(sn.Desc), query) ||
+			strings.Contains(strings.ToLower(sn.Details), query) ||
+			strings.Contains(strings.ToLower(sn.Vlan), query) {
+			results = append(results, subnets.SubnetJSON{
+				ID:      strconv.Itoa(len(results)),
+				Net:     sn.Net,
+				Desc:    sn.Desc,
+				Notes:   sn.Details,
+				Vlan:    sn.Vlan,
+				ModTime: sn.Mod,
+			})
+		}
+	}
+	return results
+}
+
 func (ipam *IPAMServer) searchHostData(query string, stopChan chan struct{}) [][]string {
-	query = strings.TrimSpace(query)
 	network := subnetmath.BlindlyParseCIDR(query)
 	if network != nil {
 		addressCount := ping.GetNumberOfHosts(network)

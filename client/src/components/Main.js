@@ -126,6 +126,15 @@ export class Main extends React.Component {
 						scanData: msg.requestData
 					});
 					break;
+				case "DISPLAYSEARCHDATA":
+					console.log("DISPLAYSEARCHDATA");
+					this.setState({
+						selectedTreeNode: {},
+						searchValue: msg.requestData.searchTarget,
+						subnetData: msg.requestData.subnetData,
+						hostData: msg.requestData.hostData
+					});
+					break;
 				default:
 					console.log("received unknown message type:", msg.requestType);
 			}
