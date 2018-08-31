@@ -65,17 +65,6 @@ export class SubnetPrompt extends React.PureComponent {
 						</Box>
 					</Flex>
 				</div>
-				<div className={Classes.DIALOG_FOOTER_ACTIONS}>
-					<Button
-						intent={Intent.NONE}
-						onClick={() => {
-							this.props.handleUserAction({ action: "closeSubnetPrompt" });
-						}}
-						style={{ marginRight: "40px", marginBottom: "10px" }}
-					>
-						Exit
-					</Button>
-				</div>
 			</Dialog>
 		);
 	};

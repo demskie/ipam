@@ -22,6 +22,32 @@ export class SubnetToolbar extends React.PureComponent {
 				<NavbarGroup align={Alignment.LEFT}>
 					<Button
 						className="bp3-minimal"
+						icon="add"
+						text="Create"
+						onClick={() => {
+							this.props.handleUserAction({ action: "triggerSubnetPromptAction", value: "create" });
+						}}
+					/>
+					<Button
+						className="bp3-minimal"
+						icon="annotation"
+						text="Modify"
+						disabled={Object.keys(this.props.selectedTreeNode).length === 0}
+						onClick={() => {
+							this.props.handleUserAction({ action: "triggerSubnetPromptAction", value: "modify" });
+						}}
+					/>
+					<Button
+						className="bp3-minimal"
+						icon="remove"
+						text="Delete"
+						disabled={Object.keys(this.props.selectedTreeNode).length === 0}
+						onClick={() => {
+							this.props.handleUserAction({ action: "triggerSubnetPromptAction", value: "delete" });
+						}}
+					/>
+					<Button
+						className="bp3-minimal"
 						icon="eye-open"
 						text="Show"
 						disabled={Object.keys(this.props.selectedTreeNode).length === 0}
@@ -48,32 +74,6 @@ export class SubnetToolbar extends React.PureComponent {
 									action: "showAdvancedOverlay"
 								});
 							}, 500);
-						}}
-					/>
-					<Button
-						className="bp3-minimal"
-						icon="add"
-						text="Create"
-						onClick={() => {
-							this.props.handleUserAction({ action: "triggerSubnetPromptAction", value: "create" });
-						}}
-					/>
-					<Button
-						className="bp3-minimal"
-						icon="annotation"
-						text="Modify"
-						disabled={Object.keys(this.props.selectedTreeNode).length === 0}
-						onClick={() => {
-							this.props.handleUserAction({ action: "triggerSubnetPromptAction", value: "modify" });
-						}}
-					/>
-					<Button
-						className="bp3-minimal"
-						icon="remove"
-						text="Delete"
-						disabled={Object.keys(this.props.selectedTreeNode).length === 0}
-						onClick={() => {
-							this.props.handleUserAction({ action: "triggerSubnetPromptAction", value: "delete" });
 						}}
 					/>
 				</NavbarGroup>

@@ -110,28 +110,31 @@ func (d *Datastore) RecreateDatastore(devicesWithAddr []DeviceData, devicesWitho
 
 // AppendCustomData returns a new string slice for sending to client
 func (d *Datastore) AppendCustomData(existingData [][]string) [][]string {
-	newData := make([][]string, len(existingData))
-	for i := range newData {
-		newData[i] = existingData[i]
-	}
-	sliceOfAddresses := existingData[0]
 	d.mtx.RLock()
-	for i, hdr := range d.headers {
-		newSlice := make([]string, 0, len(sliceOfAddresses)+1)
-		newSlice = append(newSlice, string(hdr))
-		for _, addr := range sliceOfAddresses {
-			newSlice = append(newSlice, string(d.structured[address(addr)][i]))
+	if len(d.structured) > 0 {
+		sliceOfAddresses := existingData[0]
+		for i, hdr := range d.headers {
+			newSlice := make([]string, 0, len(sliceOfAddresses)+1)
+			newSlice = append(newSlice, string(hdr))
+			for _, addr := range sliceOfAddresses {
+				val, exists := d.structured[address(addr)]
+				if exists {
+					newSlice = append(newSlice, string(val[i]))
+				} else {
+					newSlice = append(newSlice, "")
+				}
+			}
+			existingData = append(existingData, newSlice)
 		}
-		newData = append(newData, newSlice)
 	}
 	d.mtx.RUnlock()
-	return newData
+	return existingData
 }
 
-const searchLimit = 10000
+const searchLimit = 100000
 
 // SearchAllCustomData will return any hosts and unknownHosts of hostData that include the query string
-func (d *Datastore) SearchAllCustomData(query string, stopChan chan struct{}) (matchedAddrs map[string]struct{}, matchedUnknownDevices [][]string) {
+func (d *Datastore) SearchAllCustomData(query string, stopChan chan struct{}) (matchedAddrs map[string]struct{}, matchedUnknownDevices [][]string, copiedHeaders []string) {
 	d.mtx.RLock()
 	matchedAddrs = map[string]struct{}{}
 	for addr, device := range d.structured {
@@ -161,6 +164,10 @@ func (d *Datastore) SearchAllCustomData(query string, stopChan chan struct{}) (m
 			}
 		}
 	}
+	copiedHeaders = make([]string, len(d.headers))
+	for i := range d.headers {
+		copiedHeaders[i] = string(d.headers[i])
+	}
 	d.mtx.RUnlock()
-	return matchedAddrs, matchedUnknownDevices
+	return matchedAddrs, matchedUnknownDevices, copiedHeaders
 }

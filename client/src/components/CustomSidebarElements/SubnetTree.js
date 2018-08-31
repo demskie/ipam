@@ -2,6 +2,9 @@ import React from "react";
 import PropTypes from "prop-types";
 import { Tree, Intent, ContextMenu, Menu, MenuItem, Classes } from "@blueprintjs/core";
 
+var lastClickedNodeId;
+var lastClickedTime;
+
 export class SubnetTree extends React.PureComponent {
 	constructor(props) {
 		super(props);
@@ -35,7 +38,7 @@ export class SubnetTree extends React.PureComponent {
 					newNode.isExpanded = true;
 				}
 			}
-			if (newNode.childNodes !== undefined) {
+			if (newNode.childNodes !== undefined || newNode.childNodes !== null) {
 				if (newNode.childNodes.length === 0) {
 					delete newNode.childNodes;
 				} else {
@@ -48,12 +51,16 @@ export class SubnetTree extends React.PureComponent {
 	};
 
 	handleNodeClick = nodeData => {
-		const lastClickedTime = nodeData.lastClickedTime;
-		const nowClickedTime = Date.now();
+		if (lastClickedNodeId === nodeData.id && Date.now() - lastClickedTime < 1000) {
+			setTimeout(() => {
+				this.props.handleUserAction({ action: "triggerSubnetPromptAction", value: "show" });
+			}, 250);
+		}
+		lastClickedNodeId = nodeData.id;
+		lastClickedTime = Date.now();
 		let newNodeData = Object.assign({}, nodeData);
 		newNodeData.isSelected = true;
 		newNodeData.isExpanded = true;
-		newNodeData.lastClickedTime = nowClickedTime;
 		this.props.handleUserAction({ action: "select", nodeData: newNodeData });
 		if (nodeData.childNodes !== undefined) {
 			let foundMatch = false;
@@ -68,9 +75,6 @@ export class SubnetTree extends React.PureComponent {
 					expandedNodeIds: [newNodeData.id, ...this.state.expandedNodeIds]
 				});
 			}
-		}
-		if (lastClickedTime !== undefined && nowClickedTime - lastClickedTime > 1000) {
-			this.props.handleUserAction({ action: "triggerSubnetPromptAction", value: "show" });
 		}
 	};
 
@@ -160,6 +164,7 @@ export class SubnetTree extends React.PureComponent {
 	};
 
 	render() {
+		console.debug("subnetData", this.props.subnetData);
 		return (
 			<Tree
 				className="bp3-dark"

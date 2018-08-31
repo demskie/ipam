@@ -29,7 +29,7 @@ export class Main extends React.Component {
 			sidebarOpen: false,
 			sidebarDocked: false,
 
-			searchValue: "",
+			lastReceivedSearchResult: "",
 
 			subnetData: [],
 			selectedTreeNode: {},
@@ -130,7 +130,7 @@ export class Main extends React.Component {
 					console.log("DISPLAYSEARCHDATA");
 					this.setState({
 						selectedTreeNode: {},
-						searchValue: msg.requestData.searchTarget,
+						lastReceivedSearchResult: msg.requestData.searchTarget,
 						subnetData: msg.requestData.subnetData,
 						hostData: msg.requestData.hostData
 					});
@@ -146,7 +146,9 @@ export class Main extends React.Component {
 			this.handleUserAction({ action: "getSubnetData" });
 			this.handleUserAction({ action: "getHistoryData" });
 			setInterval(() => {
-				this.handleUserAction({ action: "getSubnetData" });
+				if (this.state.searchValue === "") {
+					this.handleUserAction({ action: "getSubnetData" });
+				}
 			}, 60000);
 		});
 		setTimeout(() => {
@@ -209,7 +211,11 @@ export class Main extends React.Component {
 				<CustomSidebar
 					content={
 						<div>
-							<CustomNavbar handleUserAction={this.handleUserAction} sidebarDocked={this.state.sidebarDocked} />
+							<CustomNavbar
+								handleUserAction={this.handleUserAction}
+								sidebarDocked={this.state.sidebarDocked}
+								lastReceivedSearchResult={this.state.lastReceivedSearchResult}
+							/>
 							<HostDetails
 								hostData={this.state.hostData}
 								hostDetailsWidth={this.state.hostDetailsWidth}
@@ -233,7 +239,7 @@ export class Main extends React.Component {
 					isOpen={this.state.alertVisible}
 					onClose={() => window.location.reload(true)}
 				>
-					<p>{"Could not connect to server"}</p>
+					<p>{"Lost connection with server"}</p>
 				</Alert>
 				<AdvancedOverlay
 					advancedOverlayEnabled={this.state.advancedOverlayEnabled}
@@ -356,6 +362,19 @@ const reactToUserAction = (parent, obj) => {
 				);
 			} else {
 				console.log("GETDEBUGDATA failed because websocket was not open");
+			}
+			break;
+
+		case "getSearchData":
+			if (parent.state.websocket.readyState === 1) {
+				parent.state.websocket.send(
+					JSON.stringify({
+						requestType: "GETSEARCHDATA",
+						requestData: [obj.value]
+					})
+				);
+			} else {
+				console.log("GETSEARCHDATA failed because websocket was not open");
 			}
 			break;
 

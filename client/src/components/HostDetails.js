@@ -9,20 +9,30 @@ const lastAttemptWidth = 160;
 const extraDataWidth = 160;
 
 export class HostDetails extends React.PureComponent {
+	getRowCount = () => {
+		if (this.props.hostData[0] !== undefined) {
+			return this.props.hostData[0].length;
+		}
+		return 0;
+	};
+
 	columnWidthArray = () => {
-		let widthArray = new Array(this.props.hostData.length);
-		if (widthArray.length <= 4) {
+		if (this.props.hostData.length <= 4) {
 			const width = this.props.hostDetailsWidth / 4;
 			return [width, width, width, width];
 		}
-		widthArray[0] = addressWidth;
-		widthArray[1] = aRecordWidth;
-		widthArray[2] = pingResultWidth;
-		widthArray[3] = lastAttemptWidth;
+		let widthArray = [addressWidth, aRecordWidth, pingResultWidth, lastAttemptWidth];
 		for (let i = 4; i < this.props.hostData.length; i++) {
-			widthArray[i] = extraDataWidth;
+			widthArray.push(extraDataWidth);
 		}
 		return widthArray;
+	};
+
+	numberOfFrozenCells = () => {
+		if (this.props.hostData[4] === undefined) {
+			return 0;
+		}
+		return 2;
 	};
 
 	addressRenderer = rowIndex => {
@@ -122,28 +132,18 @@ export class HostDetails extends React.PureComponent {
 	};
 
 	render() {
-		const getRowCount = () => {
-			if (this.props.hostData[0] !== undefined) {
-				return this.props.hostData[0].length;
-			}
-			return 0;
-		};
+		console.debug("hostData", this.props.hostData);
 		return (
 			<div id="hostDetails" style={{ height: this.props.hostDetailsHeight }}>
 				<Table
 					className="bp3-dark"
-					numRows={getRowCount()}
-					renderMode={RenderMode.BATCH}
+					numRows={this.getRowCount()}
+					renderMode={RenderMode.NONE}
 					enableGhostCells={true}
 					columnWidths={this.columnWidthArray()}
 					enableColumnResizing={true}
 					enableRowHeader={false}
-					numFrozenColumns={() => {
-						if (this.props.hostData[4] === undefined) {
-							return 0;
-						}
-						return 2;
-					}}
+					numFrozenColumns={this.numberOfFrozenCells()}
 					numFrozenRows={0}
 				>
 					<Column name={<div style={{ textAlign: "center" }}>{"Address"}</div>} cellRenderer={this.addressRenderer} />

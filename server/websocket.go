@@ -79,6 +79,8 @@ func (ipam *IPAMServer) handleWebsocketClient(w http.ResponseWriter, r *http.Req
 			ipam.handleGetScanStart(conn, inMsg)
 		case "GETSCANDATA":
 			ipam.handleGetScanData(conn, inMsg)
+		case "GETSEARCHDATA":
+			ipam.handleGetSearchData(conn, inMsg)
 		case "POSTNEWSUBNET":
 			ipam.handlePostNewSubnet(conn, inMsg)
 		case "POSTMODIFYSUBNET":
@@ -262,35 +264,38 @@ func (ipam *IPAMServer) handleGetScanData(conn *websocket.Conn, inMsg simpleJSON
 }
 
 type searchRequestJSON struct {
-	RequestType  string               `json:"requestType"`
-	SearchTarget string               `json:"searchTarget"`
-	SubnetData   []subnets.SubnetJSON `json:"subnetData"`
-	HostData     [][]string           `json:"hostData"`
+	RequestType string `json:"requestType"`
+	RequestData struct {
+		SearchTarget string               `json:"searchTarget"`
+		SubnetData   []subnets.SubnetJSON `json:"subnetData"`
+		HostData     [][]string           `json:"hostData"`
+	} `json:"requestData"`
 }
 
 func (ipam *IPAMServer) handleGetSearchData(conn *websocket.Conn, inMsg simpleJSON) {
 	remoteIP, _, _ := net.SplitHostPort(conn.RemoteAddr().String())
-	if len(inMsg.RequestData) != 0 {
+	if len(inMsg.RequestData) != 1 {
 		log.Printf("received an invalid request from (%v)\n", remoteIP)
 		return
 	}
+	originalRequest := inMsg.RequestData[0]
 	inMsg.RequestData[0] = strings.TrimSpace(inMsg.RequestData[0])
 	inMsg.RequestData[0] = strings.ToLower(inMsg.RequestData[0])
+	log.Printf("(%v) has requested searchData for '%v'", remoteIP, inMsg.RequestData[0])
 	if inMsg.RequestData[0] == "" {
 		log.Printf("received an invalid request from (%v)\n", remoteIP)
 		return
 	}
-	stopChan := make(chan struct{}, 0)
+	timeoutChan := make(chan struct{}, 0)
 	go func() {
 		time.Sleep(5 * time.Second)
-		close(stopChan)
+		close(timeoutChan)
 	}()
-	outMsg := searchRequestJSON{
-		RequestType:  "DISPLAYSEARCHDATA",
-		SearchTarget: inMsg.RequestData[0],
-		SubnetData:   ipam.searchSubnetData(inMsg.RequestData[0], stopChan),
-		HostData:     ipam.searchHostData(inMsg.RequestData[0], stopChan),
-	}
+	outMsg := searchRequestJSON{}
+	outMsg.RequestType = "DISPLAYSEARCHDATA"
+	outMsg.RequestData.SearchTarget = originalRequest
+	outMsg.RequestData.SubnetData = ipam.searchSubnetData(inMsg.RequestData[0], timeoutChan)
+	outMsg.RequestData.HostData = ipam.searchHostData(inMsg.RequestData[0], timeoutChan)
 	b, err := json.Marshal(outMsg)
 	if err != nil {
 		log.Printf("error encoding outgoing message to (%v)\n", remoteIP)

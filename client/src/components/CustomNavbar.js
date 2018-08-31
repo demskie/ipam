@@ -6,7 +6,6 @@ import { Button, Navbar, NavbarGroup, Alignment, Alert, InputGroup, Intent } fro
 import { CustomSpinner } from "./CustomSpinner/CustomSpinner.js";
 
 var searchInputValue;
-var searchPendingIntervalFunc;
 
 export class CustomNavbar extends React.PureComponent {
 	constructor() {
@@ -41,61 +40,37 @@ export class CustomNavbar extends React.PureComponent {
 		});
 	};
 
-	handleSearchIntervalStart = () => {
-		if (searchInputValue === "") {
+	clearSpinnerWhenFinished = () => {
+		console.log("searchInputValue", searchInputValue, "lastReceivedSearchResult", this.props.lastReceivedSearchResult);
+		if (
+			searchInputValue === this.props.lastReceivedSearchResult &&
+			this.state.spinnerCycleTime !== 0 &&
+			this.state.spinnerPercent !== 0 &&
+			this.state.spinnerIntent !== Intent.NONE
+		) {
 			this.setState({
 				spinnerCycleTime: 0,
 				spinnerPercent: 0,
 				spinnerIntent: Intent.NONE
 			});
-			clearInterval(searchPendingIntervalFunc);
-			return;
 		}
-		this.setState({
-			spinnerCycleTime: 0,
-			spinnerPercent: 0.0001,
-			spinnerIntent: Intent.PRIMARY
-		});
-		clearInterval(searchPendingIntervalFunc);
-		searchPendingIntervalFunc = setInterval(() => {
-			const spinnerPercent = this.state.spinnerPercent;
-			this.setState({
-				spinnerPercent: spinnerPercent + 100 / 3000
-			});
-		}, 100);
 	};
 
 	debouncedSearchValueMutation = debounce(() => {
-		if (searchInputValue != "") {
-			clearInterval(searchPendingIntervalFunc);
-			this.props.handleUserAction({ action: "search", value: searchInputValue });
+		if (searchInputValue !== "") {
+			this.props.handleUserAction({ action: "getSearchData", value: searchInputValue });
 			this.setState({
 				spinnerCycleTime: 1.5,
 				spinnerPercent: 0.25,
 				spinnerIntent: Intent.PRIMARY
 			});
-			let i = 0;
-			const waitForResult = setInterval(() => {
-				if (i > 10000 / 100 || this.props.searchResult == searchInputValue) {
-					clearInterval(waitForResult);
-					this.setState({
-						spinnerCycleTime: 0,
-						spinnerPercent: 1,
-						spinnerIntent: Intent.DANGER
-					});
-				}
-				i++;
-			}, 100);
 		} else {
 			this.props.handleUserAction({ action: "getSubnetData" });
 		}
-	}, 3000);
-
-	componentWillUnmount = () => {
-		clearInterval(searchPendingIntervalFunc);
-	};
+	}, 500);
 
 	render() {
+		this.clearSpinnerWhenFinished();
 		return (
 			<div style={{ height: "50px" }}>
 				<Navbar className="bp3-dark" style={{ paddingLeft: "5px", paddingRight: "5px" }}>
@@ -108,21 +83,24 @@ export class CustomNavbar extends React.PureComponent {
 								this.props.handleUserAction({ action: "triggerSidebarToggle" });
 							}}
 						/>
-						<div className="bp3-navbar-heading" style={{ marginLeft: "10px" }}>
+						<div className="bp3-navbar-heading" style={{ marginLeft: "20px", marginRight: "30px" }}>
 							<b>IPAM</b>
 						</div>
-					</NavbarGroup>
-
-					<NavbarGroup align={Alignment.RIGHT}>
 						<InputGroup
 							id="searchInput"
 							leftIcon="search"
 							onChange={ev => {
 								searchInputValue = ev.target.value;
-								this.handleSearchIntervalStart();
+								if (searchInputValue === "") {
+									this.setState({
+										spinnerCycleTime: 0,
+										spinnerPercent: 0,
+										spinnerIntent: Intent.NONE
+									});
+								}
 								this.debouncedSearchValueMutation();
 							}}
-							placeholder="Search..."
+							placeholder=""
 							rightElement={
 								<CustomSpinner
 									cycleTime={this.state.spinnerCycleTime}
@@ -133,19 +111,23 @@ export class CustomNavbar extends React.PureComponent {
 								/>
 							}
 							round={true}
-							style={{ width: "220px" }}
+							style={{ width: "260px" }}
 						/>
+					</NavbarGroup>
+
+					<NavbarGroup align={Alignment.RIGHT}>
 						<Button
-							text="Advanced"
-							style={{ marginLeft: "20px" }}
+							className="bp3-minimal"
+							icon="info-sign"
+							style={{ marginLeft: "15px", marginRight: "5px" }}
 							onClick={() => {
 								this.props.handleUserAction({ action: "showAdvancedOverlay" });
 							}}
 						/>
 						<Button
-							className="bp3-minimal bp3-large"
+							className="bp3-minimal"
 							icon="fullscreen"
-							style={{ marginLeft: "10px", marginRight: "5px" }}
+							style={{ marginRight: "5px" }}
 							onClick={this.requestFullscreen}
 							disabled={this.state.fullscreenButtonDisabled}
 						/>
@@ -167,5 +149,5 @@ export class CustomNavbar extends React.PureComponent {
 CustomNavbar.propTypes = {
 	handleUserAction: PropTypes.func.isRequired,
 	sidebarDocked: PropTypes.bool.isRequired,
-	searchResult: PropTypes.string.isRequired
+	lastReceivedSearchResult: PropTypes.string.isRequired
 };
