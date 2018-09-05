@@ -60,3 +60,17 @@ label.bp3-label .bp3-popover-wrapper {
 .bp3-menu {
 	min-width: 80px;
 }
+
+#sidebarElements {
+	width: max-content;
+	width: -moz-max-content;
+	width: -webkit-max-content;
+	width: -o-max-content;
+}
+
+.subnetLabel {
+	width: max-content;
+	width: -moz-max-content;
+	width: -webkit-max-content;
+	width: -o-max-content;
+}

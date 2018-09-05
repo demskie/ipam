@@ -13,9 +13,12 @@ export class SubnetTree extends React.PureComponent {
 		};
 	}
 
-	generateLabel = (net, desc) => {
+	generateLabel = (net, desc, vlan) => {
 		while (net.length < 24) {
 			net += "\u00A0";
+		}
+		if (vlan.trim().length > 0) {
+			desc += "\u00A0" + "(" + vlan + ")";
 		}
 		const extraSpace = net + "\u00A0" + desc;
 		return (
@@ -29,7 +32,7 @@ export class SubnetTree extends React.PureComponent {
 		let processedData = [];
 		for (let i in serverData) {
 			let newNode = Object.assign({}, serverData[i]);
-			newNode.label = this.generateLabel(newNode.net, newNode.desc);
+			newNode.label = this.generateLabel(newNode.net, newNode.desc, newNode.vlan);
 			if (newNode.id === this.props.selectedTreeNode.id) {
 				newNode.isSelected = true;
 			}
