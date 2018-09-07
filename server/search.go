@@ -32,7 +32,7 @@ func (ipam *IPAMServer) searchSubnetData(query string, stopChan chan struct{}) [
 }
 
 func (ipam *IPAMServer) searchHostData(query string, stopChan chan struct{}) [][]string {
-	network := subnetmath.BlindlyParseCIDR(query)
+	network := subnetmath.ParseNetworkCIDR(query)
 	if network != nil {
 		addressCount := ping.GetNumberOfHosts(network)
 		currentIP := subnetmath.DuplicateNetwork(network).IP

@@ -94,12 +94,12 @@ func (p *Pinger) InitializeBackgroundPinger(maxPingsPerSecond, goroutineCount in
 
 // GetNumberOfHosts limits the number of hosts to display information for
 func GetNumberOfHosts(network *net.IPNet) int {
-	addressCount := subnetmath.AddressCount(network)
+	addressCount := subnetmath.AddressCountInt(network)
 	if addressCount >= maximumHostCount {
 		addressCount = maximumHostCount - 1
 	} else if addressCount > 2 {
 		addressCount--
-	} else if addressCount == 0 {
+	} else if addressCount < 1 {
 		addressCount++
 	}
 	return addressCount
@@ -140,7 +140,7 @@ func (p *Pinger) GetPingTimesForAddresses(addresses []string) []string {
 // MarkHostsAsPending will sweep through all hosts in a subnet and mark them as pending update
 func (p *Pinger) MarkHostsAsPending(network *net.IPNet) {
 	var (
-		addressCount = subnetmath.AddressCount(network)
+		addressCount = subnetmath.AddressCountInt(network)
 		currentIP    = subnetmath.DuplicateAddr(network.IP)
 		ipString     = currentIP.String()
 	)

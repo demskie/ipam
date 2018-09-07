@@ -44,7 +44,7 @@ func (tree *Tree) CreateSubnet(skeleton *SubnetSkeleton) error {
 	tree.mtx.Lock()
 	defer tree.mtx.Unlock()
 	// creating a new subnet object
-	network := subnetmath.BlindlyParseCIDR(skeleton.Net)
+	network := subnetmath.ParseNetworkCIDR(skeleton.Net)
 	if network == nil {
 		return fmt.Errorf("could not create '%v' as it is not a valid CIDR network", skeleton.Net)
 	}
@@ -113,7 +113,7 @@ func (tree *Tree) CreateSubnet(skeleton *SubnetSkeleton) error {
 
 // ReplaceSubnet will override all values on an existing subnet
 func (tree *Tree) ReplaceSubnet(skeleton *SubnetSkeleton) error {
-	network := subnetmath.BlindlyParseCIDR(skeleton.Net)
+	network := subnetmath.ParseNetworkCIDR(skeleton.Net)
 	if network == nil {
 		return fmt.Errorf("could not modify '%v' as it is not a valid CIDR network", skeleton.Net)
 	}

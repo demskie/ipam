@@ -173,7 +173,7 @@ func (ipam *IPAMServer) handleRestfulReplaceSubnet(w http.ResponseWriter, r *htt
 		return
 	}
 	defer r.Body.Close()
-	network := subnetmath.BlindlyParseCIDR(inMsg.Subnet)
+	network := subnetmath.ParseNetworkCIDR(inMsg.Subnet)
 	oldSkeleton := ipam.subnets.GetSubnetSkeleton(network)
 	newSkeleton := &subnets.SubnetSkeleton{
 		Net:     inMsg.Subnet,
@@ -221,7 +221,7 @@ func (ipam *IPAMServer) handleRestfulDeleteSubnet(w http.ResponseWriter, r *http
 		return
 	}
 	defer r.Body.Close()
-	network := subnetmath.BlindlyParseCIDR(inMsg.Subnet)
+	network := subnetmath.ParseNetworkCIDR(inMsg.Subnet)
 	oldSkeleton := ipam.subnets.GetSubnetSkeleton(network)
 	if network == nil || ipam.subnets.DeleteSubnet(network) != nil {
 		message := fmt.Sprintf("could not delete '%v' as it does not exist", inMsg.Subnet)

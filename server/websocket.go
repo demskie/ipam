@@ -143,7 +143,7 @@ func (ipam *IPAMServer) handleGetHostData(conn *websocket.Conn, inMsg simpleJSON
 	remoteIP, _, _ := net.SplitHostPort(conn.RemoteAddr().String())
 	var network *net.IPNet
 	if len(inMsg.RequestData) == 1 {
-		network = subnetmath.BlindlyParseCIDR(inMsg.RequestData[0])
+		network = subnetmath.ParseNetworkCIDR(inMsg.RequestData[0])
 	}
 	if network == nil {
 		log.Printf("received an invalid request from (%v)\n", remoteIP)
@@ -347,7 +347,7 @@ func (ipam *IPAMServer) handlePostModifySubnet(conn *websocket.Conn, inMsg simpl
 		return
 	}
 	inMsg.RequestData = removeWhitespace(inMsg.RequestData)
-	network := subnetmath.BlindlyParseCIDR(inMsg.RequestData[0])
+	network := subnetmath.ParseNetworkCIDR(inMsg.RequestData[0])
 	if network == nil {
 		log.Printf("received an invalid request from (%v)\n", remoteIP)
 		return
@@ -382,7 +382,7 @@ func (ipam *IPAMServer) handlePostDeleteSubnet(conn *websocket.Conn, inMsg simpl
 		return
 	}
 	inMsg.RequestData = removeWhitespace(inMsg.RequestData)
-	network := subnetmath.BlindlyParseCIDR(inMsg.RequestData[0])
+	network := subnetmath.ParseNetworkCIDR(inMsg.RequestData[0])
 	oldSkeleton := ipam.subnets.GetSubnetSkeleton(network)
 	if network == nil || ipam.subnets.DeleteSubnet(network) != nil {
 		sendErrorMessage(conn, fmt.Sprintf("could not delete '%v' as it does not exist", inMsg.RequestData[0]))
