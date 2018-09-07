@@ -78,7 +78,7 @@ func (ipam *IPAMServer) PingSweepSubnets(pingsPerSecond, pingerGoroutineCount in
 }
 
 // ServeAndReceiveChan will start the HTTP Webserver and stream results back to the caller
-func (ipam *IPAMServer) ServeAndReceiveChan(addr string, debug bool) chan MutatedData {
+func (ipam *IPAMServer) ServeAndReceiveChan(addr string, directory string, debug bool) chan MutatedData {
 	if ipam.mutationChan != nil {
 		return ipam.mutationChan
 	}
@@ -87,7 +87,7 @@ func (ipam *IPAMServer) ServeAndReceiveChan(addr string, debug bool) chan Mutate
 	ipam.mutationChan = make(chan MutatedData, 1)
 	go func() {
 		go startDebugServer(debug)
-		ipam.startWebServer(addr)
+		ipam.startWebServer(addr, directory)
 		close(ipam.mutationChan)
 	}()
 	return ipam.mutationChan
@@ -115,7 +115,7 @@ func startDebugServer(debug bool) {
 	}
 }
 
-func (ipam *IPAMServer) startWebServer(addr string) {
+func (ipam *IPAMServer) startWebServer(addr, directory string) {
 	muxInsecure := mux.NewRouter()
 	muxInsecure.HandleFunc("/sync", ipam.handleWebsocketClient)
 	muxInsecure.HandleFunc("/api/subnets", ipam.handleRestfulSubnets)
@@ -124,7 +124,13 @@ func (ipam *IPAMServer) startWebServer(addr string) {
 	muxInsecure.HandleFunc("/api/createsubnet", ipam.handleRestfulCreateSubnet)
 	muxInsecure.HandleFunc("/api/replacesubnet", ipam.handleRestfulReplaceSubnet)
 	muxInsecure.HandleFunc("/api/deletesubnet", ipam.handleRestfulDeleteSubnet)
-	muxInsecure.PathPrefix("/").Handler(http.FileServer(http.Dir(".")))
+	var fs http.Dir
+	if directory == "" {
+		fs = http.Dir(".")
+	} else {
+		fs = http.Dir(directory)
+	}
+	muxInsecure.PathPrefix("/").Handler(http.FileServer(fs))
 	srvInsecure := &http.Server{
 		Addr:         addr,
 		Handler:      muxInsecure,

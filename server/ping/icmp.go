@@ -4,12 +4,15 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"sync"
 	"time"
 
 	"golang.org/x/net/icmp"
 	"golang.org/x/net/ipv4"
 	"golang.org/x/net/ipv6"
 )
+
+var mtx sync.Mutex
 
 func pingICMPv4(addr net.IP, timeout int) error {
 	conn, err := icmp.ListenPacket("ip4:icmp", "0.0.0.0")
@@ -47,6 +50,9 @@ func pingICMPv4(addr net.IP, timeout int) error {
 	}
 	switch rmsg.Type {
 	case ipv4.ICMPTypeEchoReply:
+		if peer.(*net.IPAddr).IP.Equal(addr) == false {
+			return fmt.Errorf("received echo reply from %v instead of %v", peer, addr)
+		}
 	default:
 		return fmt.Errorf("received %+v from %v; wanted echo reply", rmsg, peer)
 	}
@@ -89,6 +95,9 @@ func pingICMPv6(addr net.IP, timeout int) error {
 	}
 	switch rmsg.Type {
 	case ipv6.ICMPTypeEchoReply:
+		if peer.(*net.IPAddr).IP.Equal(addr) == false {
+			return fmt.Errorf("received echo reply from %v instead of %v", peer, addr)
+		}
 	default:
 		return fmt.Errorf("received %+v from %v; wanted echo reply", rmsg, peer)
 	}
@@ -131,6 +140,9 @@ func pingUDPv4(addr net.IP, timeout int) error {
 	}
 	switch rmsg.Type {
 	case ipv6.ICMPTypeEchoReply:
+		if peer.(*net.IPAddr).IP.Equal(addr) == false {
+			return fmt.Errorf("received echo reply from %v instead of %v", peer, addr)
+		}
 	default:
 		return fmt.Errorf("received %+v from %v; wanted echo reply", rmsg, peer)
 	}
@@ -174,6 +186,9 @@ func pingUDPv6(addr net.IP, timeout int) error {
 	}
 	switch rmsg.Type {
 	case ipv6.ICMPTypeEchoReply:
+		if peer.(*net.IPAddr).IP.Equal(addr) == false {
+			return fmt.Errorf("received echo reply from %v instead of %v", peer, addr)
+		}
 	default:
 		return fmt.Errorf("received %+v from %v; wanted echo reply", rmsg, peer)
 	}

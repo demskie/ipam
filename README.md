@@ -1,3 +1,0 @@
-# ipam
-
-## WORK IN PROGRESS
