@@ -2,6 +2,7 @@ package server
 
 import (
 	"log"
+	"log/syslog"
 	"net/http"
 	"net/http/pprof"
 	"sync"
@@ -140,4 +141,14 @@ func (ipam *IPAMServer) startWebServer(addr, directory string) {
 	}
 	errServeInsecure := srvInsecure.ListenAndServe()
 	log.Fatal("ListenAndServe:", errServeInsecure)
+}
+
+// AddSyslogServer is used for remote logging purposes
+func (ipam *IPAMServer) AddSyslogServer(address, port string) error {
+	wr, err := syslog.Dial("tcp", address+":"+port, syslog.LOG_NOTICE, "IPAM")
+	if err != nil {
+		return err
+	}
+	ipam.debug.AddIOWriter(wr)
+	return nil
 }

@@ -416,7 +416,7 @@ const reactToUserAction = (parent, obj) => {
 				console.log("GETSCANSTART failed because websocket was not open");
 			}
 			obj.scanner = setInterval(() => {
-				if (parent.state.scanTarget !== obj.value) {
+				if (parent.state.scanTarget !== obj.value || parent.state.scanTarget === "") {
 					clearInterval(obj.scanner);
 				} else {
 					if (parent.state.websocket.readyState === 1) {

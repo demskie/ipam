@@ -10,20 +10,29 @@ import (
 
 // ServerLogger is the object containing the threadsafe bytesBuffer
 type ServerLogger struct {
-	buf *protectedBuffer
+	buf     *protectedBuffer
+	wrSlice []io.Writer
 }
 
 // NewServerLogger copys all logging into a buffer that can be retrieved with GetString()
 func NewServerLogger() *ServerLogger {
 	pb := &protectedBuffer{}
-	mw := io.MultiWriter(os.Stdout, pb)
-	log.SetOutput(mw)
-	return &ServerLogger{pb}
+	wrSlice := []io.Writer{os.Stdout, pb}
+	log.SetOutput(io.MultiWriter(wrSlice...))
+	return &ServerLogger{pb, wrSlice}
 }
 
 // GetString returns the raw multiline string seen in stdout
 func (s *ServerLogger) GetString() string {
 	return s.buf.String()
+}
+
+// AddIOWriter could be used to log to remote syslog or local file
+func (s *ServerLogger) AddIOWriter(wr io.Writer) {
+	s.buf.m.Lock()
+	s.wrSlice = append(s.wrSlice, wr)
+	log.SetOutput(io.MultiWriter(s.wrSlice...))
+	s.buf.m.Unlock()
 }
 
 type protectedBuffer struct {
