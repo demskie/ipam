@@ -6,71 +6,71 @@
 @import "~@blueprintjs/timezone/lib/css/blueprint-timezone.css";
 
 *:focus {
-  outline: none;
+	outline: none;
 }
 
 label.bp3-label .bp3-popover-wrapper {
-  margin-top: 0px;
+	margin-top: 0px;
 }
 
 .bp3-tree-node-label {
-  font-family: "Fira Mono", monospace;
-  font-size-adjust: 0.45;
+	font-family: "Fira Mono", monospace;
+	font-size: 13px;
 }
 
 .bp3-tab-list {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
 }
 
 .bp3-tab {
-  text-align: center;
-  margin-top: 15px;
-  margin-left: 15px;
-  margin-right: 15px !important;
-  margin-bottom: 15px;
+	text-align: center;
+	margin-top: 15px;
+	margin-left: 15px;
+	margin-right: 15px !important;
+	margin-bottom: 15px;
 }
 
 .bp3-tab-panel {
-  margin-top: 0px !important;
+	margin-top: 0px !important;
 }
 
 .virtualRow {
-  font-family: "Fira Mono", monospace;
-  font-size: smaller;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  padding-top: 4px;
+	font-family: "Fira Mono", monospace;
+	font-size: smaller;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	padding-top: 4px;
 }
 
 #subnetToolbar {
-  position: static;
-  min-width: 500px;
+	position: static;
+	min-width: 500px;
 }
 
 @supports (position: sticky) {
-  #subnetToolbar {
-    position: sticky;
-  }
+	#subnetToolbar {
+		position: sticky;
+	}
 }
 
 .bp3-menu {
-  min-width: 80px;
+	min-width: 80px;
 }
 
 #sidebarElements {
-  width: max-content;
-  width: -moz-max-content;
-  width: -webkit-max-content;
-  width: -o-max-content;
+	width: max-content;
+	width: -moz-max-content;
+	width: -webkit-max-content;
+	width: -o-max-content;
 }
 
 .subnetLabel {
-  width: max-content;
-  width: -moz-max-content;
-  width: -webkit-max-content;
-  width: -o-max-content;
+	width: max-content;
+	width: -moz-max-content;
+	width: -webkit-max-content;
+	width: -o-max-content;
 }
