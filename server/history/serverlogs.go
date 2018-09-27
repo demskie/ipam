@@ -63,8 +63,8 @@ func (b *protectedBuffer) Write(p []byte) (n int, err error) {
 	b.m.Lock()
 	defer b.m.Unlock()
 	if b.b.Len() >= limit {
-		newLength := b.b.Len() - (limit * shrinkFactor)
-		b.b = *bytes.NewBuffer(b.b.Bytes()[newLength:])
+		start := b.b.Len() - (limit * shrinkFactor)
+		b.b = *bytes.NewBuffer(b.b.Bytes()[start:])
 	}
 	return b.b.Write(p)
 }
