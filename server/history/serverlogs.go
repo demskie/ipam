@@ -16,7 +16,7 @@ type ServerLogger struct {
 
 // NewServerLogger copys all logging into a buffer that can be retrieved with GetString()
 func NewServerLogger() *ServerLogger {
-	pb := &protectedBuffer{}
+	pb := newProtectedBuffer()
 	wrSlice := []io.Writer{os.Stdout, pb}
 	log.SetOutput(io.MultiWriter(wrSlice...))
 	return &ServerLogger{pb, wrSlice}
@@ -40,19 +40,31 @@ type protectedBuffer struct {
 	m sync.Mutex
 }
 
+func newProtectedBuffer() *protectedBuffer {
+	return &protectedBuffer{
+		b: *bytes.NewBuffer(make([]byte, 0)),
+		m: sync.Mutex{},
+	}
+}
+
 func (b *protectedBuffer) Read(p []byte) (n int, err error) {
 	b.m.Lock()
 	defer b.m.Unlock()
 	return b.b.Read(p)
 }
 
-const megabyte = 1000000
+const megabyte = 1e6
+const limit = 8 * megabyte
+const shrinkFactor = 0.75
+
+// https://play.golang.org/p/RIN852Pj6wW
 
 func (b *protectedBuffer) Write(p []byte) (n int, err error) {
 	b.m.Lock()
 	defer b.m.Unlock()
-	if b.b.Len() > 5*megabyte {
-		b.b = *bytes.NewBuffer(b.b.Bytes()[0 : 4*megabyte])
+	if b.b.Len() >= limit {
+		newLength := b.b.Len() - (limit * shrinkFactor)
+		b.b = *bytes.NewBuffer(b.b.Bytes()[newLength:])
 	}
 	return b.b.Write(p)
 }
