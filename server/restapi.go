@@ -269,7 +269,12 @@ func (ipam *IPAMServer) handleRestfulReserveHost(w http.ResponseWriter, r *http.
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	msg := ipam.history.RecordUserAction(remoteIP, "reserved host", []string{host})
+	slc := []string{
+		fmt.Sprintf("net='%v'", host),
+		fmt.Sprintf("desc='%v'", inMsg.Description),
+		fmt.Sprintf("details='%v'", inMsg.Details),
+	}
+	msg := ipam.history.RecordUserAction(remoteIP, "reserving host", slc)
 	ipam.signalMutation(msg)
 	w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
