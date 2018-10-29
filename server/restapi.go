@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"net/http"
@@ -147,9 +148,7 @@ func (ipam *IPAMServer) handleRestfulCreateSubnet(w http.ResponseWriter, r *http
 	}
 	msg := ipam.history.RecordUserAction(remoteIP, "creating subnet", newSkeleton.ToSlice())
 	ipam.signalMutation(msg)
-	w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("operation successful"))
+	io.WriteString(w, "operation successful")
 }
 
 // curl --header "Content-Type: application/json" --request POST \
@@ -198,9 +197,7 @@ func (ipam *IPAMServer) handleRestfulReplaceSubnet(w http.ResponseWriter, r *htt
 	}
 	msg := ipam.history.RecordUserAction(remoteIP, "pushing changes", differences)
 	ipam.signalMutation(msg)
-	w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("operation successful"))
+	io.WriteString(w, "operation successful")
 }
 
 // curl --header "Content-Type: application/json" --request POST \
@@ -230,9 +227,7 @@ func (ipam *IPAMServer) handleRestfulDeleteSubnet(w http.ResponseWriter, r *http
 	}
 	msg := ipam.history.RecordUserAction(remoteIP, "deleting subnet", oldSkeleton.ToSlice())
 	ipam.signalMutation(msg)
-	w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("operation successful"))
+	io.WriteString(w, "operation successful")
 }
 
 // curl --header "Content-Type: application/json" --request POST \
@@ -260,23 +255,21 @@ func (ipam *IPAMServer) handleRestfulReserveHost(w http.ResponseWriter, r *http.
 		http.Error(w, "subnet does not exist", http.StatusBadRequest)
 	}
 	cidr := 32
-	if network.IP.To16() != nil {
+	if network.IP.To4() == nil {
 		cidr = 128
 	}
 	host, err := ipam.subnets.CreateAvailableSubnet(network, inMsg.Description, inMsg.Details, "", cidr)
 	if err != nil {
-		log.Println(remoteIP, "failed to complete request because -", err.Error())
+		log.Println(remoteIP, "request failed because", err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	slc := []string{
-		fmt.Sprintf("net='%v'", host),
+		fmt.Sprintf("net='%s'", host),
 		fmt.Sprintf("desc='%v'", inMsg.Description),
 		fmt.Sprintf("details='%v'", inMsg.Details),
 	}
 	msg := ipam.history.RecordUserAction(remoteIP, "reserving host", slc)
 	ipam.signalMutation(msg)
-	w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(host))
+	io.WriteString(w, host)
 }

@@ -182,7 +182,7 @@ func (tree *Tree) CreateAvailableSubnet(parent *net.IPNet, desc, details, vlan s
 				Vlan:    "",
 				Mod:     time.Now().Format(defaultTimeLayout),
 			})
-			if err == nil {
+			if err != nil {
 				return "", err
 			}
 			return network, nil

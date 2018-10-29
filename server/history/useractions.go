@@ -38,7 +38,7 @@ func (r *UserActions) OverwriteUserHistory(history []string) {
 func (r *UserActions) RecordUserAction(user, verb string, changes []string) string {
 	t := time.Now().Format(defaultTimeLayout)
 	r.mtx.Lock()
-	r.stack = append([]string{fmt.Sprintf("%v (%v) is %v: %v\n", t, user, verb, changes)}, r.stack...)
+	r.stack = append([]string{fmt.Sprintf("%v (%v) is %v: %v", t, user, verb, changes)}, r.stack...)
 	r.mtx.Unlock()
 	message := fmt.Sprintf("(%v) is %v: %v\n", user, verb, changes)
 	log.Print(message)
