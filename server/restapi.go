@@ -260,7 +260,7 @@ func (ipam *IPAMServer) handleRestfulReserveHost(w http.ResponseWriter, r *http.
 		http.Error(w, "subnet does not exist", http.StatusBadRequest)
 	}
 	cidr := 32
-	if network.IP.To4() != nil {
+	if network.IP.To16() != nil {
 		cidr = 128
 	}
 	host, err := ipam.subnets.CreateAvailableSubnet(network, inMsg.Description, inMsg.Details, "", cidr)
