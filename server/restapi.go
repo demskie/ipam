@@ -147,7 +147,7 @@ func (ipam *IPAMServer) handleRestfulCreateSubnet(w http.ResponseWriter, r *http
 	}
 	msg := ipam.history.RecordUserAction(remoteIP, "creating subnet", newSkeleton.ToSlice())
 	ipam.signalMutation(msg)
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("operation successful"))
 }
@@ -198,7 +198,7 @@ func (ipam *IPAMServer) handleRestfulReplaceSubnet(w http.ResponseWriter, r *htt
 	}
 	msg := ipam.history.RecordUserAction(remoteIP, "pushing changes", differences)
 	ipam.signalMutation(msg)
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("operation successful"))
 }
@@ -230,7 +230,48 @@ func (ipam *IPAMServer) handleRestfulDeleteSubnet(w http.ResponseWriter, r *http
 	}
 	msg := ipam.history.RecordUserAction(remoteIP, "deleting subnet", oldSkeleton.ToSlice())
 	ipam.signalMutation(msg)
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("operation successful"))
+}
+
+// curl --header "Content-Type: application/json" --request POST \
+// 		--data '{"subnet":"10.128.8.0/21", "description":"MyDockerService", "details":"jira123456789"}' \
+// 		http://localhost/api/reservehost
+
+func (ipam *IPAMServer) handleRestfulReserveHost(w http.ResponseWriter, r *http.Request) {
+	remoteIP, _, _ := net.SplitHostPort(r.RemoteAddr)
+	type incomingJSON struct {
+		Subnet      string `json:"subnet"`
+		Description string `json:"description"`
+		Details     string `json:"details"`
+	}
+	var inMsg incomingJSON
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&inMsg)
+	if err != nil {
+		log.Println(remoteIP, "sent an invalid request -", err.Error())
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	defer r.Body.Close()
+	network := subnetmath.ParseNetworkCIDR(inMsg.Subnet)
+	if ipam.subnets.GetSubnetSkeleton(network) == nil {
+		http.Error(w, "subnet does not exist", http.StatusBadRequest)
+	}
+	cidr := 32
+	if network.IP.To4() != nil {
+		cidr = 128
+	}
+	host, err := ipam.subnets.CreateAvailableSubnet(network, inMsg.Description, inMsg.Details, "", cidr)
+	if err != nil {
+		log.Println(remoteIP, "failed to complete request because -", err.Error())
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	msg := ipam.history.RecordUserAction(remoteIP, "reserved host", []string{host})
+	ipam.signalMutation(msg)
+	w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(host))
 }

@@ -125,6 +125,7 @@ func (ipam *IPAMServer) startWebServer(addr, directory string) {
 	muxInsecure.HandleFunc("/api/createsubnet", ipam.handleRestfulCreateSubnet)
 	muxInsecure.HandleFunc("/api/replacesubnet", ipam.handleRestfulReplaceSubnet)
 	muxInsecure.HandleFunc("/api/deletesubnet", ipam.handleRestfulDeleteSubnet)
+	muxInsecure.HandleFunc("/api/reservehost", ipam.handleRestfulReserveHost)
 	var fs http.Dir
 	if directory == "" {
 		fs = http.Dir(".")

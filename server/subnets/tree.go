@@ -39,10 +39,14 @@ func NewTree() *Tree {
 
 const defaultTimeLayout string = "01-02-2006 15:04:05"
 
-// CreateSubnet will add a valid subnet to the tree
+// CreateSubnet will attempt to add the requested subnet to the tree
 func (tree *Tree) CreateSubnet(skeleton *SubnetSkeleton) error {
 	tree.mtx.Lock()
 	defer tree.mtx.Unlock()
+	return tree.createSubnet(skeleton)
+}
+
+func (tree *Tree) createSubnet(skeleton *SubnetSkeleton) error {
 	// creating a new subnet object
 	network := subnetmath.ParseNetworkCIDR(skeleton.Net)
 	if network == nil {
@@ -153,6 +157,38 @@ func (tree *Tree) DeleteSubnet(network *net.IPNet) error {
 		sn.parent.children = removeSubnetFromSlice(sn.parent.children, sn)
 	}
 	return nil
+}
+
+// CreateAvailableSubnet will search available space and create the requested subnet if possible
+func (tree *Tree) CreateAvailableSubnet(parent *net.IPNet, desc, details, vlan string, size int) (string, error) {
+	tree.mtx.RLock()
+	defer tree.mtx.RUnlock()
+	sn := findSubnet(parent, tree.roots)
+	if sn == nil {
+		return "", fmt.Errorf("could not find '%v' as it does not exist", parent)
+	}
+	children := make([]*net.IPNet, len(sn.children))
+	for i := range children {
+		children[i] = sn.children[i].network
+	}
+	for _, entry := range subnetmath.FindUnusedSubnets(parent, children...) {
+		ones, _ := entry.Mask.Size()
+		if ones <= size {
+			network := fmt.Sprintf("%v/%v", entry.IP.String(), size)
+			err := tree.createSubnet(&SubnetSkeleton{
+				Net:     network,
+				Desc:    desc,
+				Details: details,
+				Vlan:    "",
+				Mod:     time.Now().Format(defaultTimeLayout),
+			})
+			if err == nil {
+				return "", err
+			}
+			return network, nil
+		}
+	}
+	return "", fmt.Errorf("'%v' does not have enough space for /%v", parent, size)
 }
 
 func findSubnet(network *net.IPNet, objects []*subnet) *subnet {
