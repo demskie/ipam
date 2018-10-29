@@ -251,8 +251,12 @@ func (ipam *IPAMServer) handleRestfulReserveHost(w http.ResponseWriter, r *http.
 	}
 	defer r.Body.Close()
 	network := subnetmath.ParseNetworkCIDR(inMsg.Subnet)
-	if ipam.subnets.GetSubnetSkeleton(network) == nil {
-		http.Error(w, "subnet does not exist", http.StatusBadRequest)
+	if network == nil {
+		http.Error(w, fmt.Sprintf("'%v' is not a valid subnet", inMsg.Subnet), http.StatusBadRequest)
+		return
+	} else if ipam.subnets.GetSubnetSkeleton(network) == nil {
+		http.Error(w, fmt.Sprintf("'%v' does not exist", network), http.StatusBadRequest)
+		return
 	}
 	cidr := 32
 	if network.IP.To4() == nil {
