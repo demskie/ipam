@@ -283,6 +283,7 @@ const reactToUserAction = (parent, obj) => {
 			parent.setState({
 				subnetPromptEnabled: false
 			});
+			parent.handleUserAction({ action: "getSubnetData" });
 			break;
 
 		case "modify":
@@ -299,6 +300,7 @@ const reactToUserAction = (parent, obj) => {
 			parent.setState({
 				subnetPromptEnabled: false
 			});
+			parent.handleUserAction({ action: "getSubnetData" });
 			break;
 
 		case "delete":
@@ -315,6 +317,7 @@ const reactToUserAction = (parent, obj) => {
 			parent.setState({
 				subnetPromptEnabled: false
 			});
+			parent.handleUserAction({ action: "getSubnetData" });
 			break;
 
 		case "getSubnetData":
