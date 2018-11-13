@@ -18,7 +18,7 @@ export class SubnetTree extends React.PureComponent {
 			net += "\u00A0";
 		}
 		if (vlan.trim().length > 0) {
-			desc += "\u00A0" + "(" + vlan + ")";
+			desc += "\u00A0(" + vlan + ")";
 		}
 		const extraSpace = net + "\u00A0" + desc;
 		return (

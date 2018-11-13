@@ -1,7 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import fscreen from "fscreen";
-import debounce from "debounce";
+import _ from "lodash-es";
 import { Button, Navbar, NavbarGroup, Alignment, Alert, InputGroup, Intent } from "@blueprintjs/core";
 import { CustomSpinner } from "./CustomSpinner/CustomSpinner.js";
 
@@ -55,7 +55,7 @@ export class CustomNavbar extends React.PureComponent {
 		}
 	};
 
-	debouncedSearchValueMutation = debounce(() => {
+	debouncedSearchValueMutation = _.debounce(() => {
 		this.props.handleUserAction({ action: "getSearchData", value: searchInputValue });
 		if (searchInputValue !== "") {
 			this.setState({

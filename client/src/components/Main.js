@@ -1,5 +1,5 @@
 import React from "react";
-import debounce from "debounce";
+import _ from "lodash-es";
 import { HostDetails } from "./HostDetails.js";
 import { AdvancedOverlay } from "./AdvancedOverlay.js";
 import { Alert, Intent, Toaster, Classes, Position } from "@blueprintjs/core";
@@ -196,7 +196,7 @@ export class Main extends React.Component {
 	};
 
 	componentDidMount = () => {
-		window.addEventListener("resize", debounce(this.updateDimensions, 1000));
+		window.addEventListener("resize", _.debounce(this.updateDimensions, 1000));
 		this.updateDimensions();
 		this.handleWebsocketMessage();
 		this.handleWebsocketCreation();
