@@ -44,7 +44,7 @@ export class HostDetails extends React.PureComponent {
 			return <Cell />;
 		}
 		return (
-			<Cell>
+			<Cell tooltip={value}>
 				<div style={{ textAlign: "center" }}>{value}</div>
 			</Cell>
 		);
@@ -59,7 +59,7 @@ export class HostDetails extends React.PureComponent {
 			return <Cell />;
 		}
 		return (
-			<Cell>
+			<Cell tooltip={value}>
 				<div style={{ textAlign: "center" }}>{value}</div>
 			</Cell>
 		);
@@ -120,7 +120,7 @@ export class HostDetails extends React.PureComponent {
 							return <Cell />;
 						}
 						return (
-							<Cell>
+							<Cell tooltip={this.props.hostData[i][rowIndex + 1]}>
 								<div style={{ textAlign: "center" }}>{this.props.hostData[i][rowIndex + 1]}</div>
 							</Cell>
 						);
@@ -142,7 +142,7 @@ export class HostDetails extends React.PureComponent {
 					columnWidths={this.columnWidthArray()}
 					enableColumnResizing={true}
 					enableRowHeader={false}
-					numFrozenColumns={this.numberOfFrozenCells()}
+					numFrozenColumns={0}
 					numFrozenRows={0}
 				>
 					<Column name={<div style={{ textAlign: "center" }}>{"Address"}</div>} cellRenderer={this.addressRenderer} />
