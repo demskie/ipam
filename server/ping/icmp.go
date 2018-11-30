@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"sync"
 	"time"
 
 	"golang.org/x/net/icmp"
@@ -12,12 +11,10 @@ import (
 	"golang.org/x/net/ipv6"
 )
 
-var mtx sync.Mutex
-
-func pingICMPv4(addr net.IP, timeout int) error {
+func pingICMPv4(addr net.IP, timeout int) (bool, error) {
 	conn, err := icmp.ListenPacket("ip4:icmp", "0.0.0.0")
 	if err != nil {
-		return fmt.Errorf("icmp.ListenPacket() %v", err)
+		return false, fmt.Errorf("icmp.ListenPacket() %v", err)
 	}
 	conn.SetDeadline(time.Now().Add(time.Duration(timeout) * time.Second))
 	defer conn.Close()
@@ -30,39 +27,39 @@ func pingICMPv4(addr net.IP, timeout int) error {
 	}
 	b, err := msg.Marshal(nil)
 	if err != nil {
-		return fmt.Errorf("msg.Marshal() %v", err)
+		return false, fmt.Errorf("msg.Marshal() %v", err)
 	}
 	destAddr := &net.IPAddr{
 		IP: addr,
 	}
 	_, err = conn.WriteTo(b, destAddr)
 	if err != nil {
-		return fmt.Errorf("conn.WriteTo() %v", err)
+		return false, fmt.Errorf("conn.WriteTo() %v", err)
 	}
 	rb := make([]byte, 1500)
 	n, peer, err := conn.ReadFrom(rb)
 	if err != nil {
-		return fmt.Errorf("conn.ReadFrom() %v", err)
+		return false, fmt.Errorf("conn.ReadFrom() %v", err)
 	}
 	rmsg, err := icmp.ParseMessage(1, rb[:n])
 	if err != nil {
-		return fmt.Errorf("icmp.ParseMessage() %v", err)
+		return false, fmt.Errorf("icmp.ParseMessage() %v", err)
 	}
 	switch rmsg.Type {
 	case ipv4.ICMPTypeEchoReply:
 		if peer.(*net.IPAddr).IP.Equal(addr) == false {
-			return fmt.Errorf("received echo reply from %v instead of %v", peer, addr)
+			return true, fmt.Errorf("received echo reply from %v instead of %v", peer, addr)
 		}
 	default:
-		return fmt.Errorf("received %+v from %v; wanted echo reply", rmsg, peer)
+		return false, fmt.Errorf("received %+v from %v; wanted echo reply", rmsg, peer)
 	}
-	return nil
+	return true, nil
 }
 
-func pingICMPv6(addr net.IP, timeout int) error {
+func pingICMPv6(addr net.IP, timeout int) (bool, error) {
 	conn, err := icmp.ListenPacket("ip6:ipv6-icmp", "::")
 	if err != nil {
-		return fmt.Errorf("icmp.ListenPacket() %v", err)
+		return false, fmt.Errorf("icmp.ListenPacket() %v", err)
 	}
 	conn.SetDeadline(time.Now().Add(time.Duration(timeout) * time.Second))
 	defer conn.Close()
@@ -75,33 +72,33 @@ func pingICMPv6(addr net.IP, timeout int) error {
 	}
 	b, err := msg.Marshal(nil)
 	if err != nil {
-		return fmt.Errorf("msg.Marshal() %v", err)
+		return false, fmt.Errorf("msg.Marshal() %v", err)
 	}
 	destAddr := &net.IPAddr{
 		IP: addr,
 	}
 	_, err = conn.WriteTo(b, destAddr)
 	if err != nil {
-		return fmt.Errorf("conn.WriteTo() %v", err)
+		return false, fmt.Errorf("conn.WriteTo() %v", err)
 	}
 	rb := make([]byte, 1500)
 	n, peer, err := conn.ReadFrom(rb)
 	if err != nil {
-		return fmt.Errorf("conn.ReadFrom() %v", err)
+		return false, fmt.Errorf("conn.ReadFrom() %v", err)
 	}
 	rmsg, err := icmp.ParseMessage(58, rb[:n])
 	if err != nil {
-		return fmt.Errorf("icmp.ParseMessage() %v", err)
+		return false, fmt.Errorf("icmp.ParseMessage() %v", err)
 	}
 	switch rmsg.Type {
 	case ipv6.ICMPTypeEchoReply:
 		if peer.(*net.IPAddr).IP.Equal(addr) == false {
-			return fmt.Errorf("received echo reply from %v instead of %v", peer, addr)
+			return true, fmt.Errorf("received echo reply from %v instead of %v", peer, addr)
 		}
 	default:
-		return fmt.Errorf("received %+v from %v; wanted echo reply", rmsg, peer)
+		return false, fmt.Errorf("received %+v from %v; wanted echo reply", rmsg, peer)
 	}
-	return nil
+	return true, nil
 }
 
 func pingUDPv4(addr net.IP, timeout int) error {

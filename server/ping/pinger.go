@@ -50,22 +50,24 @@ func (p *Pinger) ScanNetwork(network *net.IPNet) {
 	}
 }
 
-func ping(ip string) bool {
+func ping(ip string) (reachable bool, foundError bool) {
 	addr := net.ParseIP(ip)
 	if addr != nil {
 		for i := 0; i < 2; i++ {
 			var err error
 			if addr.To4() != nil {
-				err = pingICMPv4(addr, 2)
+				reachable, err = pingICMPv4(addr, 3)
 			} else {
-				err = pingICMPv6(addr, 2)
+				reachable, err = pingICMPv6(addr, 3)
 			}
-			if err == nil {
-				return true
+			foundError = false
+			if err != nil {
+				foundError = true
 			}
+			return reachable, foundError
 		}
 	}
-	return false
+	return false, true
 }
 
 // InitializeBackgroundPinger will create the workers needed for scanning
@@ -75,7 +77,7 @@ func (p *Pinger) InitializeBackgroundPinger(maxPingsPerSecond, goroutineCount in
 	workers.Execute(func(threadNum int) {
 		for ipString := range p.requestChan {
 			start := time.Now()
-			reachable := ping(ipString)
+			reachable, _ := ping(ipString) // TODO: provide ternary results
 			p.mtx.Lock()
 			pingData := p.data[ipString]
 			if reachable {
