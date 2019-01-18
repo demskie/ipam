@@ -10,8 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/demskie/ipam/server/ping"
-
 	"github.com/demskie/ipam/server/subnets"
 	"github.com/demskie/subnetmath"
 	"github.com/gorilla/websocket"
@@ -150,12 +148,11 @@ func (ipam *IPAMServer) handleGetHostData(conn *websocket.Conn, inMsg simpleJSON
 		return
 	}
 	log.Printf("(%v) has requested hostData for %v\n", remoteIP, network)
-	addressCount := ping.GetNumberOfHosts(network)
-	currentIP := subnetmath.DuplicateNetwork(network).IP
-	sliceOfAddresses := make([]string, addressCount)
-	for i := 0; i < addressCount; i++ {
-		sliceOfAddresses[i] = currentIP.String()
-		currentIP = subnetmath.AddToAddr(currentIP, 1)
+	sliceOfAddresses := []string{}
+	currentIP := subnetmath.DuplicateAddr(network.IP)
+	for network.Contains(currentIP) {
+		sliceOfAddresses = append(sliceOfAddresses, currentIP.String())
+		currentIP = subnetmath.NextAddr(currentIP)
 	}
 	outMsg := nestedStringsJSON{
 		RequestType: "DISPLAYHOSTDATA",

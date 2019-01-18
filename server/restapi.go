@@ -10,7 +10,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/demskie/ipam/server/ping"
 	"github.com/demskie/ipam/server/subnets"
 	"github.com/demskie/subnetmath"
 )
@@ -68,12 +67,11 @@ func (ipam *IPAMServer) handleRestfulHosts(w http.ResponseWriter, r *http.Reques
 	type outgoingJSON struct {
 		Data []hostJSON `json:"data"`
 	}
-	addressCount := ping.GetNumberOfHosts(network)
-	currentIP := subnetmath.DuplicateNetwork(network).IP
-	sliceOfAddresses := make([]string, addressCount)
-	for i := 0; i < addressCount; i++ {
-		sliceOfAddresses[i] = currentIP.String()
-		currentIP = subnetmath.AddToAddr(currentIP, 1)
+	sliceOfAddresses := []string{}
+	currentIP := subnetmath.DuplicateAddr(network.IP)
+	for network.Contains(currentIP) {
+		sliceOfAddresses = append(sliceOfAddresses, currentIP.String())
+		currentIP = subnetmath.NextAddr(currentIP)
 	}
 	forwardRecords := ipam.dns.GetFirstHostnameForAddresses(sliceOfAddresses)
 	pingResults := ipam.pinger.GetPingResultsForAddresses(sliceOfAddresses)

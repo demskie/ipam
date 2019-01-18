@@ -43,10 +43,15 @@ type result struct {
 // ScanNetwork will inform the backgroundScanner to look at these IPs next
 func (p *Pinger) ScanNetwork(network *net.IPNet) {
 	log.Printf("scanning => %v\n", network.String())
+	i := 0
 	currentIP := subnetmath.DuplicateAddr(network.IP)
-	for i := 0; i < GetNumberOfHosts(network); i++ {
+	for network.Contains(currentIP) {
 		p.requestChan <- currentIP.String()
-		currentIP = subnetmath.AddToAddr(currentIP, 1)
+		currentIP = subnetmath.NextAddr(currentIP)
+		if i > 1e6 {
+			break
+		}
+		i++
 	}
 }
 
@@ -94,19 +99,6 @@ func (p *Pinger) InitializeBackgroundPinger(maxPingsPerSecond, goroutineCount in
 	})
 }
 
-// GetNumberOfHosts limits the number of hosts to display information for
-func GetNumberOfHosts(network *net.IPNet) int {
-	addressCount := subnetmath.AddressCountInt(network)
-	if addressCount >= maximumHostCount {
-		addressCount = maximumHostCount - 1
-	} else if addressCount > 2 {
-		addressCount--
-	} else if addressCount < 1 {
-		addressCount++
-	}
-	return addressCount
-}
-
 // GetPingResultsForAddresses returns ping results for slice of addresses
 func (p *Pinger) GetPingResultsForAddresses(addresses []string) []string {
 	results := make([]string, len(addresses))
@@ -141,13 +133,10 @@ func (p *Pinger) GetPingTimesForAddresses(addresses []string) []string {
 
 // MarkHostsAsPending will sweep through all hosts in a subnet and mark them as pending update
 func (p *Pinger) MarkHostsAsPending(network *net.IPNet) {
-	var (
-		addressCount = subnetmath.AddressCountInt(network)
-		currentIP    = subnetmath.DuplicateAddr(network.IP)
-		ipString     = currentIP.String()
-	)
 	p.mtx.Lock()
-	for i := 0; i < addressCount; i++ {
+	currentIP := subnetmath.DuplicateAddr(network.IP)
+	for network.Contains(currentIP) {
+		ipString := currentIP.String()
 		val, exists := p.data[ipString]
 		if exists {
 			val.pendingUpdate = true
@@ -157,33 +146,28 @@ func (p *Pinger) MarkHostsAsPending(network *net.IPNet) {
 				pendingUpdate: true,
 			}
 		}
-		currentIP = subnetmath.AddToAddr(currentIP, 1)
-		ipString = currentIP.String()
+		currentIP = subnetmath.NextAddr(currentIP)
 	}
 	p.mtx.Unlock()
 }
 
 // GetScanResults returns a string slice of host addresses and their reachability status
-func (p *Pinger) GetScanResults(network *net.IPNet) [][]string {
-	var (
-		results   = make([][]string, GetNumberOfHosts(network))
-		currentIP = subnetmath.DuplicateAddr(network.IP)
-		ipString  = currentIP.String()
-	)
+func (p *Pinger) GetScanResults(network *net.IPNet) (results [][]string) {
 	p.mtx.RLock()
-	for i := 0; i < len(results); i++ {
+	currentIP := subnetmath.DuplicateAddr(network.IP)
+	for network.Contains(currentIP) {
+		ipString := currentIP.String()
 		val, exists := p.data[ipString]
 		if exists {
-			results[i] = []string{
+			results = append(results, []string{
 				ipString,
 				strconv.FormatInt(int64(val.lastLatency), 10),
 				strconv.FormatBool(val.pendingUpdate),
-			}
+			})
 		} else {
 			p.data[ipString] = result{}
 		}
-		currentIP = subnetmath.AddToAddr(currentIP, 1)
-		ipString = currentIP.String()
+		currentIP = subnetmath.NextAddr(currentIP)
 	}
 	p.mtx.RUnlock()
 	return results

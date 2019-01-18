@@ -4,7 +4,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/demskie/ipam/server/ping"
 	"github.com/demskie/ipam/server/subnets"
 	"github.com/demskie/subnetmath"
 )
@@ -34,12 +33,11 @@ func (ipam *IPAMServer) searchSubnetData(query string, stopChan chan struct{}) [
 func (ipam *IPAMServer) searchHostData(query string, stopChan chan struct{}) [][]string {
 	network := subnetmath.ParseNetworkCIDR(query)
 	if network != nil {
-		addressCount := ping.GetNumberOfHosts(network)
-		currentIP := subnetmath.DuplicateNetwork(network).IP
-		sliceOfAddresses := make([]string, addressCount)
-		for i := 0; i < addressCount; i++ {
-			sliceOfAddresses[i] = currentIP.String()
-			currentIP = subnetmath.AddToAddr(currentIP, 1)
+		sliceOfAddresses := []string{}
+		currentIP := subnetmath.DuplicateAddr(network.IP)
+		for network.Contains(currentIP) {
+			sliceOfAddresses = append(sliceOfAddresses, currentIP.String())
+			currentIP = subnetmath.NextAddr(currentIP)
 		}
 		hostData := [][]string{
 			sliceOfAddresses,
@@ -51,6 +49,7 @@ func (ipam *IPAMServer) searchHostData(query string, stopChan chan struct{}) [][
 	}
 	matchedAddrs, unmatchedLines, headers := ipam.custom.SearchAllCustomData(query, stopChan)
 	matchedAddrs = ipam.dns.SearchAllHostnames(query, matchedAddrs)
+
 	sliceOfAddresses := make([]string, 0, len(matchedAddrs))
 	for addr := range matchedAddrs {
 		sliceOfAddresses = append(sliceOfAddresses, addr)

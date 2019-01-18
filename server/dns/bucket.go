@@ -81,6 +81,7 @@ func appendToSliceIfMissing(slc []string, s1 string) []string {
 	return append(slc, s1)
 }
 
+// SearchAllHostnames adds results to matchedAddrs
 func (b *Bucket) SearchAllHostnames(query string, matchedAddrs map[string]struct{}) map[string]struct{} {
 	b.mtx.RLock()
 	for hostname, addr := range b.hostnameToAddr {
