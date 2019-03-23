@@ -2,6 +2,9 @@
 @import "~@blueprintjs/icons/lib/css/blueprint-icons.css";
 @import "~@blueprintjs/table/lib/css/table.css";
 
+@import "~animate.css";
+@import "~react-virtualized/styles.css";
+
 *:focus {
 	outline: none;
 }
@@ -45,7 +48,7 @@ label.bp3-label .bp3-popover-wrapper {
 
 #subnetToolbar {
 	position: static;
-	min-width: 500px;
+	min-width: 650px;
 }
 
 @supports (position: sticky) {
@@ -59,15 +62,29 @@ label.bp3-label .bp3-popover-wrapper {
 }
 
 #sidebarElements {
+	position: relative;
 	width: max-content;
 	width: -moz-max-content;
 	width: -webkit-max-content;
 	width: -o-max-content;
 }
 
-.subnetLabel {
-	width: max-content;
-	width: -moz-max-content;
-	width: -webkit-max-content;
-	width: -o-max-content;
+.subnetPromptPanelStack {
+	height: 310px;
+}
+
+.bp3-dark .bp3-panel-stack-view {
+	background-color: rgb(41, 55, 65);
+}
+
+.bp3-panel-stack-header .bp3-heading {
+	margin-bottom: 15px;
+}
+
+.bp3-button.bp3-panel-stack-header-back {
+	margin-bottom: 15px;
+}
+
+.bp3-button.bp3-panel-stack-header-next {
+	margin-bottom: 15px;
 }

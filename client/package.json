@@ -1,26 +1,51 @@
 {
-	"name": "client",
-	"version": "0.1.0",
-	"private": true,
-	"dependencies": {
-		"@blueprintjs/core": "^3.8.0",
-		"@blueprintjs/icons": "^3.3.0",
-		"@blueprintjs/table": "^3.3.0",
-		"classnames": "^2.2.6",
-		"fscreen": "^1.0.2",
-		"lodash-es": "^4.17.11",
-		"prop-types": "^15.6.2",
-		"react": "^16.6.3",
-		"react-dom": "^16.6.3",
-		"react-scripts": "^1.1.4",
-		"react-sidebar": "^3.0.2",
-		"react-virtualized": "^9.21.0",
-		"reflexbox": "^3.0.1"
-	},
-	"scripts": {
-		"start": "react-scripts start",
-		"build": "react-scripts build",
-		"test": "react-scripts test --env=jsdom",
-		"eject": "react-scripts eject"
-	}
+  "name": "ipam",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@blueprintjs/core": "^3.13.0",
+    "@blueprintjs/icons": "^3.6.0",
+    "@blueprintjs/table": "^3.4.1",
+    "@types/classnames": "^2.2.7",
+    "@types/fscreen": "^1.0.1",
+    "@types/jest": "24.0.6",
+    "@types/lodash-es": "^4.17.2",
+    "@types/node": "11.9.5",
+    "@types/react": "16.8.4",
+    "@types/react-burger-menu": "^2.2.2",
+    "@types/react-dom": "16.8.2",
+    "@types/react-sidebar": "^3.0.0",
+    "@types/react-transition-group": "^2.0.16",
+    "@types/react-virtualized": "^9.18.12",
+    "animate.css": "^3.7.0",
+    "classnames": "^2.2.6",
+    "fscreen": "^1.0.2",
+    "ipaddr.js": "^1.9.0",
+    "lodash-es": "^4.17.11",
+    "react": "^16.8.3",
+    "react-burger-menu": "^2.6.5",
+    "react-dom": "^16.8.3",
+    "react-scripts": "2.1.5",
+    "react-sidebar": "^3.0.2",
+    "react-split": "^2.0.4",
+    "react-transition-group": "^2.6.1",
+    "react-virtualized": "^9.21.0",
+    "reflexbox": "^3.0.1",
+    "typescript": "3.3.3333"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not ie <= 11",
+    "not op_mini all"
+  ]
 }
