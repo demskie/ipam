@@ -10,10 +10,7 @@ import { Button, Intent, InputGroup, IPanelProps } from "@blueprintjs/core";
 import { Flex, Box } from "reflexbox";
 
 export interface CreatePanelProps {
-	rootSubnetPromptMode: SubnetPromptMode;
-	subnetPromptMode: SubnetPromptMode;
 	selectedTreeNode: Subnet;
-	triggerSubnetPromptMode: (mode: SubnetPromptMode) => void;
 	websocket: WebsocketManager;
 	createSubnet: MainTriggers["createSubnet"];
 	exitSubnetPrompt: () => void;
@@ -23,12 +20,7 @@ export class CreatePanel extends React.PureComponent<IPanelProps & CreatePanelPr
 	render() {
 		return (
 			<React.Fragment>
-				<SubnetInputGroups
-					rootSubnetPromptMode={this.props.rootSubnetPromptMode}
-					subnetPromptMode={SubnetPromptMode.CREATE}
-					selectedTreeNode={this.props.selectedTreeNode}
-					triggerSubnetPromptMode={this.props.triggerSubnetPromptMode}
-				/>
+				<SubnetInputGroups subnetPromptMode={SubnetPromptMode.CREATE} selectedTreeNode={this.props.selectedTreeNode} />
 				<Flex justify={"space-between"} style={{ marginLeft: "15px", marginRight: "15px", marginBottom: "10px" }}>
 					<Box style={{ width: "135px" }}>
 						<InputGroup id="username-input" placeholder="username" defaultValue={this.props.websocket.getUsername()} />

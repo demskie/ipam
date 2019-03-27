@@ -5,36 +5,69 @@ import { Subnet } from "../SubnetTree";
 
 import { Button, Intent, Label, TextArea, InputGroup, Tooltip, Position } from "@blueprintjs/core";
 import { Flex, Box } from "reflexbox";
+import * as ipaddr from "ipaddr.js";
 
 interface SubnetInputGroupsProps {
-	rootSubnetPromptMode: SubnetPromptMode;
 	subnetPromptMode: SubnetPromptMode;
 	selectedTreeNode: Subnet;
-	triggerSubnetPromptMode: (mode: SubnetPromptMode) => void;
 }
 
-interface SubnetInputGroupsState {}
+interface SubnetInputGroupsState {
+	isValidCIDR: boolean;
+}
 
 export class SubnetInputGroups extends React.Component<SubnetInputGroupsProps, SubnetInputGroupsState> {
+	state = {
+		isValidCIDR: true
+	};
+
 	render() {
 		const isShow = this.props.subnetPromptMode === SubnetPromptMode.SHOW;
 		const isCreate = this.props.subnetPromptMode === SubnetPromptMode.CREATE;
 		const isModify = this.props.subnetPromptMode === SubnetPromptMode.MODIFY;
 		const isDelete = this.props.subnetPromptMode === SubnetPromptMode.DELETE;
+		const getPrefix = () => {
+			switch (true) {
+				case isShow:
+					return "show";
+				case isCreate:
+					return "create";
+				case isModify:
+					return "modify";
+				case isDelete:
+					return "delete";
+			}
+			return "unknown";
+		};
 		return (
 			<Flex justify="center">
 				<Box p={2}>
 					<Label>
 						{"Subnet CIDR"}
 						<InputGroup
-							id="cidr-input"
+							id={`${getPrefix()}-cidr-input`}
 							placeholder={"127.0.0.0/8"}
-							defaultValue={(() => {
-								return isCreate ? "" : this.props.selectedTreeNode.net;
-							})()}
+							defaultValue={isCreate ? "" : this.props.selectedTreeNode.net}
 							disabled={isShow || isDelete}
+							onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+								if (event.target.value !== "") {
+									try {
+										ipaddr.parseCIDR(event.target.value);
+									} catch {
+										return this.setState({ isValidCIDR: false });
+									}
+								}
+								this.setState({ isValidCIDR: true });
+							}}
+							intent={this.state.isValidCIDR ? Intent.NONE : Intent.DANGER}
 							rightElement={
-								<Tooltip className="bp3-dark" content={subnettingHint} intent={Intent.NONE}>
+								<Tooltip
+									className="bp3-dark"
+									content={subnettingHint}
+									intent={Intent.NONE}
+									boundary={"viewport"}
+									position={Position.RIGHT}
+								>
 									<Button className="bp3-minimal" icon="help" />
 								</Tooltip>
 							}
@@ -50,7 +83,7 @@ export class SubnetInputGroups extends React.Component<SubnetInputGroupsProps, S
 						<Label>
 							{"Description"}
 							<InputGroup
-								id="description-input"
+								id={`${getPrefix()}-description-input`}
 								placeholder={"mcsubnettyface"}
 								defaultValue={(() => {
 									return isCreate ? "" : this.props.selectedTreeNode.desc;
@@ -63,7 +96,7 @@ export class SubnetInputGroups extends React.Component<SubnetInputGroupsProps, S
 					<Label>
 						{"VLAN ID"}
 						<InputGroup
-							id="vlan-input"
+							id={`${getPrefix()}-vlan-input`}
 							defaultValue={(() => {
 								return isCreate ? "" : this.props.selectedTreeNode.vlan;
 							})()}
@@ -75,7 +108,7 @@ export class SubnetInputGroups extends React.Component<SubnetInputGroupsProps, S
 					<Label>
 						{"Scratch Notes"}
 						<TextArea
-							id="notes-input"
+							id={`${getPrefix()}-notes-input`}
 							large={false}
 							style={{ width: "210px", maxWidth: "210px", height: "165px" }}
 							defaultValue={(() => {

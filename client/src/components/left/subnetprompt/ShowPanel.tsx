@@ -3,7 +3,7 @@ import React from "react";
 import { MainTriggers } from "../../Main";
 import { WebsocketManager } from "../../websocket/Manager";
 import { Subnet } from "../SubnetTree";
-import { SubnetPromptMode } from "../SubnetPrompt";
+import { SubnetPromptMode, subnetPromptFirstRender } from "../SubnetPrompt";
 import { ModifyPanel } from "./ModifyPanel";
 import { DeletePanel } from "./DeletePanel";
 import { SubnetInputGroups } from "./InputGroups";
@@ -12,9 +12,7 @@ import { Button, Intent, IPanelProps } from "@blueprintjs/core";
 
 export interface ShowPanelProps {
 	rootSubnetPromptMode: SubnetPromptMode;
-	subnetPromptMode: SubnetPromptMode;
 	selectedTreeNode: Subnet;
-	triggerSubnetPromptMode: (mode: SubnetPromptMode) => void;
 	websocket: WebsocketManager;
 	createSubnet: MainTriggers["createSubnet"];
 	modifySubnet: MainTriggers["modifySubnet"];
@@ -22,46 +20,35 @@ export interface ShowPanelProps {
 	exitSubnetPrompt: () => void;
 }
 
-interface ShowPanelState {
-	initialExecution: boolean;
-}
+interface ShowPanelState {}
 
-export class ShowPanel extends React.PureComponent<IPanelProps & ShowPanelProps, ShowPanelState> {
-	state = {
-		initialExecution: true
+export class ShowPanel extends React.Component<IPanelProps & ShowPanelProps, ShowPanelState> {
+	autoOpenSubmenus = () => {
+		if (subnetPromptFirstRender.value) {
+			const isRootModify = this.props.rootSubnetPromptMode === SubnetPromptMode.MODIFY;
+			const isRootDelete = this.props.rootSubnetPromptMode === SubnetPromptMode.DELETE;
+			if (isRootModify) {
+				this.props.openPanel({
+					component: ModifyPanel,
+					props: this.props,
+					title: "Modify Subnet"
+				});
+			} else if (isRootDelete) {
+				this.props.openPanel({
+					component: DeletePanel,
+					props: this.props,
+					title: "Delete Subnet"
+				});
+			}
+			subnetPromptFirstRender.value = false;
+		}
 	};
 
 	render() {
-		const isModify = this.props.subnetPromptMode === SubnetPromptMode.MODIFY;
-		const isDelete = this.props.subnetPromptMode === SubnetPromptMode.DELETE;
-		if (this.state.initialExecution) {
-			if (isModify) {
-				console.log("triggering ModifyPanel");
-				this.setState({ initialExecution: false }, () => {
-					this.props.openPanel({
-						component: ModifyPanel,
-						props: this.props,
-						title: "Modify Subnet"
-					});
-				});
-			} else if (isDelete) {
-				this.setState({ initialExecution: false }, () => {
-					this.props.openPanel({
-						component: DeletePanel,
-						props: this.props,
-						title: "Delete Subnet"
-					});
-				});
-			}
-		}
+		setTimeout(() => this.autoOpenSubmenus(), 250);
 		return (
 			<React.Fragment>
-				<SubnetInputGroups
-					rootSubnetPromptMode={this.props.rootSubnetPromptMode}
-					subnetPromptMode={SubnetPromptMode.SHOW}
-					selectedTreeNode={this.props.selectedTreeNode}
-					triggerSubnetPromptMode={this.props.triggerSubnetPromptMode}
-				/>
+				<SubnetInputGroups subnetPromptMode={SubnetPromptMode.SHOW} selectedTreeNode={this.props.selectedTreeNode} />
 				<div>
 					<Button
 						intent={Intent.NONE}

@@ -1,0 +1,11 @@
+[
+	{
+		"childNodes": [],
+		"desc": "Testing1234",
+		"id": "0",
+		"modTime": "10-10-2010 13:25:00",
+		"net": "10.0.0.0/16",
+		"notes": "here are some notes",
+		"vlan": ""
+	}
+]
