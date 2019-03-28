@@ -16,7 +16,7 @@ import { ScanAddr } from "./advancedprompt/Pingsweep";
 const rootElement = document.getElementById("root") as HTMLElement;
 const sidebarWidth = 650;
 
-const notifications = Toaster.create({
+export const notifications = Toaster.create({
 	autoFocus: false,
 	canEscapeKeyClear: false,
 	className: Classes.DARK,
@@ -188,6 +188,15 @@ export class Main extends React.Component<{}, MainState> {
 		this.state.triggers.setAdvancedPromptMode = (mode: AdvancedPromptMode) => {
 			this.setState({ advancedPromptMode: mode });
 		};
+		this.state.triggers.startScan = (net: string) => {
+			// do something
+		};
+		this.state.triggers.processCompleteSubnetData = (subnetData: Subnet[]) => {
+			// do something
+		};
+		this.state.triggers.processFilteredSubnetData = (subnetData: Subnet[], filter: string) => {
+			// do something
+		};
 	};
 }
 
@@ -200,4 +209,6 @@ export interface MainTriggers {
 	deleteSubnet: (user: string, pass: string, subnet: Subnet) => void;
 	setAdvancedPromptMode: (mode: AdvancedPromptMode) => void;
 	startScan: (net: string) => void;
+	processCompleteSubnetData: (subnetData: Subnet[]) => void;
+	processFilteredSubnetData: (subnetData: Subnet[], filter: string) => void;
 }

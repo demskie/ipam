@@ -6,6 +6,7 @@
     "@blueprintjs/core": "^3.13.0",
     "@blueprintjs/icons": "^3.6.0",
     "@blueprintjs/table": "^3.4.1",
+    "@types/chance": "^1.0.1",
     "@types/classnames": "^2.2.7",
     "@types/fscreen": "^1.0.1",
     "@types/jest": "24.0.6",
