@@ -1,45 +1,13 @@
 import React from "react";
 import { MainState, MainTriggers, notifications } from "../Main";
+import { Subnet } from "../left/SubnetTree";
+import { HostData } from "../Right";
+import * as message from "./MessageTypes";
+
+import { Intent } from "@blueprintjs/core";
 
 import { Chance } from "chance";
-import { Intent } from "@blueprintjs/core";
-import { Subnet } from "../left/SubnetTree";
-
 const CHANCE = Chance();
-
-interface baseMessage {
-	requestType: InboundRequestTypes;
-}
-
-enum InboundRequestTypes {
-	DisplayError = "DISPLAYERROR",
-	DisplaySubnetData = "DISPLAYSUBNETDATA",
-	DisplayFilteredSubnetData = "DISPLAYFILTEREDSUBNETDATA",
-	DisplayHostData = "DISPLAYHOSTDATA",
-	DisplayHistoryData = "DISPLAYHISTORYDATA",
-	DisplayDebugData = "DISPLAYDEBUGDATA",
-	DisplayScanData = "DISPLAYSCANDATA",
-	DisplaySearchData = "DISPLAYSEARCHDATA"
-}
-
-interface inboundDisplayError {
-	requestType: InboundRequestTypes.DisplayError;
-	originalGUID: string;
-	requestData: string;
-}
-
-interface inboundDisplaySubnetData {
-	requestType: InboundRequestTypes.DisplaySubnetData;
-	originalGUID: string;
-	requestData: Subnet[];
-}
-
-interface inboundDisplayFilteredSubnetData {
-	requestType: InboundRequestTypes.DisplaySubnetData;
-	originalGUID: string;
-	originalFilter: string;
-	requestData: Subnet[];
-}
 
 export class WebsocketManager {
 	private readonly setMainState: React.Component<{}, MainState>["setState"];
@@ -47,7 +15,8 @@ export class WebsocketManager {
 	private ws: WebSocket;
 	private user = "";
 	private pass = "";
-	private latency = -1;
+	private latencyRTT = -1;
+	private pendingRequests = new Map<message.globallyUniqueID, message.base>();
 
 	constructor(setState: React.Component<{}, MainState>["setState"], triggers: MainTriggers) {
 		this.setMainState = setState;
@@ -76,18 +45,23 @@ export class WebsocketManager {
 	}
 
 	private handleMessage(ev: MessageEvent) {
-		const baseMsg = JSON.parse(ev.data) as baseMessage;
+		const baseMsg = JSON.parse(ev.data) as message.base;
 		var msg;
-		switch (baseMsg.requestType) {
-			case InboundRequestTypes.DisplayError:
-				msg = baseMsg as inboundDisplayError;
+		switch (baseMsg.messageType) {
+			case message.kind.Ping:
+				msg = baseMsg as message.inboundPing;
+				// do something
+				break;
+			case message.kind.GenericError:
+				msg = baseMsg as message.inboundGenericError;
 				notifications.show({
 					intent: Intent.WARNING,
-					message: msg.requestData,
+					message: msg.error,
 					timeout: 0
 				});
 				break;
-			case InboundRequestTypes.DisplaySubnetData:
+
+			case message.kind.DisplaySubnetData:
 				msg = baseMsg as inboundDisplaySubnetData;
 				this.mainTriggers.processCompleteSubnetData(msg.requestData);
 			case InboundRequestTypes.DisplayFilteredSubnetData:
