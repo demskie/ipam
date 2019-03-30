@@ -1,5 +1,6 @@
 import { Subnet } from "../left/SubnetTree";
 import { HostData } from "../Right";
+import { ScanAddr } from "../advancedprompt/Pingsweep";
 
 export enum kind {
 	Ping,
@@ -23,89 +24,109 @@ export enum serverErrorTypes {
 
 export interface base {
 	messageType: kind;
+	sessionGUID: string;
 }
-
-export type globallyUniqueID = string;
 
 export interface outboundPing extends base {
 	messageType: kind.Ping;
-	guid: globallyUniqueID;
+	sessionGUID: string;
 }
 
 export interface inboundPing extends base {
 	messageType: kind.Ping;
-	guidEcho: globallyUniqueID;
+	sessionGUID: string;
 }
 
-export interface inboundServerError extends base {
+export interface inboundGenericError extends base {
 	messageType: kind.GenericError;
-	guidEcho: globallyUniqueID;
+	sessionGUID: string;
 	errorType: serverErrorTypes;
 	errorValue: string;
 }
 
 export interface inboundGenericInfo extends base {
 	messageType: kind.GenericInfo;
-	guidEcho: globallyUniqueID;
+	sessionGUID: string;
 	info: string;
 }
 
 export interface outboundAllSubnets extends base {
 	messageType: kind.AllSubnets;
-	guid: globallyUniqueID;
+	sessionGUID: string;
 }
 
 export interface inboundAllSubnets extends base {
 	messageType: kind.AllSubnets;
-	guidEcho: globallyUniqueID;
+	sessionGUID: string;
 	subnets: Subnet[];
 }
 
 export interface outboundSomeSubnets extends base {
 	messageType: kind.SomeSubnets;
-	guid: globallyUniqueID;
+	sessionGUID: string;
 	filter: string;
 }
 
 export interface inboundSomeSubnets extends base {
 	messageType: kind.SomeSubnets;
-	guidEcho: globallyUniqueID;
+	sessionGUID: string;
 	subnets: Subnet[];
 }
 
 export interface outboundSpecificHosts extends base {
 	messageType: kind.SpecificHosts;
-	guid: globallyUniqueID;
+	sessionGUID: string;
 	network: string;
 }
 
 export interface inboundSpecificHosts extends base {
 	messageType: kind.SpecificHosts;
-	guidEcho: globallyUniqueID;
+	sessionGUID: string;
 	hosts: HostData;
 }
 
 export interface outboundSomeHosts extends base {
 	messageType: kind.SomeHosts;
-	guid: globallyUniqueID;
+	sessionGUID: string;
 	filter: string;
 }
 
 export interface inboundSomeHosts extends base {
 	messageType: kind.SomeHosts;
-	guidEcho: globallyUniqueID;
+	sessionGUID: string;
 	hosts: HostData;
 }
 
-export enum kind2 {
-	Ping,
-	GenericError,
-	GenericInfo,
-	AllSubnets,
-	SomeSubnets,
-	SpecificHosts,
-	SomeHosts,
-	History,
-	DebugLog,
-	ManualPingScan
+export interface outboundHistory extends base {
+	messageType: kind.History;
+	sessionGUID: string;
+}
+
+export interface inboundHistory extends base {
+	messageType: kind.History;
+	sessionGUID: string;
+	history: string[];
+}
+
+export interface outboundDebugLog extends base {
+	messageType: kind.DebugLog;
+	sessionGUID: string;
+}
+
+export interface inboundDebugLog extends base {
+	messageType: kind.DebugLog;
+	sessionGUID: string;
+	debugLog: string[];
+}
+
+export interface outboundManualPingScan extends base {
+	messageType: kind.ManualPingScan;
+	sessionGUID: string;
+	network: string;
+}
+
+export interface inboundManualPingScan extends base {
+	messageType: kind.ManualPingScan;
+	sessionGUID: string;
+	results: ScanAddr[];
 }

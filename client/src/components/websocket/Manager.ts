@@ -4,10 +4,15 @@ import { Subnet } from "../left/SubnetTree";
 import { HostData } from "../Right";
 import * as message from "./MessageTypes";
 
-import { Intent } from "@blueprintjs/core";
+import { Intent, IToastOptions } from "@blueprintjs/core";
 
 import { Chance } from "chance";
 const CHANCE = Chance();
+
+interface pendingRequest {
+	date: Date;
+	sentMessage: message.base;
+}
 
 export class WebsocketManager {
 	private readonly setMainState: React.Component<{}, MainState>["setState"];
@@ -16,7 +21,7 @@ export class WebsocketManager {
 	private user = "";
 	private pass = "";
 	private latencyRTT = -1;
-	private pendingRequests = new Map<message.globallyUniqueID, message.base>();
+	private pendingRequests = [] as pendingRequest[];
 
 	constructor(setState: React.Component<{}, MainState>["setState"], triggers: MainTriggers) {
 		this.setMainState = setState;
@@ -47,28 +52,47 @@ export class WebsocketManager {
 	private handleMessage(ev: MessageEvent) {
 		const baseMsg = JSON.parse(ev.data) as message.base;
 		var msg;
+		var toasts: IToastOptions[];
 		switch (baseMsg.messageType) {
 			case message.kind.Ping:
 				msg = baseMsg as message.inboundPing;
-				// do something
+				for (let req of this.pendingRequests) {
+					if (req.sentMessage.sessionGUID === msg.sessionGUID) {
+						this.latencyRTT = new Date().getTime() - req.date.getTime();
+						break;
+					}
+				}
 				break;
 			case message.kind.GenericError:
 				msg = baseMsg as message.inboundGenericError;
+				for (let req of this.pendingRequests) {
+					if (req.sentMessage.sessionGUID === msg.sessionGUID) {
+						// do something specific
+						break;
+					}
+				}
+				toasts = notifications.getToasts();
+				if (toasts.length > 8 && toasts[0].key !== undefined) {
+					notifications.dismiss(toasts[0].key);
+				}
 				notifications.show({
-					intent: Intent.WARNING,
-					message: msg.error,
+					intent: Intent.DANGER,
+					message: msg.errorValue,
 					timeout: 0
 				});
 				break;
-
-			case message.kind.DisplaySubnetData:
-				msg = baseMsg as inboundDisplaySubnetData;
-				this.mainTriggers.processCompleteSubnetData(msg.requestData);
-			case InboundRequestTypes.DisplayFilteredSubnetData:
-				msg = baseMsg as inboundDisplayFilteredSubnetData;
-				this.mainTriggers.processFilteredSubnetData(msg.requestData, msg.originalFilter);
+			case message.kind.GenericInfo:
+				msg = baseMsg as message.inboundGenericInfo;
+				toasts = notifications.getToasts();
+				if (toasts.length < 8) {
+					notifications.show({
+						intent: Intent.NONE,
+						message: msg.info,
+						timeout: 5000
+					});
+				}
 			default:
-				console.error(`received invalid requestType: ${baseMsg.requestType}`);
+				console.error(`received invalid messageType: ${baseMsg.messageType}`);
 		}
 	}
 
