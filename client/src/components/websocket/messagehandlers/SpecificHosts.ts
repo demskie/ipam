@@ -9,3 +9,11 @@ export function receiveSpecificHosts(baseMsg: message.base, websocketManager: We
 		websocketManager.removePendingMessage(origReq.sentMessage.sessionGUID);
 	}
 }
+
+export function sendSpecificHosts(network: string, websocketManager: WebsocketManager) {
+	websocketManager.sendMessage({
+		messageType: message.kind.SpecificHosts,
+		sessionGUID: websocketManager.createSessionGUID(),
+		network: network
+	});
+}

@@ -9,3 +9,11 @@ export function receiveSomeSubnets(baseMsg: message.base, websocketManager: Webs
 		websocketManager.removePendingMessage(origReq.sentMessage.sessionGUID);
 	}
 }
+
+export function sendSomeSubnets(filter: string, websocketManager: WebsocketManager) {
+	websocketManager.sendMessage({
+		messageType: message.kind.SomeSubnets,
+		sessionGUID: websocketManager.createSessionGUID(),
+		filter: filter
+	});
+}

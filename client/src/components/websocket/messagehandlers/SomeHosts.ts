@@ -9,3 +9,11 @@ export function receiveSomeHosts(baseMsg: message.base, websocketManager: Websoc
 		websocketManager.removePendingMessage(origReq.sentMessage.sessionGUID);
 	}
 }
+
+export function sendSomeHosts(filter: string, websocketManager: WebsocketManager) {
+	websocketManager.sendMessage({
+		messageType: message.kind.SomeHosts,
+		sessionGUID: websocketManager.createSessionGUID(),
+		filter: filter
+	});
+}

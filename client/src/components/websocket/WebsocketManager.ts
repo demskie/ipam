@@ -1,7 +1,8 @@
 import React from "react";
 import { MainState, MainTriggers, CHANCE } from "../Main";
 import * as message from "./MessageTypes";
-import { messageHandlers } from "./MessageHandlers";
+import { messageReceivers, messageSenders } from "./MessageHandlers";
+import { isObject } from "util";
 
 interface pendingRequest {
 	creationTime: number;
@@ -38,28 +39,30 @@ export class WebsocketManager {
 
 	private handleMessage(ev: MessageEvent) {
 		const baseMsg = JSON.parse(ev.data) as message.base;
-		if (baseMsg.messageType === message.kind.Ping) {
-			messageHandlers.receivePing(baseMsg, this);
+		if (!isObject(baseMsg) || typeof baseMsg.messageType !== "number") {
+			console.error("received an invalid message:", baseMsg);
+		} else if (baseMsg.messageType === message.kind.Ping) {
+			messageReceivers.receivePing(baseMsg, this);
 		} else if (baseMsg.messageType === message.kind.GenericError) {
-			messageHandlers.receiveGenericError(baseMsg, this);
+			messageReceivers.receiveGenericError(baseMsg, this);
 		} else if (baseMsg.messageType === message.kind.GenericInfo) {
-			messageHandlers.receiveGenericInfo(baseMsg);
+			messageReceivers.receiveGenericInfo(baseMsg);
 		} else if (baseMsg.messageType === message.kind.AllSubnets) {
-			messageHandlers.receiveAllSubnets(baseMsg, this);
+			messageReceivers.receiveAllSubnets(baseMsg, this);
 		} else if (baseMsg.messageType === message.kind.SomeSubnets) {
-			messageHandlers.receiveSomeSubnets(baseMsg, this);
+			messageReceivers.receiveSomeSubnets(baseMsg, this);
 		} else if (baseMsg.messageType === message.kind.SomeHosts) {
-			messageHandlers.receiveSomeHosts(baseMsg, this);
+			messageReceivers.receiveSomeHosts(baseMsg, this);
 		} else if (baseMsg.messageType === message.kind.SpecificHosts) {
-			messageHandlers.receiveSpecificHosts(baseMsg, this);
+			messageReceivers.receiveSpecificHosts(baseMsg, this);
 		} else if (baseMsg.messageType === message.kind.History) {
-			messageHandlers.receiveHistory(baseMsg, this);
+			messageReceivers.receiveHistory(baseMsg, this);
 		} else if (baseMsg.messageType === message.kind.DebugLog) {
-			messageHandlers.receiveDebugLog(baseMsg, this);
+			messageReceivers.receiveDebugLog(baseMsg, this);
 		} else if (baseMsg.messageType === message.kind.ManualPingScan) {
-			messageHandlers.receiveManualPingScan(baseMsg, this);
+			messageReceivers.receiveManualPingScan(baseMsg, this);
 		} else {
-			console.error(`received invalid messageType: ${baseMsg.messageType}`);
+			console.error(`received an invalid messageType: ${baseMsg.messageType}`);
 		}
 	}
 

@@ -9,3 +9,10 @@ export function receiveHistory(baseMsg: message.base, websocketManager: Websocke
 		websocketManager.removePendingMessage(origReq.sentMessage.sessionGUID);
 	}
 }
+
+export function sendHistory(websocketManager: WebsocketManager) {
+	websocketManager.sendMessage({
+		messageType: message.kind.History,
+		sessionGUID: websocketManager.createSessionGUID()
+	});
+}

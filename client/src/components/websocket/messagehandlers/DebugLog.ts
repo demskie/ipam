@@ -9,3 +9,10 @@ export function receiveDebugLog(baseMsg: message.base, websocketManager: Websock
 		websocketManager.removePendingMessage(origReq.sentMessage.sessionGUID);
 	}
 }
+
+export function sendDebugLog(websocketManager: WebsocketManager) {
+	websocketManager.sendMessage({
+		messageType: message.kind.DebugLog,
+		sessionGUID: websocketManager.createSessionGUID()
+	});
+}

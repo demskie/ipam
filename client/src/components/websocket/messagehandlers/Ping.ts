@@ -8,3 +8,10 @@ export function receivePing(baseMsg: message.base, websocketManager: WebsocketMa
 		websocketManager.updateLatencyRTT(origReq.creationTime);
 	}
 }
+
+export function sendPing(websocketManager: WebsocketManager) {
+	websocketManager.sendMessage({
+		messageType: message.kind.Ping,
+		sessionGUID: websocketManager.createSessionGUID()
+	});
+}
