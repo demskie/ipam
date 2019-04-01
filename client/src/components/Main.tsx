@@ -9,9 +9,12 @@ import { Left } from "./Left";
 import { Right, HostData } from "./Right";
 import { AdvancedPrompt, AdvancedPromptMode } from "./AdvancedPrompt";
 import { SubnetPrompt, SubnetPromptMode } from "./left/SubnetPrompt";
-import { WebsocketManager } from "./websocket/Manager";
+import { WebsocketManager } from "./websocket/WebsocketManager";
 import { Subnet } from "./left/SubnetTree";
 import { ScanAddr } from "./advancedprompt/Pingsweep";
+
+import { Chance } from "chance";
+export const CHANCE = Chance();
 
 const rootElement = document.getElementById("root") as HTMLElement;
 const sidebarWidth = 650;
@@ -92,7 +95,7 @@ export class Main extends React.Component<{}, MainState> {
 	};
 
 	watchForOutdatedCache = () => {
-		let interval = setInterval(() => {
+		const interval = setInterval(() => {
 			if ((window as any).isOutdated === true) {
 				notifications.show({
 					action: {
@@ -115,7 +118,7 @@ export class Main extends React.Component<{}, MainState> {
 				this.setState({
 					sidebarOpen: true
 				});
-			}, 1000);
+			}, 1500);
 		}
 	};
 

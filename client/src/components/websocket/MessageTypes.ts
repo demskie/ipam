@@ -130,3 +130,13 @@ export interface inboundManualPingScan extends base {
 	sessionGUID: string;
 	results: ScanAddr[];
 }
+
+export type AllKnownOutboundTypes =
+	| outboundPing
+	| outboundAllSubnets
+	| outboundSomeSubnets
+	| outboundSpecificHosts
+	| outboundSomeHosts
+	| outboundHistory
+	| outboundDebugLog
+	| outboundManualPingScan;

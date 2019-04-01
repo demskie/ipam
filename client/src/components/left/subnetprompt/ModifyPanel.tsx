@@ -1,7 +1,7 @@
 import React from "react";
 
 import { MainTriggers } from "../../Main";
-import { WebsocketManager } from "../../websocket/Manager";
+import { WebsocketManager } from "../../websocket/WebsocketManager";
 import { Subnet } from "../SubnetTree";
 import { SubnetPromptMode } from "../SubnetPrompt";
 import { SubnetInputGroups } from "./InputGroups";
