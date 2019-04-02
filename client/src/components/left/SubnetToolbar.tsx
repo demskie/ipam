@@ -1,6 +1,5 @@
 import React from "react";
 
-import { Subnet } from "./SubnetTree";
 import { Navbar, NavbarGroup, Alignment, Button } from "@blueprintjs/core";
 import { MainState as SubnetToolbarProps } from "../Main";
 import { SubnetPromptMode } from "./SubnetPrompt";
@@ -12,7 +11,7 @@ export class SubnetToolbar extends React.PureComponent<SubnetToolbarProps, Subne
 		return (
 			<Navbar
 				id="subnetToolbar"
-				className="bp3-dark"
+				className={this.props.darkMode ? "bp3-dark" : "light-mode-background-color"}
 				fixedToTop={true}
 				style={{ top: this.props.sidebarDocked ? "0px" : "50px" }}
 			>

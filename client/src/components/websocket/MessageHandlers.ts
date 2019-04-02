@@ -8,6 +8,9 @@ import { receiveSpecificHosts, sendSpecificHosts } from "./messagehandlers/Speci
 import { receiveHistory, sendHistory } from "./messagehandlers/History";
 import { receiveDebugLog, sendDebugLog } from "./messagehandlers/DebugLog";
 import { receiveManualPingScan, sendManualPingScan } from "./messagehandlers/ManualPingScan";
+import { sendCreateSubnet } from "./messagehandlers/CreateSubnet";
+import { sendModifySubnet } from "./messagehandlers/ModifySubnet";
+import { sendDeleteSubnet } from "./messagehandlers/DeleteSubnet";
 
 export const messageReceivers = {
 	receivePing,
@@ -30,5 +33,8 @@ export const messageSenders = {
 	sendSpecificHosts,
 	sendHistory,
 	sendDebugLog,
-	sendManualPingScan
+	sendManualPingScan,
+	sendCreateSubnet,
+	sendModifySubnet,
+	sendDeleteSubnet
 };

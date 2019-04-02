@@ -8,6 +8,7 @@ import { MainTriggers } from "../Main";
 var lastNonEmptyTarget = "";
 
 interface PingsweepProps {
+	darkMode: boolean;
 	scanData: Array<any>;
 	scanTarget: string;
 	triggers: MainTriggers;
@@ -63,7 +64,7 @@ export class Pingsweep extends React.PureComponent<PingsweepProps, PingsweepStat
 				results.push(
 					<Box key={i} px={1}>
 						<Card
-							className="bp3-dark"
+							className={this.props.darkMode ? "bp3-dark" : ""}
 							interactive={true}
 							elevation={Elevation.THREE}
 							style={{

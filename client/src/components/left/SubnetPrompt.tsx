@@ -35,9 +35,11 @@ export class SubnetPrompt extends React.Component<SubnetPromptProps, SubnetPromp
 
 	getModifiedProps = () => {
 		return {
+			darkMode: this.props.darkMode,
 			rootSubnetPromptMode: this.props.rootSubnetPromptMode,
 			selectedTreeNode: this.props.selectedTreeNode,
-			websocket: this.props.websocket,
+			getUsername: this.props.triggers.getUsername,
+			getPassword: this.props.triggers.getPassword,
 			createSubnet: this.props.triggers.createSubnet,
 			modifySubnet: this.props.triggers.modifySubnet,
 			deleteSubnet: this.props.triggers.deleteSubnet,
@@ -52,7 +54,7 @@ export class SubnetPrompt extends React.Component<SubnetPromptProps, SubnetPromp
 	render() {
 		return (
 			<Dialog
-				className={classNames(Classes.DARK)}
+				className={this.props.darkMode ? "bp3-dark" : ""}
 				isOpen={this.props.rootSubnetPromptMode !== SubnetPromptMode.CLOSED}
 				onClose={this.closeSubnetPrompt}
 				onOpened={this.resetRootSubnetPromptMode}

@@ -24,7 +24,7 @@ export class AdvancedPrompt extends React.PureComponent<AdvancedProps, AdvancedS
 		return (
 			<div id="advancedPrompt">
 				<Dialog
-					className={Classes.DARK}
+					className={this.props.darkMode ? "bp3-dark" : ""}
 					style={{ width: `${advancedWidth}px`, minHeight: `${advancedHeight}px` }}
 					isOpen={this.props.advancedPromptMode !== AdvancedPromptMode.CLOSED}
 					onClose={() => this.props.triggers.setAdvancedPromptMode(AdvancedPromptMode.CLOSED)}
@@ -42,13 +42,27 @@ export class AdvancedPrompt extends React.PureComponent<AdvancedProps, AdvancedS
 									id={AdvancedPromptMode.HISTORY}
 									title="History"
 									disabled={false}
-									panel={<TabList data={this.props.historyData} panelWidth={panelWidth} panelHeight={panelHeight} />}
+									panel={
+										<TabList
+											darkMode={this.props.darkMode}
+											data={this.props.historyData}
+											panelWidth={panelWidth}
+											panelHeight={panelHeight}
+										/>
+									}
 								/>
 								<Tab
 									id={AdvancedPromptMode.DEBUG}
 									title="Debug"
 									disabled={false}
-									panel={<TabList data={this.props.debugData} panelWidth={panelWidth} panelHeight={panelHeight} />}
+									panel={
+										<TabList
+											darkMode={this.props.darkMode}
+											data={this.props.debugData}
+											panelWidth={panelWidth}
+											panelHeight={panelHeight}
+										/>
+									}
 								/>
 								<Tab
 									id={AdvancedPromptMode.PINGSWEEP}
@@ -56,6 +70,7 @@ export class AdvancedPrompt extends React.PureComponent<AdvancedProps, AdvancedS
 									disabled={false}
 									panel={
 										<Pingsweep
+											darkMode={this.props.darkMode}
 											scanData={this.props.scanData}
 											scanTarget={this.props.scanTarget}
 											triggers={this.props.triggers}

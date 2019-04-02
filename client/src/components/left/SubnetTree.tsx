@@ -134,9 +134,9 @@ export class SubnetTree extends React.Component<SubnetTreeProps, SubnetTreeState
 			ev.preventDefault();
 			const menu = React.createElement(
 				Menu,
-				{ className: Classes.DARK },
+				{ className: this.props.darkMode ? "bp3-dark" : "" },
 				React.createElement(MenuItem, {
-					className: Classes.DARK,
+					className: this.props.darkMode ? "bp3-dark" : "",
 					onClick: () => {
 						this.props.triggers.setRootSubnetPromptMode(SubnetPromptMode.SHOW);
 					},
@@ -144,7 +144,7 @@ export class SubnetTree extends React.Component<SubnetTreeProps, SubnetTreeState
 					text: "Show Subnet"
 				}),
 				React.createElement(MenuItem, {
-					className: Classes.DARK,
+					className: this.props.darkMode ? "bp3-dark" : "",
 					onClick: () => {
 						setTimeout(() => {
 							this.props.triggers.startScan(this.props.selectedTreeNode.net);
@@ -159,7 +159,7 @@ export class SubnetTree extends React.Component<SubnetTreeProps, SubnetTreeState
 					text: "Scan Subnet"
 				}),
 				React.createElement(MenuItem, {
-					className: Classes.DARK,
+					className: this.props.darkMode ? "bp3-dark" : "",
 					onClick: () => {
 						// this.props.handleUserAction({ action: "triggerSubnetPromptAction", value: "modify" });
 						console.log("triggerSubnetPromptAction", "modify");
@@ -168,7 +168,7 @@ export class SubnetTree extends React.Component<SubnetTreeProps, SubnetTreeState
 					text: "Modify Subnet"
 				}),
 				React.createElement(MenuItem, {
-					className: Classes.DARK,
+					className: this.props.darkMode ? "bp3-dark" : "",
 					onClick: () => {
 						// this.props.handleUserAction({ action: "triggerSubnetPromptAction", value: "delete" });
 						console.log("triggerSubnetPromptAction", "delete");
@@ -186,7 +186,7 @@ export class SubnetTree extends React.Component<SubnetTreeProps, SubnetTreeState
 	render() {
 		return (
 			<Tree
-				className="bp3-dark"
+				className={this.props.darkMode ? "bp3-dark" : ""}
 				contents={this.constructTreeNodes(this.props.subnetData)}
 				onNodeClick={this.handleNodeClick}
 				onNodeCollapse={this.handleNodeCollapse}

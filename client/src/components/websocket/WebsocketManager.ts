@@ -17,7 +17,7 @@ export class WebsocketManager {
 	private user = "";
 	private pass = "";
 	private latencyRTT = Number.MAX_SAFE_INTEGER;
-	private readonly pendingRequests = [] as pendingRequest[];
+	private pendingRequests = [] as pendingRequest[];
 
 	constructor(setState: React.Component<{}, MainState>["setState"], triggers: MainTriggers) {
 		this.setMainState = setState;
@@ -145,8 +145,6 @@ export class WebsocketManager {
 	getLatencyRTT() {
 		return this.latencyRTT;
 	}
-
-	getSubnetData() {}
 
 	getUsername() {
 		return this.user;

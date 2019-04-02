@@ -5,7 +5,10 @@ export function receiveManualPingScan(baseMsg: message.base, websocketManager: W
 	const msg = baseMsg as message.inboundManualPingScan;
 	const origReq = websocketManager.findPendingMessage(msg.sessionGUID);
 	if (origReq !== undefined) {
-		websocketManager.setMainState({ scanData: msg.results });
+		const origMsg = origReq.sentMessage as message.outboundManualPingScan;
+		if (origMsg.network === websocketManager.mainTriggers.getScanTarget()) {
+			websocketManager.setMainState({ scanData: msg.results });
+		}
 		websocketManager.removePendingMessage(origReq.sentMessage.sessionGUID);
 	}
 }

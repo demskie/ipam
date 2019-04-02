@@ -3,6 +3,7 @@ import React from "react";
 import { List } from "react-virtualized";
 
 interface TabListProps {
+	darkMode: boolean;
 	data: Array<any>;
 	panelHeight: number;
 	panelWidth: number;
@@ -17,7 +18,7 @@ export class TabList extends React.PureComponent<TabListProps, TabListState> {
 				style={{
 					width: this.props.panelWidth,
 					height: this.props.panelHeight,
-					backgroundColor: "#232d35",
+					backgroundColor: this.props.darkMode ? "rgb(41, 55, 65)" : "rgb(203, 217, 221)",
 					borderRadius: "9px",
 					paddingLeft: "10px"
 				}}

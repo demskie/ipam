@@ -12,7 +12,10 @@ export enum kind {
 	SomeHosts,
 	History,
 	DebugLog,
-	ManualPingScan
+	ManualPingScan,
+	CreateSubnet,
+	ModifySubnet,
+	DeleteSubnet
 }
 
 export enum serverErrorTypes {
@@ -20,6 +23,15 @@ export enum serverErrorTypes {
 	NotSubnetZero,
 	DoesNotExist,
 	AlreadyExists
+}
+
+export interface SubnetRequest {
+	user: string;
+	pass: string;
+	net: string;
+	desc: string;
+	notes: string;
+	vlan: string;
 }
 
 export interface base {
@@ -131,6 +143,24 @@ export interface inboundManualPingScan extends base {
 	results: ScanAddr[];
 }
 
+export interface outboundCreateSubnet extends base {
+	messageType: kind.CreateSubnet;
+	sessionGUID: string;
+	subnetRequest: SubnetRequest;
+}
+
+export interface outboundModifySubnet extends base {
+	messageType: kind.ModifySubnet;
+	sessionGUID: string;
+	subnetRequest: SubnetRequest;
+}
+
+export interface outboundDeleteSubnet extends base {
+	messageType: kind.DeleteSubnet;
+	sessionGUID: string;
+	subnetRequest: SubnetRequest;
+}
+
 export type AllKnownOutboundTypes =
 	| outboundPing
 	| outboundAllSubnets
@@ -139,4 +169,7 @@ export type AllKnownOutboundTypes =
 	| outboundSomeHosts
 	| outboundHistory
 	| outboundDebugLog
-	| outboundManualPingScan;
+	| outboundManualPingScan
+	| outboundCreateSubnet
+	| outboundModifySubnet
+	| outboundDeleteSubnet;

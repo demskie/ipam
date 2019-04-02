@@ -2,19 +2,24 @@ import React from "react";
 
 import _ from "lodash-es";
 import Sidebar from "react-sidebar";
-import { ITreeNode, Alert, Toaster, Classes, Position, Intent } from "@blueprintjs/core";
+import { Toaster, Classes, Position, Intent } from "@blueprintjs/core";
+
+import UAParser from "ua-parser-js";
+export const parser = new UAParser();
+
+import { Chance } from "chance";
+export const CHANCE = Chance();
 
 import { Top } from "./Top";
 import { Left } from "./Left";
 import { Right, HostData } from "./Right";
 import { AdvancedPrompt, AdvancedPromptMode } from "./AdvancedPrompt";
-import { SubnetPrompt, SubnetPromptMode } from "./left/SubnetPrompt";
+import { SubnetPromptMode } from "./left/SubnetPrompt";
 import { WebsocketManager } from "./websocket/WebsocketManager";
 import { Subnet } from "./left/SubnetTree";
 import { ScanAddr } from "./advancedprompt/Pingsweep";
-
-import { Chance } from "chance";
-export const CHANCE = Chance();
+import { SubnetRequest } from "./websocket/MessageTypes";
+import { messageSenders } from "./websocket/MessageHandlers";
 
 const rootElement = document.getElementById("root") as HTMLElement;
 const sidebarWidth = 650;
@@ -22,15 +27,19 @@ const sidebarWidth = 650;
 export const notifications = Toaster.create({
 	autoFocus: false,
 	canEscapeKeyClear: false,
-	className: Classes.DARK,
+	className: "bp3-dark",
 	position: Position.BOTTOM
 });
 
 export class MainState {
-	websocket: WebsocketManager;
+	readonly websocket: WebsocketManager;
 
 	sidebarOpen = false;
 	sidebarDocked = false;
+
+	darkMode =
+		true &&
+		(parser.getOS().name == "Mac OS" || parser.getDevice().type === "mobile" || parser.getDevice().type === "tablet");
 
 	emptySearchField = true;
 	lastTransmittedSearchQuery = "";
@@ -53,8 +62,6 @@ export class MainState {
 	advancedPromptMode = AdvancedPromptMode.CLOSED;
 	advancedPromptWidth = 0;
 	advancedPromptHeight = 0;
-
-	alertVisible = false;
 
 	readonly triggers = {} as MainTriggers;
 
@@ -134,7 +141,7 @@ export class Main extends React.Component<{}, MainState> {
 					styles={{
 						sidebar: {
 							width: `${sidebarWidth}px`,
-							backgroundColor: "#30404D"
+							backgroundColor: this.state.darkMode ? "#30404D" : "#FFFFFF"
 						}
 					}}
 					sidebar={<Left {...this.state} />}
@@ -143,6 +150,7 @@ export class Main extends React.Component<{}, MainState> {
 						<React.Fragment>
 							<Top {...this.state} />
 							<Right
+								darkMode={this.state.darkMode}
 								hostData={this.state.hostData}
 								hostDetailsWidth={this.state.hostDetailsWidth}
 								hostDetailsHeight={this.state.hostDetailsHeight}
@@ -151,16 +159,6 @@ export class Main extends React.Component<{}, MainState> {
 					}
 				</Sidebar>
 				<AdvancedPrompt {...this.state} />
-				<Alert
-					className="bp3-dark"
-					confirmButtonText="Reconnect"
-					icon="warning-sign"
-					intent={Intent.WARNING}
-					isOpen={this.state.alertVisible}
-					onClose={() => window.location.reload(true)}
-				>
-					<p>{"Lost connection with server"}</p>
-				</Alert>
 			</React.Fragment>
 		);
 	}
@@ -179,26 +177,31 @@ export class Main extends React.Component<{}, MainState> {
 		this.state.triggers.setRootSubnetPromptMode = (mode: SubnetPromptMode) => {
 			this.setState({ rootSubnetPromptMode: mode });
 		};
-		this.state.triggers.createSubnet = (user: string, pass: string, subnet: Subnet) => {
-			// do something
+		this.state.triggers.getUsername = () => {
+			return this.state.websocket.getUsername();
 		};
-		this.state.triggers.modifySubnet = (user: string, pass: string, subnet: Subnet) => {
-			// do something
+		this.state.triggers.getPassword = () => {
+			return this.state.websocket.getPassword();
 		};
-		this.state.triggers.deleteSubnet = (user: string, pass: string, subnet: Subnet) => {
-			// do something
+		this.state.triggers.createSubnet = (subnetRequest: SubnetRequest) => {
+			messageSenders.sendCreateSubnet(subnetRequest, this.state.websocket);
+		};
+		this.state.triggers.modifySubnet = (subnetRequest: SubnetRequest) => {
+			messageSenders.sendModifySubnet(subnetRequest, this.state.websocket);
+		};
+		this.state.triggers.deleteSubnet = (subnetRequest: SubnetRequest) => {
+			messageSenders.sendDeleteSubnet(subnetRequest, this.state.websocket);
 		};
 		this.state.triggers.setAdvancedPromptMode = (mode: AdvancedPromptMode) => {
 			this.setState({ advancedPromptMode: mode });
 		};
 		this.state.triggers.startScan = (net: string) => {
-			// do something
+			this.setState({ scanTarget: net }, () => {
+				messageSenders.sendManualPingScan(net, this.state.websocket);
+			});
 		};
-		this.state.triggers.processCompleteSubnetData = (subnetData: Subnet[]) => {
-			// do something
-		};
-		this.state.triggers.processFilteredSubnetData = (subnetData: Subnet[], filter: string) => {
-			// do something
+		this.state.triggers.getScanTarget = () => {
+			return this.state.scanTarget;
 		};
 	};
 }
@@ -207,11 +210,12 @@ export interface MainTriggers {
 	toggleSidebar: () => void;
 	selectTreeNode: (node: Subnet) => void;
 	setRootSubnetPromptMode: (mode: SubnetPromptMode) => void;
-	createSubnet: (user: string, pass: string, subnet: Subnet) => void;
-	modifySubnet: (user: string, pass: string, subnet: Subnet) => void;
-	deleteSubnet: (user: string, pass: string, subnet: Subnet) => void;
+	getUsername: () => string;
+	getPassword: () => string;
+	createSubnet: (subnetRequest: SubnetRequest) => void;
+	modifySubnet: (subnetRequest: SubnetRequest) => void;
+	deleteSubnet: (subnetRequest: SubnetRequest) => void;
 	setAdvancedPromptMode: (mode: AdvancedPromptMode) => void;
 	startScan: (net: string) => void;
-	processCompleteSubnetData: (subnetData: Subnet[]) => void;
-	processFilteredSubnetData: (subnetData: Subnet[], filter: string) => void;
+	getScanTarget: () => string;
 }

@@ -1,5 +1,5 @@
 import React from "react";
-import { Cell, Column, Table, RenderMode, IColumnProps } from "@blueprintjs/table";
+import { Cell, Column, Table, RenderMode } from "@blueprintjs/table";
 
 const addressWidth = 150;
 const aRecordWidth = 260;
@@ -16,6 +16,7 @@ export interface HostData {
 }
 
 interface RightProps {
+	darkMode: boolean;
 	hostData: HostData;
 	hostDetailsWidth: number;
 	hostDetailsHeight: number;
@@ -26,8 +27,8 @@ interface RightState {}
 export class Right extends React.PureComponent<RightProps, RightState> {
 	getRowCount = () => {
 		const rowCount = this.props.hostData.aRecords.length;
-		if (rowCount < 32) {
-			return 32;
+		if (rowCount < 128) {
+			return 128;
 		}
 		return rowCount;
 	};
@@ -147,7 +148,7 @@ export class Right extends React.PureComponent<RightProps, RightState> {
 		return (
 			<div id="hostDetails" style={{ height: this.props.hostDetailsHeight }}>
 				<Table
-					className="bp3-dark"
+					className={this.props.darkMode ? "bp3-dark" : ""}
 					numRows={this.getRowCount()}
 					renderMode={RenderMode.NONE}
 					enableGhostCells={true}

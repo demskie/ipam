@@ -1,7 +1,6 @@
 import React from "react";
 
 import { MainTriggers } from "../../Main";
-import { WebsocketManager } from "../../websocket/WebsocketManager";
 import { Subnet } from "../SubnetTree";
 import { SubnetPromptMode, subnetPromptFirstRender } from "../SubnetPrompt";
 import { ModifyPanel } from "./ModifyPanel";
@@ -11,9 +10,11 @@ import { SubnetInputGroups } from "./InputGroups";
 import { Button, Intent, IPanelProps } from "@blueprintjs/core";
 
 export interface ShowPanelProps {
+	darkMode: boolean;
 	rootSubnetPromptMode: SubnetPromptMode;
 	selectedTreeNode: Subnet;
-	websocket: WebsocketManager;
+	getUsername: MainTriggers["getUsername"];
+	getPassword: MainTriggers["getPassword"];
 	createSubnet: MainTriggers["createSubnet"];
 	modifySubnet: MainTriggers["modifySubnet"];
 	deleteSubnet: MainTriggers["deleteSubnet"];
@@ -48,7 +49,11 @@ export class ShowPanel extends React.Component<IPanelProps & ShowPanelProps, Sho
 		setTimeout(() => this.autoOpenSubmenus(), 250);
 		return (
 			<React.Fragment>
-				<SubnetInputGroups subnetPromptMode={SubnetPromptMode.SHOW} selectedTreeNode={this.props.selectedTreeNode} />
+				<SubnetInputGroups
+					darkMode={this.props.darkMode}
+					subnetPromptMode={SubnetPromptMode.SHOW}
+					selectedTreeNode={this.props.selectedTreeNode}
+				/>
 				<div>
 					<Button
 						intent={Intent.NONE}

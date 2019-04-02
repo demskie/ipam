@@ -1,7 +1,6 @@
 import React from "react";
 
 import { MainTriggers } from "../../Main";
-import { WebsocketManager } from "../../websocket/WebsocketManager";
 import { Subnet } from "../SubnetTree";
 import { SubnetPromptMode } from "../SubnetPrompt";
 import { SubnetInputGroups } from "./InputGroups";
@@ -10,8 +9,10 @@ import { Button, Intent, InputGroup, IPanelProps } from "@blueprintjs/core";
 import { Flex, Box } from "reflexbox";
 
 export interface CreatePanelProps {
+	darkMode: boolean;
 	selectedTreeNode: Subnet;
-	websocket: WebsocketManager;
+	getUsername: MainTriggers["getUsername"];
+	getPassword: MainTriggers["getPassword"];
 	createSubnet: MainTriggers["createSubnet"];
 	exitSubnetPrompt: () => void;
 }
@@ -20,37 +21,35 @@ export class CreatePanel extends React.PureComponent<IPanelProps & CreatePanelPr
 	render() {
 		return (
 			<React.Fragment>
-				<SubnetInputGroups subnetPromptMode={SubnetPromptMode.CREATE} selectedTreeNode={this.props.selectedTreeNode} />
+				<SubnetInputGroups
+					darkMode={this.props.darkMode}
+					subnetPromptMode={SubnetPromptMode.CREATE}
+					selectedTreeNode={this.props.selectedTreeNode}
+				/>
 				<Flex justify={"space-between"} style={{ marginLeft: "15px", marginRight: "15px", marginBottom: "10px" }}>
 					<Box style={{ width: "135px" }}>
-						<InputGroup id="username-input" placeholder="username" defaultValue={this.props.websocket.getUsername()} />
+						<InputGroup id="username-input-create" placeholder="username" defaultValue={this.props.getUsername()} />
 					</Box>
 					<Box style={{ width: "135px" }}>
 						<InputGroup
-							id="password-input"
+							id="password-input-create"
 							placeholder="password"
 							type="password"
-							defaultValue={this.props.websocket.getPassword()}
+							defaultValue={this.props.getPassword()}
 						/>
 					</Box>
 					<Box>
 						<Button
 							intent={Intent.SUCCESS}
 							onClick={() => {
-								this.props.createSubnet(
-									(window.document.getElementById("username-input") as HTMLInputElement).value,
-									(window.document.getElementById("password-input") as HTMLInputElement).value,
-									{
-										id: "",
-										childNodes: [],
-										modTime: "",
-										label: "",
-										net: (document.getElementById("cidr-input") as HTMLInputElement).value,
-										desc: (document.getElementById("description-input") as HTMLInputElement).value,
-										notes: (document.getElementById("notes-input") as HTMLInputElement).value,
-										vlan: (document.getElementById("vlan-input") as HTMLInputElement).value
-									}
-								);
+								this.props.createSubnet({
+									user: (document.getElementById("username-input-create") as HTMLInputElement).value,
+									pass: (document.getElementById("password-input-create") as HTMLInputElement).value,
+									net: (document.getElementById("cidr-input-create") as HTMLInputElement).value,
+									desc: (document.getElementById("desc-input-create") as HTMLInputElement).value,
+									notes: (document.getElementById("notes-input-create") as HTMLInputElement).value,
+									vlan: (document.getElementById("vlan-input-create") as HTMLInputElement).value
+								});
 								this.props.exitSubnetPrompt();
 							}}
 							style={{ width: "120px" }}

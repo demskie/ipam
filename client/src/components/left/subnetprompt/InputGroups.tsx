@@ -8,6 +8,7 @@ import { Flex, Box } from "reflexbox";
 import * as ipaddr from "ipaddr.js";
 
 interface SubnetInputGroupsProps {
+	darkMode: boolean;
 	subnetPromptMode: SubnetPromptMode;
 	selectedTreeNode: Subnet;
 }
@@ -45,7 +46,7 @@ export class SubnetInputGroups extends React.Component<SubnetInputGroupsProps, S
 					<Label>
 						{"Subnet CIDR"}
 						<InputGroup
-							id={`${getPrefix()}-cidr-input`}
+							id={`cidr-input-${getPrefix()}`}
 							placeholder={"127.0.0.0/8"}
 							defaultValue={isCreate ? "" : this.props.selectedTreeNode.net}
 							disabled={isShow || isDelete}
@@ -62,7 +63,7 @@ export class SubnetInputGroups extends React.Component<SubnetInputGroupsProps, S
 							intent={this.state.isValidCIDR ? Intent.NONE : Intent.DANGER}
 							rightElement={
 								<Tooltip
-									className="bp3-dark"
+									className={this.props.darkMode ? "bp3-dark" : ""}
 									content={subnettingHint}
 									intent={Intent.NONE}
 									boundary={"viewport"}
@@ -74,7 +75,7 @@ export class SubnetInputGroups extends React.Component<SubnetInputGroupsProps, S
 						/>
 					</Label>
 					<Tooltip
-						className="bp3-dark"
+						className={this.props.darkMode ? "bp3-dark" : ""}
 						content={this.props.selectedTreeNode.desc}
 						position={Position.RIGHT}
 						intent={Intent.NONE}
@@ -83,7 +84,7 @@ export class SubnetInputGroups extends React.Component<SubnetInputGroupsProps, S
 						<Label>
 							{"Description"}
 							<InputGroup
-								id={`${getPrefix()}-description-input`}
+								id={`desc-input-${getPrefix()}`}
 								placeholder={"mcsubnettyface"}
 								defaultValue={(() => {
 									return isCreate ? "" : this.props.selectedTreeNode.desc;
@@ -96,7 +97,7 @@ export class SubnetInputGroups extends React.Component<SubnetInputGroupsProps, S
 					<Label>
 						{"VLAN ID"}
 						<InputGroup
-							id={`${getPrefix()}-vlan-input`}
+							id={`vlan-input-${getPrefix()}`}
 							defaultValue={(() => {
 								return isCreate ? "" : this.props.selectedTreeNode.vlan;
 							})()}
@@ -108,7 +109,7 @@ export class SubnetInputGroups extends React.Component<SubnetInputGroupsProps, S
 					<Label>
 						{"Scratch Notes"}
 						<TextArea
-							id={`${getPrefix()}-notes-input`}
+							id={`notes-input-${getPrefix()}`}
 							large={false}
 							style={{ width: "210px", maxWidth: "210px", height: "165px" }}
 							defaultValue={(() => {

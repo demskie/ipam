@@ -73,6 +73,10 @@ label.bp3-label .bp3-popover-wrapper {
 	height: 310px;
 }
 
+.bp3-panel-stack-view {
+	background-color: rgb(235, 241, 245);
+}
+
 .bp3-dark .bp3-panel-stack-view {
 	background-color: rgb(41, 55, 65);
 }
@@ -87,4 +91,24 @@ label.bp3-label .bp3-popover-wrapper {
 
 .bp3-button.bp3-panel-stack-header-next {
 	margin-bottom: 15px;
+}
+
+.dark-mode-primary-bg-color {
+	background-color: rgb(41, 55, 65) !important;
+}
+
+.dark-mode-secondary-background-color {
+	background-color: rgb(48, 64, 77) !important;
+}
+
+.dark-mode-tertiary-background-color {
+	background-color: rgb(44, 58, 69) !important;
+}
+
+.light-mode-primary-background-color {
+	background-color: rgb(235, 241, 245) !important;
+}
+
+.light-mode-secondary-background-color {
+	background-color: rgb(203, 217, 221) !important;
 }

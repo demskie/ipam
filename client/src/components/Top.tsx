@@ -1,7 +1,7 @@
 import React from "react";
 import fscreen from "fscreen";
 import _ from "lodash-es";
-import { Button, Navbar, NavbarGroup, Alignment, Alert, InputGroup } from "@blueprintjs/core";
+import { Button, Navbar, NavbarGroup, Alignment, Alert, InputGroup, Popover, Menu, MenuItem } from "@blueprintjs/core";
 import { MainState as TopProps } from "./Main";
 import { AdvancedPromptMode } from "./AdvancedPrompt";
 
@@ -31,7 +31,10 @@ export class Top extends React.Component<TopProps, TopState> {
 	render() {
 		return (
 			<div className="top" style={{ height: "50px" }}>
-				<Navbar className="bp3-dark" style={{ paddingLeft: "5px", paddingRight: "5px" }}>
+				<Navbar
+					className={this.props.darkMode ? "bp3-dark" : "light-mode-background-color"}
+					style={{ paddingLeft: "5px", paddingRight: "5px" }}
+				>
 					<NavbarGroup align={Alignment.LEFT}>
 						<Button
 							className="bp3-minimal bp3-large"
@@ -73,25 +76,63 @@ export class Top extends React.Component<TopProps, TopState> {
 							style={{ width: "260px" }}
 						/>
 					</NavbarGroup>
-
 					<NavbarGroup align={Alignment.RIGHT}>
 						<Button
-							className="bp3-minimal"
 							icon="info-sign"
-							style={{ marginLeft: "15px", marginRight: "5px" }}
+							style={{ marginRight: "10px" }}
 							onClick={() => this.props.triggers.setAdvancedPromptMode(AdvancedPromptMode.HISTORY)}
 						/>
+						<Popover
+							isOpen={false}
+							position={"bottom"}
+							content={
+								<Menu>
+									<MenuItem text="Hello" />
+									<MenuItem text="World" />
+									<MenuItem text="Hello" />
+									<MenuItem text="World" />
+									<MenuItem text="Hello" />
+									<MenuItem text="World" />
+									<MenuItem text="Hello" />
+									<MenuItem text="World" />
+									<MenuItem text="Hello" />
+									<MenuItem text="World" />
+								</Menu>
+							}
+							target={
+								<Button
+									icon="cog"
+									style={{ marginRight: "5px" }}
+									onClick={() => console.log("Settings button was pressed")}
+								/>
+							}
+						/>
+
 						<Button
-							className="bp3-minimal"
+							className={"dark-mode-primary-background-color"}
+							style={{
+								marginLeft: "10px",
+								marginRight: "10px",
+								borderRadius: "25px",
+								color: this.props.websocket.isConnected() ? "rgba(0, 180, 0, 1)" : "rgba(255, 0, 0, 1)",
+								width: "75px",
+								background: "rgba(16, 22, 26, 0.3)"
+							}}
+							active={true}
+							onClick={() => console.log("Connection button was pressed")}
+						>
+							{this.props.websocket.isConnected() ? "Online" : "Offline"}
+						</Button>
+						<Button
 							icon="fullscreen"
-							style={{ marginRight: "5px" }}
+							style={{ marginLeft: "5px", marginRight: "5px" }}
 							onClick={this.requestFullscreen}
 							disabled={this.state.fullscreenDisabled}
 						/>
 					</NavbarGroup>
 				</Navbar>
 				<Alert
-					className="bp3-dark"
+					className={this.props.darkMode ? "bp3-dark" : ""}
 					isOpen={this.state.fullscreenAlertIsOpen}
 					confirmButtonText="Okay"
 					onConfirm={() => this.setState({ fullscreenAlertIsOpen: false })}
