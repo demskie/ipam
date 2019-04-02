@@ -27,7 +27,7 @@ export class SubnetTree extends React.Component<SubnetTreeProps, SubnetTreeState
 	};
 
 	generateLabel = (net: string, desc: string, vlan: string) => {
-		while (net.length < 24) {
+		while (net.length < 20) {
 			net += "\u00A0";
 		}
 		if (vlan.trim().length > 0) {
@@ -35,7 +35,7 @@ export class SubnetTree extends React.Component<SubnetTreeProps, SubnetTreeState
 		}
 		const extraSpace = net + "\u00A0" + desc;
 		return (
-			<div className="subnetLabel" style={{ fontFamily: "Fira Mono, monospace" }}>
+			<div className="subnetLabel" style={{ fontFamily: "Fira Mono, monospace", display: "inline-block" }}>
 				{extraSpace}
 			</div>
 		);
@@ -185,14 +185,16 @@ export class SubnetTree extends React.Component<SubnetTreeProps, SubnetTreeState
 
 	render() {
 		return (
-			<Tree
-				className={this.props.darkMode ? "bp3-dark" : "light-mode-background-color-first"}
-				contents={this.constructTreeNodes(this.props.subnetData)}
-				onNodeClick={this.handleNodeClick}
-				onNodeCollapse={this.handleNodeCollapse}
-				onNodeContextMenu={this.handleNodeClick}
-				onNodeExpand={this.handleNodeExpand}
-			/>
+			<div id={"subnetTree"}>
+				<Tree
+					className={this.props.darkMode ? "bp3-dark" : "light-mode-background-color-first"}
+					contents={this.constructTreeNodes(this.props.subnetData)}
+					onNodeClick={this.handleNodeClick}
+					onNodeCollapse={this.handleNodeCollapse}
+					onNodeContextMenu={this.handleNodeClick}
+					onNodeExpand={this.handleNodeExpand}
+				/>
+			</div>
 		);
 	}
 }

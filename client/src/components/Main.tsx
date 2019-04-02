@@ -38,7 +38,7 @@ export class MainState {
 	sidebarDocked = false;
 
 	darkMode =
-		true &&
+		false &&
 		(parser.getOS().name == "Mac OS" || parser.getDevice().type === "mobile" || parser.getDevice().type === "tablet");
 
 	emptySearchField = true;
@@ -133,6 +133,9 @@ export class Main extends React.Component<{}, MainState> {
 		return (
 			<React.Fragment>
 				<Sidebar
+					sidebarId={"sidebar"}
+					contentId={"content"}
+					overlayId={"sidebarOverlay"}
 					open={this.state.sidebarOpen}
 					docked={this.state.sidebarDocked}
 					onSetOpen={(open: boolean) => {

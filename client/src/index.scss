@@ -17,6 +17,7 @@ label.bp3-label .bp3-popover-wrapper {
 .bp3-tree-node-label {
 	font-family: "Fira Mono", monospace;
 	font-size: 13px;
+	overflow: hidden;
 }
 
 .bp3-tab-list {
@@ -49,7 +50,6 @@ label.bp3-label .bp3-popover-wrapper {
 
 #subnetToolbar {
 	position: static;
-	min-width: 650px;
 }
 
 @supports (position: sticky) {

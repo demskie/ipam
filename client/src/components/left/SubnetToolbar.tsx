@@ -12,7 +12,7 @@ export class SubnetToolbar extends React.PureComponent<SubnetToolbarProps, Subne
 			<Navbar
 				id="subnetToolbar"
 				className={this.props.darkMode ? "bp3-dark" : "light-mode-background-color-second"}
-				fixedToTop={true}
+				fixedToTop={false}
 				style={{ top: this.props.sidebarDocked ? "0px" : "50px" }}
 			>
 				<NavbarGroup align={Alignment.LEFT}>
