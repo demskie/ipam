@@ -15,10 +15,10 @@ export class TabList extends React.PureComponent<TabListProps, TabListState> {
 	render() {
 		return (
 			<div
+				className={this.props.darkMode ? "dark-mode-background-color-first" : "light-mode-background-color-first"}
 				style={{
 					width: this.props.panelWidth,
 					height: this.props.panelHeight,
-					backgroundColor: this.props.darkMode ? "rgb(41, 55, 65)" : "rgb(203, 217, 221)",
 					borderRadius: "9px",
 					paddingLeft: "10px"
 				}}

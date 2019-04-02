@@ -186,7 +186,7 @@ export class SubnetTree extends React.Component<SubnetTreeProps, SubnetTreeState
 	render() {
 		return (
 			<Tree
-				className={this.props.darkMode ? "bp3-dark" : ""}
+				className={this.props.darkMode ? "bp3-dark" : "light-mode-background-color-first"}
 				contents={this.constructTreeNodes(this.props.subnetData)}
 				onNodeClick={this.handleNodeClick}
 				onNodeCollapse={this.handleNodeCollapse}

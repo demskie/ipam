@@ -2,7 +2,7 @@ import React from "react";
 
 import _ from "lodash-es";
 import Sidebar from "react-sidebar";
-import { Toaster, Classes, Position, Intent } from "@blueprintjs/core";
+import { Toaster, Classes, Position, Intent, Colors } from "@blueprintjs/core";
 
 import UAParser from "ua-parser-js";
 export const parser = new UAParser();
@@ -22,7 +22,7 @@ import { SubnetRequest } from "./websocket/MessageTypes";
 import { messageSenders } from "./websocket/MessageHandlers";
 
 const rootElement = document.getElementById("root") as HTMLElement;
-const sidebarWidth = 650;
+const sidebarWidth = 530;
 
 export const notifications = Toaster.create({
 	autoFocus: false,
@@ -141,7 +141,7 @@ export class Main extends React.Component<{}, MainState> {
 					styles={{
 						sidebar: {
 							width: `${sidebarWidth}px`,
-							backgroundColor: this.state.darkMode ? "#30404D" : "#FFFFFF"
+							backgroundColor: this.state.darkMode ? "#30404D" : Colors.GRAY5
 						}
 					}}
 					sidebar={<Left {...this.state} />}

@@ -1,7 +1,19 @@
 import React from "react";
 import fscreen from "fscreen";
 import _ from "lodash-es";
-import { Button, Navbar, NavbarGroup, Alignment, Alert, InputGroup, Popover, Menu, MenuItem } from "@blueprintjs/core";
+import {
+	Button,
+	Navbar,
+	NavbarGroup,
+	Alignment,
+	Alert,
+	InputGroup,
+	Popover,
+	Menu,
+	MenuItem,
+	Colors
+} from "@blueprintjs/core";
+
 import { MainState as TopProps } from "./Main";
 import { AdvancedPromptMode } from "./AdvancedPrompt";
 
@@ -32,14 +44,15 @@ export class Top extends React.Component<TopProps, TopState> {
 		return (
 			<div className="top" style={{ height: "50px" }}>
 				<Navbar
-					className={this.props.darkMode ? "bp3-dark" : "light-mode-background-color"}
-					style={{ paddingLeft: "5px", paddingRight: "5px" }}
+					className={this.props.darkMode ? "bp3-dark" : "bp3-dark"}
+					style={{ paddingLeft: "5px", paddingRight: "5px", minWidth: "620px" }}
 				>
 					<NavbarGroup align={Alignment.LEFT}>
 						<Button
-							className="bp3-minimal bp3-large"
+							className={"bp3-large"}
 							icon="menu"
 							disabled={false}
+							minimal={true}
 							onClick={() => {
 								this.props.triggers.toggleSidebar();
 							}}
@@ -79,6 +92,7 @@ export class Top extends React.Component<TopProps, TopState> {
 					<NavbarGroup align={Alignment.RIGHT}>
 						<Button
 							icon="info-sign"
+							minimal={true}
 							style={{ marginRight: "10px" }}
 							onClick={() => this.props.triggers.setAdvancedPromptMode(AdvancedPromptMode.HISTORY)}
 						/>
@@ -102,6 +116,7 @@ export class Top extends React.Component<TopProps, TopState> {
 							target={
 								<Button
 									icon="cog"
+									minimal={true}
 									style={{ marginRight: "5px" }}
 									onClick={() => console.log("Settings button was pressed")}
 								/>
@@ -109,15 +124,15 @@ export class Top extends React.Component<TopProps, TopState> {
 						/>
 
 						<Button
-							className={"dark-mode-primary-background-color"}
 							style={{
 								marginLeft: "10px",
 								marginRight: "10px",
 								borderRadius: "25px",
-								color: this.props.websocket.isConnected() ? "rgba(0, 180, 0, 1)" : "rgba(255, 0, 0, 1)",
-								width: "75px",
-								background: "rgba(16, 22, 26, 0.3)"
+								// color: this.props.websocket.isConnected() ? "rgba(0, 180, 0, 1)" : "rgba(255, 0, 0, 1)",
+								width: "75px"
+								//background: "rgba(16, 22, 26, 0.3)"
 							}}
+							minimal={true}
 							active={true}
 							onClick={() => console.log("Connection button was pressed")}
 						>
@@ -125,6 +140,7 @@ export class Top extends React.Component<TopProps, TopState> {
 						</Button>
 						<Button
 							icon="fullscreen"
+							minimal={true}
 							style={{ marginLeft: "5px", marginRight: "5px" }}
 							onClick={this.requestFullscreen}
 							disabled={this.state.fullscreenDisabled}
