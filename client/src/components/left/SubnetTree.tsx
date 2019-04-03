@@ -27,6 +27,7 @@ export class SubnetTree extends React.Component<SubnetTreeProps, SubnetTreeState
 	};
 
 	generateLabel = (net: string, desc: string, vlan: string) => {
+		const ogNet = net;
 		while (net.length < 20) {
 			net += "\u00A0";
 		}
@@ -35,7 +36,7 @@ export class SubnetTree extends React.Component<SubnetTreeProps, SubnetTreeState
 		}
 		const extraSpace = net + "\u00A0" + desc;
 		return (
-			<div className="subnetLabel" style={{ fontFamily: "Fira Mono, monospace", display: "inline-block" }}>
+			<div id={ogNet} className="subnetLabel" style={{ fontFamily: "Fira Mono, monospace", display: "inline-block" }}>
 				{extraSpace}
 			</div>
 		);
@@ -161,8 +162,7 @@ export class SubnetTree extends React.Component<SubnetTreeProps, SubnetTreeState
 				React.createElement(MenuItem, {
 					className: this.props.darkMode ? "bp3-dark" : "",
 					onClick: () => {
-						// this.props.handleUserAction({ action: "triggerSubnetPromptAction", value: "modify" });
-						console.log("triggerSubnetPromptAction", "modify");
+						this.props.triggers.setRootSubnetPromptMode(SubnetPromptMode.MODIFY);
 					},
 					intent: Intent.PRIMARY,
 					text: "Modify Subnet"
@@ -170,8 +170,7 @@ export class SubnetTree extends React.Component<SubnetTreeProps, SubnetTreeState
 				React.createElement(MenuItem, {
 					className: this.props.darkMode ? "bp3-dark" : "",
 					onClick: () => {
-						// this.props.handleUserAction({ action: "triggerSubnetPromptAction", value: "delete" });
-						console.log("triggerSubnetPromptAction", "delete");
+						this.props.triggers.setRootSubnetPromptMode(SubnetPromptMode.DELETE);
 					},
 					intent: Intent.PRIMARY,
 					text: "Delete Subnet"
@@ -185,9 +184,16 @@ export class SubnetTree extends React.Component<SubnetTreeProps, SubnetTreeState
 
 	render() {
 		return (
-			<div id={"subnetTree"}>
+			<div
+				id={"subnetTree"}
+				style={{
+					height: this.props.sidebarDocked ? "calc(100vh - 50px)" : "calc(100vh - 100px)",
+					overflowX: "auto",
+					overflowY: "auto"
+				}}
+			>
 				<Tree
-					className={this.props.darkMode ? "bp3-dark" : "light-mode-background-color-first"}
+					className={this.props.darkMode ? "bp3-dark" : "light-mode-background-color-third"}
 					contents={this.constructTreeNodes(this.props.subnetData)}
 					onNodeClick={this.handleNodeClick}
 					onNodeCollapse={this.handleNodeCollapse}

@@ -8,11 +8,14 @@ import { SubnetTree } from "./left/SubnetTree";
 export class Left extends React.Component<MainState, {}> {
 	render() {
 		return (
-			<div className="sidebarElements" style={{ marginTop: this.props.sidebarDocked ? "0px" : "50px" }}>
-				<SubnetPrompt {...this.props} />
-				<SubnetToolbar {...this.props} />
-				<SubnetTree {...this.props} />
-			</div>
+			<React.Fragment>
+				<div id="sidebarSpacing" style={{ height: this.props.sidebarDocked ? "0px" : "50px" }} />
+				<div id="sidebarElements" style={{ width: "100%", height: "100%" }}>
+					<SubnetPrompt {...this.props} />
+					<SubnetToolbar {...this.props} />
+					<SubnetTree {...this.props} />
+				</div>
+			</React.Fragment>
 		);
 	}
 }

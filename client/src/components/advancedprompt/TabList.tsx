@@ -15,7 +15,9 @@ export class TabList extends React.PureComponent<TabListProps, TabListState> {
 	render() {
 		return (
 			<div
-				className={this.props.darkMode ? "dark-mode-background-color-first" : "light-mode-background-color-first"}
+				className={
+					this.props.darkMode ? "dark-mode-background-color-first color-white" : "light-mode-background-color-third"
+				}
 				style={{
 					width: this.props.panelWidth,
 					height: this.props.panelHeight,

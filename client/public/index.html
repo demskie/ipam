@@ -20,9 +20,21 @@
 			width: 100vw;
 			height: 100vh;
 		}
+		#mask {
+			top: 0;
+			position: fixed;
+			width: 100vw;
+			height: 100vh;
+			z-index: 9000;
+			background-color: #ffffff
+		}
 	</style>
 	<body>
 		<noscript>You need to enable JavaScript to run this app.</noscript>
 		<div id="root"></div>
+		<div id="mask" class="animated fadeOut delay-1s"></div>
 	</body>
+	<script>
+		setTimeout(() => document.body.removeChild(document.getElementById("mask")), 3000);
+	</script>
 </html>

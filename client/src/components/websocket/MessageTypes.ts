@@ -1,6 +1,5 @@
 import { Subnet } from "../left/SubnetTree";
 import { HostData } from "../Right";
-import { ScanAddr } from "../advancedprompt/Pingsweep";
 
 export enum kind {
 	Ping,
@@ -140,7 +139,7 @@ export interface outboundManualPingScan extends base {
 export interface inboundManualPingScan extends base {
 	messageType: kind.ManualPingScan;
 	sessionGUID: string;
-	results: ScanAddr[];
+	// results: ScanAddr[];
 }
 
 export interface outboundCreateSubnet extends base {

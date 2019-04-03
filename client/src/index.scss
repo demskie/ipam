@@ -10,6 +10,11 @@
 	outline: none;
 }
 
+// for some reason the table header elements are sometimes set to 19px
+.bp3-table-quadrant-top {
+	min-height: 30px; 
+}
+
 label.bp3-label .bp3-popover-wrapper {
 	margin-top: 0px;
 }
@@ -45,7 +50,16 @@ label.bp3-label .bp3-popover-wrapper {
 	overflow: hidden;
 	white-space: nowrap;
 	text-overflow: ellipsis;
-	padding-top: 4px;
+	vertical-align: middle;
+	line-height: 30px;
+	width: unset !important;
+}
+
+.ReactVirtualized__Grid__innerScrollContainer {
+	overflow: unset !important;
+	overflow-x: visible;
+	width: unset;
+	max-width: unset;
 }
 
 #subnetToolbar {
@@ -98,14 +112,36 @@ label.bp3-label .bp3-popover-wrapper {
 	background: #232d35;
 }
 
+.dark-mode-background-color-second {
+	background: #526371 !important;
+}
+
 .light-mode-background-color-first {
-    background: $gray5 !important;
+    background: $gray4 !important;
 }
 
 .light-mode-background-color-second {
-    background: $gray4 !important;
+    background: $gray5 !important;
+}
+
+.light-mode-background-color-third {
+	background: #e0e6ea !important;
 }
 
 .no-box-shadow {
 	box-shadow: none !important;
+}
+
+.round-borders {
+	border-radius: 25px;
+}
+
+.color-white {
+	color: white;
+}
+
+// width is being manually modified to offset scrollbars
+// we're negating this behavior as it looks poor on windows 10
+.ReactVirtualized__List {
+	width: unset !important;
 }

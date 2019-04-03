@@ -3,7 +3,6 @@ import React from "react";
 import { Dialog, Classes, Tab, Tabs } from "@blueprintjs/core";
 import { Flex, Box } from "reflexbox";
 import { TabList } from "./advancedprompt/TabList";
-import { Pingsweep } from "./advancedprompt/Pingsweep";
 import { MainState as AdvancedProps } from "./Main";
 
 interface AdvancedState {}
@@ -24,8 +23,8 @@ export class AdvancedPrompt extends React.PureComponent<AdvancedProps, AdvancedS
 		return (
 			<div id="advancedPrompt">
 				<Dialog
-					className={this.props.darkMode ? "bp3-dark" : ""}
-					style={{ width: `${advancedWidth}px`, minHeight: `${advancedHeight}px` }}
+					className={this.props.darkMode ? "bp3-dark" : "bp3-dark"}
+					style={{ width: `${advancedWidth}px`, minHeight: `${advancedHeight}px`, color: "black" }}
 					isOpen={this.props.advancedPromptMode !== AdvancedPromptMode.CLOSED}
 					onClose={() => this.props.triggers.setAdvancedPromptMode(AdvancedPromptMode.CLOSED)}
 				>
@@ -59,21 +58,6 @@ export class AdvancedPrompt extends React.PureComponent<AdvancedProps, AdvancedS
 										<TabList
 											darkMode={this.props.darkMode}
 											data={this.props.debugData}
-											panelWidth={panelWidth}
-											panelHeight={panelHeight}
-										/>
-									}
-								/>
-								<Tab
-									id={AdvancedPromptMode.PINGSWEEP}
-									title="Pingsweep"
-									disabled={false}
-									panel={
-										<Pingsweep
-											darkMode={this.props.darkMode}
-											scanData={this.props.scanData}
-											scanTarget={this.props.scanTarget}
-											triggers={this.props.triggers}
 											panelWidth={panelWidth}
 											panelHeight={panelHeight}
 										/>

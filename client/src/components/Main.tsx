@@ -17,12 +17,15 @@ import { AdvancedPrompt, AdvancedPromptMode } from "./AdvancedPrompt";
 import { SubnetPromptMode } from "./left/SubnetPrompt";
 import { WebsocketManager } from "./websocket/WebsocketManager";
 import { Subnet } from "./left/SubnetTree";
-import { ScanAddr } from "./advancedprompt/Pingsweep";
 import { SubnetRequest } from "./websocket/MessageTypes";
 import { messageSenders } from "./websocket/MessageHandlers";
 
 const rootElement = document.getElementById("root") as HTMLElement;
 const sidebarWidth = 530;
+
+const isOSX = parser.getOS().name == "Mac OS";
+const isMobile = parser.getDevice().type === "mobile";
+const isTablet = parser.getDevice().type === "tablet";
 
 export const notifications = Toaster.create({
 	autoFocus: false,
@@ -37,9 +40,8 @@ export class MainState {
 	sidebarOpen = false;
 	sidebarDocked = false;
 
-	darkMode =
-		false &&
-		(parser.getOS().name == "Mac OS" || parser.getDevice().type === "mobile" || parser.getDevice().type === "tablet");
+	darkMode = isOSX || isMobile || isTablet;
+	allowNotifications = true;
 
 	emptySearchField = true;
 	lastTransmittedSearchQuery = "";
@@ -53,10 +55,10 @@ export class MainState {
 	hostDetailsWidth = 0;
 	hostDetailsHeight = 0;
 
-	historyData = [] as string[];
-	debugData = [] as string[];
+	historyData = require("../mockdata/ipsum.json") as string[];
+	debugData = require("../mockdata/ipsum.json") as string[];
 
-	scanData = [] as ScanAddr[];
+	// scanData = [] as ScanAddr[];
 	scanTarget = "192.168.128.0/24";
 
 	advancedPromptMode = AdvancedPromptMode.CLOSED;
@@ -125,7 +127,7 @@ export class Main extends React.Component<{}, MainState> {
 				this.setState({
 					sidebarOpen: true
 				});
-			}, 1500);
+			}, 3000);
 		}
 	};
 
@@ -144,7 +146,9 @@ export class Main extends React.Component<{}, MainState> {
 					styles={{
 						sidebar: {
 							width: `${sidebarWidth}px`,
-							backgroundColor: this.state.darkMode ? "#30404D" : Colors.GRAY5
+							backgroundColor: this.state.darkMode ? "#30404D" : Colors.GRAY5,
+							overflowX: "hidden",
+							overflowY: "hidden"
 						}
 					}}
 					sidebar={<Left {...this.state} />}
@@ -167,6 +171,12 @@ export class Main extends React.Component<{}, MainState> {
 	}
 
 	attachTriggers = () => {
+		this.state.triggers.toggleDarkMode = () => {
+			this.setState({ darkMode: !this.state.darkMode });
+		};
+		this.state.triggers.toggleNotifications = () => {
+			this.setState({ allowNotifications: !this.state.allowNotifications });
+		};
 		this.state.triggers.toggleSidebar = () => {
 			if (!this.state.sidebarDocked) {
 				this.setState({ sidebarOpen: !this.state.sidebarOpen });
@@ -210,6 +220,8 @@ export class Main extends React.Component<{}, MainState> {
 }
 
 export interface MainTriggers {
+	toggleDarkMode: () => void;
+	toggleNotifications: () => void;
 	toggleSidebar: () => void;
 	selectTreeNode: (node: Subnet) => void;
 	setRootSubnetPromptMode: (mode: SubnetPromptMode) => void;

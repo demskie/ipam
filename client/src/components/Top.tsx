@@ -11,7 +11,9 @@ import {
 	Popover,
 	Menu,
 	MenuItem,
-	Colors
+	Colors,
+	PopoverInteractionKind,
+	Switch
 } from "@blueprintjs/core";
 
 import { MainState as TopProps } from "./Main";
@@ -43,10 +45,7 @@ export class Top extends React.Component<TopProps, TopState> {
 	render() {
 		return (
 			<div className="top" style={{ height: "50px" }}>
-				<Navbar
-					className={this.props.darkMode ? "bp3-dark" : "bp3-dark"}
-					style={{ paddingLeft: "5px", paddingRight: "5px", minWidth: "620px" }}
-				>
+				<Navbar className={"bp3-dark"} style={{ paddingLeft: "5px", paddingRight: "5px", minWidth: "620px" }}>
 					<NavbarGroup align={Alignment.LEFT}>
 						<Button
 							className={"bp3-large"}
@@ -86,7 +85,7 @@ export class Top extends React.Component<TopProps, TopState> {
 							// 	/>
 							// }
 							round={true}
-							style={{ width: "260px" }}
+							style={{ width: "260px", color: "white" }}
 						/>
 					</NavbarGroup>
 					<NavbarGroup align={Alignment.RIGHT}>
@@ -97,20 +96,24 @@ export class Top extends React.Component<TopProps, TopState> {
 							onClick={() => this.props.triggers.setAdvancedPromptMode(AdvancedPromptMode.HISTORY)}
 						/>
 						<Popover
-							isOpen={false}
+							interactionKind={PopoverInteractionKind.HOVER}
 							position={"bottom"}
 							content={
-								<Menu>
-									<MenuItem text="Hello" />
-									<MenuItem text="World" />
-									<MenuItem text="Hello" />
-									<MenuItem text="World" />
-									<MenuItem text="Hello" />
-									<MenuItem text="World" />
-									<MenuItem text="Hello" />
-									<MenuItem text="World" />
-									<MenuItem text="Hello" />
-									<MenuItem text="World" />
+								<Menu style={{ padding: "20px" }}>
+									<Switch
+										label="Dark Mode"
+										checked={this.props.darkMode}
+										large={false}
+										alignIndicator={Alignment.RIGHT}
+										onChange={this.props.triggers.toggleDarkMode}
+									/>
+									<Switch
+										label="Notifications"
+										checked={this.props.allowNotifications}
+										large={false}
+										alignIndicator={Alignment.RIGHT}
+										onChange={this.props.triggers.toggleNotifications}
+									/>
 								</Menu>
 							}
 							target={
@@ -128,15 +131,13 @@ export class Top extends React.Component<TopProps, TopState> {
 								marginLeft: "10px",
 								marginRight: "10px",
 								borderRadius: "25px",
-								// color: this.props.websocket.isConnected() ? "rgba(0, 180, 0, 1)" : "rgba(255, 0, 0, 1)",
 								width: "75px"
-								//background: "rgba(16, 22, 26, 0.3)"
 							}}
 							minimal={true}
 							active={true}
 							onClick={() => console.log("Connection button was pressed")}
 						>
-							{this.props.websocket.isConnected() ? "Online" : "Offline"}
+							{this.props.websocket.isConnected() ? `${this.props.websocket.getLatencyRTT()}ms` : "OFFLINE"}
 						</Button>
 						<Button
 							icon="fullscreen"
