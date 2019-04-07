@@ -70,7 +70,7 @@ export class SubnetToolbar extends React.PureComponent<SubnetToolbarProps, Subne
 								: "light-mode-background-color-second no-box-shadow round-borders"
 						}
 						style={{ margin: "5px", width: "90px" }}
-						icon="geosearch"
+						icon="satellite"
 						text="Scan"
 						disabled={Object.keys(this.props.selectedTreeNode).length === 0}
 						onClick={() => this.props.triggers.startScan(this.props.selectedTreeNode.net)}

@@ -13,19 +13,28 @@ import {
 	MenuItem,
 	Colors,
 	PopoverInteractionKind,
-	Switch
+	Switch,
+	ButtonGroup,
+	AnchorButton
 } from "@blueprintjs/core";
 
-import { MainState as TopProps } from "./Main";
-import { AdvancedPromptMode } from "./AdvancedPrompt";
+import { MainState as TopProps, rootElement } from "./Main";
+import { BasicTextOverlayMode } from "./BasicTextOverlay";
 
 class TopState {
+	clientWidth = rootElement.clientWidth;
 	fullscreenDisabled = false;
 	fullscreenAlertIsOpen = false;
 }
 
 export class Top extends React.Component<TopProps, TopState> {
 	state = new TopState();
+
+	componentDidMount() {
+		window.addEventListener("resize", () => {
+			this.setState({ clientWidth: rootElement.clientWidth });
+		});
+	}
 
 	requestFullscreen = () => {
 		if (fscreen.fullscreenEnabled) {
@@ -45,7 +54,7 @@ export class Top extends React.Component<TopProps, TopState> {
 	render() {
 		return (
 			<div className="top" style={{ height: "50px" }}>
-				<Navbar className={"bp3-dark"} style={{ paddingLeft: "5px", paddingRight: "5px", minWidth: "620px" }}>
+				<Navbar className={"bp3-dark"} style={{ paddingLeft: "5px", paddingRight: "5px", minWidth: "635px" }}>
 					<NavbarGroup align={Alignment.LEFT}>
 						<Button
 							className={"bp3-large"}
@@ -85,50 +94,131 @@ export class Top extends React.Component<TopProps, TopState> {
 							// 	/>
 							// }
 							round={true}
-							style={{ width: "260px", color: "white" }}
+							style={{ width: "240px", color: "white", marginRight: "20px" }}
 						/>
 					</NavbarGroup>
 					<NavbarGroup align={Alignment.RIGHT}>
-						<Button
-							icon="info-sign"
-							minimal={true}
-							style={{ marginRight: "10px" }}
-							onClick={() => this.props.triggers.setAdvancedPromptMode(AdvancedPromptMode.HISTORY)}
-						/>
-						<Popover
-							interactionKind={PopoverInteractionKind.HOVER}
-							position={"bottom"}
-							content={
-								<Menu style={{ padding: "20px" }}>
-									<Switch
-										label="Dark Mode"
-										checked={this.props.darkMode}
-										large={false}
-										alignIndicator={Alignment.RIGHT}
-										onChange={this.props.triggers.toggleDarkMode}
-									/>
-									<Switch
-										label="Notifications"
-										checked={this.props.allowNotifications}
-										large={false}
-										alignIndicator={Alignment.RIGHT}
-										onChange={this.props.triggers.toggleNotifications}
-									/>
-								</Menu>
-							}
-							target={
-								<Button
-									icon="cog"
-									minimal={true}
-									style={{ marginRight: "5px" }}
-									onClick={() => console.log("Settings button was pressed")}
-								/>
-							}
-						/>
+						<ButtonGroup minimal={false} onMouseEnter={() => {}}>
+							<Popover
+								interactionKind={PopoverInteractionKind.CLICK}
+								position={"bottom"}
+								content={
+									<Menu>
+										<Button
+											style={{ display: "block", padding: "15px", paddingTop: "7px", margin: "13px" }}
+											onClick={() => {
+												this.props.triggers.setBasicTextOverlayMode(BasicTextOverlayMode.PINGSWEEP);
+											}}
+										>
+											<span
+												style={{ paddingBottom: "5px", display: "inline-block", width: "100%", textAlign: "center" }}
+											>
+												{"255.255.255.255/24"}
+											</span>
+											<div className="bp3-progress-bar" style={{ width: "300px" }}>
+												<div className="bp3-progress-meter" style={{ width: "25%" }} />
+											</div>
+										</Button>
+										<Button
+											style={{ display: "block", padding: "15px", paddingTop: "7px", margin: "13px" }}
+											onClick={() => {
+												this.props.triggers.setBasicTextOverlayMode(BasicTextOverlayMode.PINGSWEEP);
+											}}
+										>
+											<span
+												style={{ paddingBottom: "5px", display: "inline-block", width: "100%", textAlign: "center" }}
+											>
+												{"255.255.255.255/24"}
+											</span>
+											<div className="bp3-progress-bar" style={{ width: "300px" }}>
+												<div className="bp3-progress-meter" style={{ width: "50%" }} />
+											</div>
+										</Button>
+										<Button
+											style={{ display: "block", padding: "15px", paddingTop: "7px", margin: "13px" }}
+											onClick={() => {
+												this.props.triggers.setBasicTextOverlayMode(BasicTextOverlayMode.PINGSWEEP);
+											}}
+										>
+											<span
+												style={{ paddingBottom: "5px", display: "inline-block", width: "100%", textAlign: "center" }}
+											>
+												{"255.255.255.255/24"}
+											</span>
+											<div className="bp3-progress-bar" style={{ width: "300px" }}>
+												<div className="bp3-progress-meter" style={{ width: "50%" }} />
+											</div>
+										</Button>
+										<Button
+											style={{ display: "block", padding: "15px", paddingTop: "7px", margin: "13px" }}
+											onClick={() => {
+												this.props.triggers.setBasicTextOverlayMode(BasicTextOverlayMode.PINGSWEEP);
+											}}
+										>
+											<span
+												style={{ paddingBottom: "5px", display: "inline-block", width: "100%", textAlign: "center" }}
+											>
+												{"255.255.255.255/24"}
+											</span>
+											<div className="bp3-progress-bar" style={{ width: "300px" }}>
+												<div className="bp3-progress-meter" style={{ width: "75%" }} />
+											</div>
+										</Button>
+									</Menu>
+								}
+								target={<Button icon="geosearch">{this.state.clientWidth >= 866 ? "Scanner" : ""}</Button>}
+							/>
+
+							<Button icon="diagram-tree">{this.state.clientWidth >= 801 ? "Visualization" : ""}</Button>
+							<Popover
+								interactionKind={PopoverInteractionKind.CLICK}
+								position={"bottom"}
+								content={
+									<Menu style={{ padding: "20px" }}>
+										<Switch
+											label="Dark Mode"
+											checked={this.props.darkMode}
+											alignIndicator={Alignment.RIGHT}
+											onChange={this.props.triggers.toggleDarkMode}
+										/>
+										<Switch
+											label="Notifications"
+											checked={this.props.allowNotifications}
+											alignIndicator={Alignment.RIGHT}
+											onChange={this.props.triggers.toggleNotifications}
+										/>
+										<Switch
+											label="Save Login"
+											checked={this.props.cacheLogin}
+											alignIndicator={Alignment.RIGHT}
+											onChange={this.props.triggers.toggleLoginCache}
+										/>
+										<Button
+											style={{
+												display: "block",
+												marginTop: "15px",
+												width: "140px",
+												textAlign: "center"
+											}}
+											onClick={() => this.props.triggers.setBasicTextOverlayMode(BasicTextOverlayMode.HISTORY)}
+										>
+											{"Show Commit Log"}
+										</Button>
+										<Button
+											style={{ display: "block", marginTop: "10px", width: "140px", textAlign: "center" }}
+											onClick={() => this.props.triggers.setBasicTextOverlayMode(BasicTextOverlayMode.DEBUG)}
+										>
+											{"Show Server Log"}
+										</Button>
+									</Menu>
+								}
+								target={<Button icon="cog">{this.state.clientWidth >= 710 ? "Advanced" : ""}</Button>}
+							/>
+						</ButtonGroup>
 
 						<Button
 							style={{
-								marginLeft: "10px",
+								marginLeft: "16px",
 								marginRight: "10px",
 								borderRadius: "25px",
 								width: "75px"
@@ -137,7 +227,7 @@ export class Top extends React.Component<TopProps, TopState> {
 							active={true}
 							onClick={() => console.log("Connection button was pressed")}
 						>
-							{this.props.websocket.isConnected() ? `${this.props.websocket.getLatencyRTT()}ms` : "OFFLINE"}
+							{this.props.websocket.isConnected() ? `${this.props.websocket.getLatencyRTT()}ms` : "125ms"}
 						</Button>
 						<Button
 							icon="fullscreen"

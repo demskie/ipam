@@ -5,6 +5,7 @@
 
 @import "~animate.css";
 @import "~react-virtualized/styles.css";
+@import "~rc-tabs/assets/index.css";
 
 *:focus {
 	outline: none;
@@ -145,3 +146,36 @@ label.bp3-label .bp3-popover-wrapper {
 .ReactVirtualized__List {
 	width: unset !important;
 }
+
+.rc-tabs-top {
+	border-bottom: none;
+}
+
+.rc-tabs-top .rc-tabs-bar {
+	border-bottom: none;
+}
+
+.rc-tabs-tab-btn-disabled {
+	color: #fff0;
+}
+
+.rc-tabs-top .rc-tabs-tab-arrow-show:hover {
+	color: #23c0fa;
+}
+
+.rc-tabs-tab-prev-icon, .rc-tabs-tab-next-icon {
+	font-weight: bold;
+}
+
+.rc-tabs-top .rc-tabs-tab {
+	margin-left: 10px;
+	margin-right: 10px;
+}
+
+.rc-tabs-tab {
+	padding-top: 8px;
+	padding-bottom: 8px;
+	padding-left: 5px;
+	padding-right: 5px;
+}
+

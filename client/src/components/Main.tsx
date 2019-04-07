@@ -2,7 +2,7 @@ import React from "react";
 
 import _ from "lodash-es";
 import Sidebar from "react-sidebar";
-import { Toaster, Classes, Position, Intent, Colors } from "@blueprintjs/core";
+import { Toaster, Position, Intent, Colors } from "@blueprintjs/core";
 
 import UAParser from "ua-parser-js";
 export const parser = new UAParser();
@@ -13,14 +13,14 @@ export const CHANCE = Chance();
 import { Top } from "./Top";
 import { Left } from "./Left";
 import { Right, HostData } from "./Right";
-import { AdvancedPrompt, AdvancedPromptMode } from "./AdvancedPrompt";
+import { BasicTextOverlay, BasicTextOverlayMode } from "./BasicTextOverlay";
 import { SubnetPromptMode } from "./left/SubnetPrompt";
 import { WebsocketManager } from "./websocket/WebsocketManager";
 import { Subnet } from "./left/SubnetTree";
 import { SubnetRequest } from "./websocket/MessageTypes";
 import { messageSenders } from "./websocket/MessageHandlers";
 
-const rootElement = document.getElementById("root") as HTMLElement;
+export const rootElement = document.getElementById("root") as HTMLElement;
 const sidebarWidth = 530;
 
 const isOSX = parser.getOS().name == "Mac OS";
@@ -42,6 +42,7 @@ export class MainState {
 
 	darkMode = isOSX || isMobile || isTablet;
 	allowNotifications = true;
+	cacheLogin = true;
 
 	emptySearchField = true;
 	lastTransmittedSearchQuery = "";
@@ -61,9 +62,9 @@ export class MainState {
 	// scanData = [] as ScanAddr[];
 	scanTarget = "192.168.128.0/24";
 
-	advancedPromptMode = AdvancedPromptMode.CLOSED;
-	advancedPromptWidth = 0;
-	advancedPromptHeight = 0;
+	basicTextOverlayMode = BasicTextOverlayMode.CLOSED;
+	basicTextOverlayWidth = 0;
+	basicTextOverlayHeight = 0;
 
 	readonly triggers = {} as MainTriggers;
 
@@ -98,8 +99,8 @@ export class Main extends React.Component<{}, MainState> {
 			sidebarDocked: dockedBool,
 			hostDetailsWidth: tableWidth,
 			hostDetailsHeight: rootElement.clientHeight - 50,
-			advancedPromptWidth: rootElement.clientWidth * 0.8,
-			advancedPromptHeight: rootElement.clientHeight * 0.8
+			basicTextOverlayWidth: rootElement.clientWidth * 0.8,
+			basicTextOverlayHeight: rootElement.clientHeight * 0.8
 		});
 	};
 
@@ -165,7 +166,7 @@ export class Main extends React.Component<{}, MainState> {
 						</React.Fragment>
 					}
 				</Sidebar>
-				<AdvancedPrompt {...this.state} />
+				<BasicTextOverlay {...this.state} />
 			</React.Fragment>
 		);
 	}
@@ -176,6 +177,9 @@ export class Main extends React.Component<{}, MainState> {
 		};
 		this.state.triggers.toggleNotifications = () => {
 			this.setState({ allowNotifications: !this.state.allowNotifications });
+		};
+		this.state.triggers.toggleLoginCache = () => {
+			this.setState({ cacheLogin: !this.state.cacheLogin });
 		};
 		this.state.triggers.toggleSidebar = () => {
 			if (!this.state.sidebarDocked) {
@@ -205,8 +209,8 @@ export class Main extends React.Component<{}, MainState> {
 		this.state.triggers.deleteSubnet = (subnetRequest: SubnetRequest) => {
 			messageSenders.sendDeleteSubnet(subnetRequest, this.state.websocket);
 		};
-		this.state.triggers.setAdvancedPromptMode = (mode: AdvancedPromptMode) => {
-			this.setState({ advancedPromptMode: mode });
+		this.state.triggers.setBasicTextOverlayMode = (mode: BasicTextOverlayMode) => {
+			this.setState({ basicTextOverlayMode: mode });
 		};
 		this.state.triggers.startScan = (net: string) => {
 			this.setState({ scanTarget: net }, () => {
@@ -222,6 +226,7 @@ export class Main extends React.Component<{}, MainState> {
 export interface MainTriggers {
 	toggleDarkMode: () => void;
 	toggleNotifications: () => void;
+	toggleLoginCache: () => void;
 	toggleSidebar: () => void;
 	selectTreeNode: (node: Subnet) => void;
 	setRootSubnetPromptMode: (mode: SubnetPromptMode) => void;
@@ -230,7 +235,7 @@ export interface MainTriggers {
 	createSubnet: (subnetRequest: SubnetRequest) => void;
 	modifySubnet: (subnetRequest: SubnetRequest) => void;
 	deleteSubnet: (subnetRequest: SubnetRequest) => void;
-	setAdvancedPromptMode: (mode: AdvancedPromptMode) => void;
+	setBasicTextOverlayMode: (mode: BasicTextOverlayMode) => void;
 	startScan: (net: string) => void;
 	getScanTarget: () => string;
 }
