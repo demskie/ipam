@@ -4,7 +4,7 @@ import _ from "lodash-es";
 import Sidebar from "react-sidebar";
 import { Toaster, Position, Intent, Colors } from "@blueprintjs/core";
 
-import UAParser from "ua-parser-js";
+import { UAParser } from "ua-parser-js";
 export const parser = new UAParser();
 
 import { Chance } from "chance";
@@ -19,6 +19,7 @@ import { WebsocketManager } from "./websocket/WebsocketManager";
 import { Subnet } from "./left/SubnetTree";
 import { SubnetRequest } from "./websocket/MessageTypes";
 import { messageSenders } from "./websocket/MessageHandlers";
+import { ScanTarget, createStaleEntries } from "./websocket/messagehandlers/ManualPingScan";
 
 export const rootElement = document.getElementById("root") as HTMLElement;
 const sidebarWidth = 530;
@@ -48,7 +49,7 @@ export class MainState {
 	lastTransmittedSearchQuery = "";
 	lastReceivedSearchResult = "";
 
-	subnetData = require("../mockdata/subnets.json") as Subnet[];
+	subnetData = [] as Subnet[];
 	selectedTreeNode = {} as Subnet;
 	rootSubnetPromptMode = SubnetPromptMode.CLOSED;
 
@@ -59,8 +60,7 @@ export class MainState {
 	historyData = require("../mockdata/ipsum.json") as string[];
 	debugData = require("../mockdata/ipsum.json") as string[];
 
-	// scanData = [] as ScanAddr[];
-	scanTarget = "192.168.128.0/24";
+	scanTargets = [] as ScanTarget[];
 
 	basicTextOverlayMode = BasicTextOverlayMode.CLOSED;
 	basicTextOverlayWidth = 0;
@@ -212,13 +212,18 @@ export class Main extends React.Component<{}, MainState> {
 		this.state.triggers.setBasicTextOverlayMode = (mode: BasicTextOverlayMode) => {
 			this.setState({ basicTextOverlayMode: mode });
 		};
-		this.state.triggers.startScan = (net: string) => {
-			this.setState({ scanTarget: net }, () => {
+		this.state.triggers.startScanning = (net: string) => {
+			for (var t of this.state.scanTargets) {
+				if (t.target === net) return;
+			}
+			const st = {
+				target: net,
+				entries: createStaleEntries(net)
+			} as ScanTarget;
+			const arr = [st, ...this.state.scanTargets.slice(0, 7)];
+			this.setState({ scanTargets: arr }, () => {
 				messageSenders.sendManualPingScan(net, this.state.websocket);
 			});
-		};
-		this.state.triggers.getScanTarget = () => {
-			return this.state.scanTarget;
 		};
 	};
 }
@@ -236,6 +241,5 @@ export interface MainTriggers {
 	modifySubnet: (subnetRequest: SubnetRequest) => void;
 	deleteSubnet: (subnetRequest: SubnetRequest) => void;
 	setBasicTextOverlayMode: (mode: BasicTextOverlayMode) => void;
-	startScan: (net: string) => void;
-	getScanTarget: () => string;
+	startScanning: (net: string) => void;
 }

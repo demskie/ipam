@@ -5,7 +5,7 @@ import { Subnet } from "../SubnetTree";
 
 import { Button, Intent, Label, TextArea, InputGroup, Tooltip, Position } from "@blueprintjs/core";
 import { Flex, Box } from "reflexbox";
-import * as ipaddr from "ipaddr.js";
+import netparser from "netparser";
 
 interface SubnetInputGroupsProps {
 	darkMode: boolean;
@@ -52,9 +52,7 @@ export class SubnetInputGroups extends React.Component<SubnetInputGroupsProps, S
 							disabled={isShow || isDelete}
 							onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
 								if (event.target.value !== "") {
-									try {
-										ipaddr.parseCIDR(event.target.value);
-									} catch {
+									if (netparser.network(event.target.value) === null) {
 										return this.setState({ isValidCIDR: false });
 									}
 								}
