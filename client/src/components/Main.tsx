@@ -8,7 +8,7 @@ import { UAParser } from "ua-parser-js";
 export const parser = new UAParser();
 
 import { Chance } from "chance";
-export const CHANCE = Chance();
+export const CHANCE = new Chance();
 
 import { Top } from "./Top";
 import { Left } from "./Left";
@@ -19,12 +19,12 @@ import { WebsocketManager } from "./websocket/WebsocketManager";
 import { Subnet } from "./left/SubnetTree";
 import { SubnetRequest } from "./websocket/MessageTypes";
 import { messageSenders } from "./websocket/MessageHandlers";
-import { ScanTarget, createStaleEntries } from "./websocket/messagehandlers/ManualPingScan";
+import { ScanTarget, createStaleEntries, ScanEntry } from "./websocket/messagehandlers/ManualPingScan";
 
 export const rootElement = document.getElementById("root") as HTMLElement;
 const sidebarWidth = 530;
 
-const isOSX = parser.getOS().name == "Mac OS";
+const isOSX = parser.getOS().name === "Mac OS";
 const isMobile = parser.getDevice().type === "mobile";
 const isTablet = parser.getDevice().type === "tablet";
 
@@ -68,13 +68,13 @@ export class MainState {
 
 	readonly triggers = {} as MainTriggers;
 
-	constructor(setState: React.Component<{}, MainState>["setState"]) {
-		this.websocket = new WebsocketManager(setState, this.triggers);
+	constructor() {
+		this.websocket = new WebsocketManager(this.triggers);
 	}
 }
 
 export class Main extends React.Component<{}, MainState> {
-	state = new MainState(this.setState as React.Component<{}, MainState>["setState"]);
+	state = new MainState();
 
 	componentDidMount() {
 		window.addEventListener("resize", _.debounce(this.updateDimensions, 1000));
@@ -225,6 +225,20 @@ export class Main extends React.Component<{}, MainState> {
 				messageSenders.sendManualPingScan(net, this.state.websocket);
 			});
 		};
+		this.state.triggers.updateScanTarget = (net: string, results: ScanEntry[]) => {
+			const arr = [...this.state.scanTargets];
+			for (var i = 0; i < arr.length; i++) {
+				if (arr[i].target === net) {
+					arr[i].entries = results;
+					this.setState({ scanTargets: arr });
+					return;
+				}
+			}
+		};
+		this.state.triggers.setMainState = (state: any) => {
+			this.setState(state);
+		};
+		this.state.triggers.setSubnetData = (subnetData: Subnet[]) => {};
 	};
 }
 
@@ -242,4 +256,7 @@ export interface MainTriggers {
 	deleteSubnet: (subnetRequest: SubnetRequest) => void;
 	setBasicTextOverlayMode: (mode: BasicTextOverlayMode) => void;
 	startScanning: (net: string) => void;
+	updateScanTarget: (net: string, entries: ScanEntry[]) => void;
+	setMainState: React.Component<{}, MainState>["setState"];
+	setSubnetData: (subnetData: Subnet[]) => void;
 }

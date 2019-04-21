@@ -25,6 +25,7 @@ class TopState {
 	clientWidth = rootElement.clientWidth;
 	fullscreenDisabled = false;
 	fullscreenAlertIsOpen = false;
+	latency = 1000;
 }
 
 export class Top extends React.Component<TopProps, TopState> {
@@ -34,6 +35,9 @@ export class Top extends React.Component<TopProps, TopState> {
 		window.addEventListener("resize", () => {
 			this.setState({ clientWidth: rootElement.clientWidth });
 		});
+		setInterval(() => {
+			this.setState({ latency: this.props.websocket.getLatencyRTT() });
+		}, 500);
 	}
 
 	requestFullscreen = () => {
@@ -227,7 +231,7 @@ export class Top extends React.Component<TopProps, TopState> {
 							active={true}
 							onClick={() => console.log("Connection button was pressed")}
 						>
-							{this.props.websocket.isConnected() ? `${this.props.websocket.getLatencyRTT()}ms` : "125ms"}
+							{this.props.websocket.isConnected() ? `${this.state.latency}ms` : "Offline"}
 						</Button>
 						<Button
 							icon="fullscreen"

@@ -148,12 +148,10 @@ export class SubnetTree extends React.Component<SubnetTreeProps, SubnetTreeState
 					className: this.props.darkMode ? "bp3-dark" : "",
 					onClick: () => {
 						setTimeout(() => {
-							this.props.triggers.startScan(this.props.selectedTreeNode.net);
-							console.log("setSelectedTabId");
+							this.props.triggers.startScanning(this.props.selectedTreeNode.net);
 							//this.props.handleUserAction({
 							//	action: "showAdvancedOverlay"
 							//});
-							console.log("showAdvancedOverlay");
 						}, 500);
 					},
 					intent: Intent.PRIMARY,

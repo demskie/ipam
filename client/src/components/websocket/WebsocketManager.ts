@@ -1,5 +1,5 @@
 import React from "react";
-import { MainState, MainTriggers, CHANCE } from "../Main";
+import { MainTriggers, CHANCE } from "../Main";
 import * as message from "./MessageTypes";
 import { messageReceivers, messageSenders } from "./MessageHandlers";
 import { isObject } from "util";
@@ -11,7 +11,6 @@ interface pendingRequest {
 }
 
 export class WebsocketManager {
-	readonly setMainState: React.Component<{}, MainState>["setState"];
 	readonly mainTriggers: MainTriggers;
 	private ws: WebSocket;
 	private user = "";
@@ -19,15 +18,24 @@ export class WebsocketManager {
 	private latencyRTT = Number.MAX_SAFE_INTEGER;
 	private pendingRequests = [] as pendingRequest[];
 
-	constructor(setState: React.Component<{}, MainState>["setState"], triggers: MainTriggers) {
-		this.setMainState = setState;
+	constructor(triggers: MainTriggers) {
 		this.mainTriggers = triggers;
 		this.ws = this.createSession();
+		setInterval(() => {
+			if (this.isConnected()) {
+				messageSenders.sendPing(this);
+				messageSenders.sendAllSubnets(this);
+			} else {
+				this.latencyRTT = Number.MAX_SAFE_INTEGER;
+			}
+		}, CHANCE.floating({ min: 250, max: 750 }))
 	}
 
 	private createSession() {
 		const wsPrefix = window.location.protocol === "https:" ? "wss://" : "ws://";
-		const wsURL = `${wsPrefix}${window.location.host}/sync`;
+		const wsHost = window.location.host.split(":")[0]
+		const wsURL = `${wsPrefix}${wsHost}/sync`;
+		console.log(`opening new websocket session: '${wsURL}'`)
 		const ws = new WebSocket(wsURL);
 		ws.addEventListener("open", () => {
 			ws.addEventListener("message", this.handleMessage);
@@ -37,7 +45,7 @@ export class WebsocketManager {
 		return ws;
 	}
 
-	private handleMessage(ev: MessageEvent) {
+	private handleMessage = (ev: MessageEvent) => {
 		const baseMsg = JSON.parse(ev.data) as message.base;
 		if (!isObject(baseMsg) || typeof baseMsg.messageType !== "number") {
 			console.error("received an invalid message:", baseMsg);
@@ -62,15 +70,15 @@ export class WebsocketManager {
 		} else if (baseMsg.messageType === message.kind.ManualPingScan) {
 			messageReceivers.receiveManualPingScan(baseMsg, this);
 		} else {
-			console.error(`received an invalid messageType: ${baseMsg.messageType}`);
+			console.error(`received an invalid messageType: '${baseMsg.messageType}'`);
 		}
 	}
 
-	private handleError(ev: Event) {
-		return; // do nothing
+	private handleError = (ev: Event) => {
+		setTimeout(() => this.ws = this.createSession(), 250);
 	}
 
-	private handleClose(ev: CloseEvent) {
+	private handleClose = (ev: CloseEvent) => {
 		setTimeout(() => {
 			this.ws = this.createSession();
 		}, CHANCE.floating({ min: 250, max: 750 }));
@@ -143,7 +151,7 @@ export class WebsocketManager {
 	}
 
 	getLatencyRTT() {
-		return this.latencyRTT;
+		return Math.min(this.latencyRTT, 9999);
 	}
 
 	getUsername() {

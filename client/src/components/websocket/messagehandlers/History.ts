@@ -5,7 +5,7 @@ export function receiveHistory(baseMsg: message.base, websocketManager: Websocke
 	const msg = baseMsg as message.inboundHistory;
 	const origReq = websocketManager.findPendingMessage(msg.sessionGUID);
 	if (origReq !== undefined) {
-		websocketManager.setMainState({ historyData: msg.history });
+		websocketManager.mainTriggers.setMainState({ historyData: msg.history });
 		websocketManager.removePendingMessage(origReq.sentMessage.sessionGUID);
 	}
 }

@@ -19,9 +19,7 @@ export function receiveManualPingScan(baseMsg: message.base, websocketManager: W
 	const origReq = websocketManager.findPendingMessage(msg.sessionGUID);
 	if (origReq !== undefined) {
 		const origMsg = origReq.sentMessage as message.outboundManualPingScan;
-		if (origMsg.network === websocketManager.mainTriggers.getScanTarget()) {
-			websocketManager.setMainState({});
-		}
+		websocketManager.mainTriggers.updateScanTarget(origMsg.network, msg.results);
 		websocketManager.removePendingMessage(origReq.sentMessage.sessionGUID);
 	}
 }
@@ -39,11 +37,10 @@ export function sendManualPingScan(network: string, websocketManager: WebsocketM
 }
 
 export function createStaleEntries(net: string) {
-	const cidr = parseInt(net.split("/")[1], 10);
-	const count = Math.pow(2, cidr);
-	const results = [];
+	const results = [] as ScanEntry[];
 	let ip = netparser.ip(net);
-	for (var i = 0; i < count; i++) {
+	if (!ip) return results;
+	while (netparser.networkContainsAddress(net, ip)) {
 		results.push({
 			address: ip,
 			latency: Number.MAX_SAFE_INTEGER,
@@ -51,6 +48,7 @@ export function createStaleEntries(net: string) {
 			isFresh: false
 		} as ScanEntry);
 		ip = netparser.nextAddress(ip);
+		if (!ip) return results;
 	}
 	return results;
 }

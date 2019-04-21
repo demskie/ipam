@@ -1,5 +1,6 @@
 import { Subnet } from "../left/SubnetTree";
 import { HostData } from "../Right";
+import { ScanEntry } from "./messagehandlers/ManualPingScan";
 
 export enum kind {
 	Ping,
@@ -21,7 +22,9 @@ export enum serverErrorTypes {
 	InvalidSubnet,
 	NotSubnetZero,
 	DoesNotExist,
-	AlreadyExists
+	AlreadyExists,
+	AuthenticationFailure,
+	UnknownFault
 }
 
 export interface SubnetRequest {
@@ -139,7 +142,7 @@ export interface outboundManualPingScan extends base {
 export interface inboundManualPingScan extends base {
 	messageType: kind.ManualPingScan;
 	sessionGUID: string;
-	// results: ScanAddr[];
+	results: ScanEntry[];
 }
 
 export interface outboundCreateSubnet extends base {

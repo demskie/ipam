@@ -5,7 +5,7 @@ export function receiveDebugLog(baseMsg: message.base, websocketManager: Websock
 	const msg = baseMsg as message.inboundDebugLog;
 	const origReq = websocketManager.findPendingMessage(msg.sessionGUID);
 	if (origReq !== undefined) {
-		websocketManager.setMainState({ debugData: msg.debugLog });
+		websocketManager.mainTriggers.setMainState({ debugData: msg.debugLog });
 		websocketManager.removePendingMessage(origReq.sentMessage.sessionGUID);
 	}
 }

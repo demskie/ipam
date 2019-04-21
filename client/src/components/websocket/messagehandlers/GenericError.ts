@@ -3,6 +3,7 @@ import { WebsocketManager } from "../WebsocketManager";
 import { notifications } from "../../Main";
 
 export function receiveGenericError(baseMsg: message.base, websocketManager: WebsocketManager) {
+	console.log("websocketManager:", websocketManager)
 	const msg = baseMsg as message.inboundGenericError;
 	const origReq = websocketManager.findPendingMessage(msg.sessionGUID);
 	if (origReq !== undefined) {

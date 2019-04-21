@@ -5,7 +5,7 @@ export function receiveSpecificHosts(baseMsg: message.base, websocketManager: We
 	const msg = baseMsg as message.inboundSpecificHosts;
 	const origReq = websocketManager.findPendingMessage(msg.sessionGUID);
 	if (origReq !== undefined) {
-		websocketManager.setMainState({ hostData: msg.hosts });
+		websocketManager.mainTriggers.setMainState({ hostData: msg.hosts });
 		websocketManager.removePendingMessage(origReq.sentMessage.sessionGUID);
 	}
 }
