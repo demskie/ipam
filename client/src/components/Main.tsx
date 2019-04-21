@@ -172,6 +172,9 @@ export class Main extends React.Component<{}, MainState> {
 	}
 
 	attachTriggers = () => {
+		this.state.triggers.setMainState = newState => {
+			this.setState(newState);
+		};
 		this.state.triggers.toggleDarkMode = () => {
 			this.setState({ darkMode: !this.state.darkMode });
 		};
@@ -188,10 +191,10 @@ export class Main extends React.Component<{}, MainState> {
 				this.setState({ sidebarOpen: true });
 			}
 		};
-		this.state.triggers.selectTreeNode = (node: Subnet) => {
+		this.state.triggers.selectTreeNode = node => {
 			this.setState({ selectedTreeNode: node });
 		};
-		this.state.triggers.setRootSubnetPromptMode = (mode: SubnetPromptMode) => {
+		this.state.triggers.setRootSubnetPromptMode = mode => {
 			this.setState({ rootSubnetPromptMode: mode });
 		};
 		this.state.triggers.getUsername = () => {
@@ -200,19 +203,19 @@ export class Main extends React.Component<{}, MainState> {
 		this.state.triggers.getPassword = () => {
 			return this.state.websocket.getPassword();
 		};
-		this.state.triggers.createSubnet = (subnetRequest: SubnetRequest) => {
+		this.state.triggers.createSubnet = subnetRequest => {
 			messageSenders.sendCreateSubnet(subnetRequest, this.state.websocket);
 		};
-		this.state.triggers.modifySubnet = (subnetRequest: SubnetRequest) => {
+		this.state.triggers.modifySubnet = subnetRequest => {
 			messageSenders.sendModifySubnet(subnetRequest, this.state.websocket);
 		};
-		this.state.triggers.deleteSubnet = (subnetRequest: SubnetRequest) => {
+		this.state.triggers.deleteSubnet = subnetRequest => {
 			messageSenders.sendDeleteSubnet(subnetRequest, this.state.websocket);
 		};
-		this.state.triggers.setBasicTextOverlayMode = (mode: BasicTextOverlayMode) => {
+		this.state.triggers.setBasicTextOverlayMode = mode => {
 			this.setState({ basicTextOverlayMode: mode });
 		};
-		this.state.triggers.startScanning = (net: string) => {
+		this.state.triggers.startScanning = net => {
 			for (var t of this.state.scanTargets) {
 				if (t.target === net) return;
 			}
@@ -225,7 +228,7 @@ export class Main extends React.Component<{}, MainState> {
 				messageSenders.sendManualPingScan(net, this.state.websocket);
 			});
 		};
-		this.state.triggers.updateScanTarget = (net: string, results: ScanEntry[]) => {
+		this.state.triggers.updateScanTarget = (net, results) => {
 			const arr = [...this.state.scanTargets];
 			for (var i = 0; i < arr.length; i++) {
 				if (arr[i].target === net) {
@@ -235,14 +238,11 @@ export class Main extends React.Component<{}, MainState> {
 				}
 			}
 		};
-		this.state.triggers.setMainState = (state: any) => {
-			this.setState(state);
-		};
-		this.state.triggers.setSubnetData = (subnetData: Subnet[]) => {};
 	};
 }
 
 export interface MainTriggers {
+	setMainState: React.Component<{}, MainState>["setState"];
 	toggleDarkMode: () => void;
 	toggleNotifications: () => void;
 	toggleLoginCache: () => void;
@@ -257,6 +257,4 @@ export interface MainTriggers {
 	setBasicTextOverlayMode: (mode: BasicTextOverlayMode) => void;
 	startScanning: (net: string) => void;
 	updateScanTarget: (net: string, entries: ScanEntry[]) => void;
-	setMainState: React.Component<{}, MainState>["setState"];
-	setSubnetData: (subnetData: Subnet[]) => void;
 }
