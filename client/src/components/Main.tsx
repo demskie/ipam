@@ -57,8 +57,8 @@ export class MainState {
 	hostDetailsWidth = 0;
 	hostDetailsHeight = 0;
 
-	historyData = require("../mockdata/ipsum.json") as string[];
-	debugData = require("../mockdata/ipsum.json") as string[];
+	historyData = [] as string[];
+	debugData = [] as string[];
 
 	scanTargets = [] as ScanTarget[];
 

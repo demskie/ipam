@@ -8,6 +8,7 @@ import ScrollableInkTabBar from "rc-tabs/lib/ScrollableInkTabBar";
 
 import { TabList } from "./advancedprompt/TabList";
 import { MainState as BasicTextOverlayProps, CHANCE } from "./Main";
+import { messageSenders } from "./websocket/MessageHandlers";
 
 interface BasicTextOverlayState {}
 
@@ -19,6 +20,37 @@ export enum BasicTextOverlayMode {
 }
 
 export class BasicTextOverlay extends React.PureComponent<BasicTextOverlayProps, BasicTextOverlayState> {
+	private refresher?: NodeJS.Timeout;
+
+	constructor(props: BasicTextOverlayProps) {
+		super(props);
+		this.refresher = this.recreateInterval();
+	}
+
+	componentDidUpdate(prevProps: BasicTextOverlayProps) {
+		if (this.props.basicTextOverlayMode !== prevProps.basicTextOverlayMode) {
+			this.refresher = this.recreateInterval();
+		}
+	}
+
+	recreateInterval() {
+		console.debug("new basicTextOverlayMode:", this.props.basicTextOverlayMode);
+		switch (this.props.basicTextOverlayMode) {
+			case BasicTextOverlayMode.HISTORY:
+				messageSenders.sendHistory(this.props.websocket);
+				return setInterval(() => messageSenders.sendHistory(this.props.websocket), 1000);
+			case BasicTextOverlayMode.DEBUG:
+				messageSenders.sendDebugLog(this.props.websocket);
+				return setInterval(() => messageSenders.sendDebugLog(this.props.websocket), 1000);
+		}
+	}
+
+	componentWillUnmount() {
+		if (this.refresher) {
+			clearInterval(this.refresher);
+		}
+	}
+
 	render() {
 		const overlayWidth = this.props.basicTextOverlayWidth;
 		const overlayHeight = this.props.basicTextOverlayHeight;

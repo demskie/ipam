@@ -63,7 +63,7 @@ export class Top extends React.Component<TopProps, TopState> {
 						<Button
 							className={"bp3-large"}
 							icon="menu"
-							disabled={false}
+							disabled={this.props.sidebarDocked}
 							minimal={true}
 							onClick={() => {
 								this.props.triggers.toggleSidebar();

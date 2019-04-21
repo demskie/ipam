@@ -12,7 +12,8 @@ interface pendingRequest {
 
 export class WebsocketManager {
 	readonly mainTriggers: MainTriggers;
-	private ws: WebSocket;
+	private ws?: WebSocket;
+	private refreshers: NodeJS.Timeout;
 	private user = "";
 	private pass = "";
 	private latencyRTT = Number.MAX_SAFE_INTEGER;
@@ -21,14 +22,13 @@ export class WebsocketManager {
 	constructor(triggers: MainTriggers) {
 		this.mainTriggers = triggers;
 		this.ws = this.createSession();
+		this.refreshers = this.createRefreshers()
 		setInterval(() => {
-			if (this.isConnected()) {
-				messageSenders.sendPing(this);
-				messageSenders.sendAllSubnets(this);
-			} else {
-				this.latencyRTT = Number.MAX_SAFE_INTEGER;
+			if (!this.isConnected()) {
+				this.ws = this.createSession()
+				this.refreshers = this.createRefreshers()
 			}
-		}, CHANCE.floating({ min: 250, max: 750 }))
+		}, CHANCE.floating({ min: 750, max: 1250}))
 	}
 
 	private createSession() {
@@ -43,6 +43,22 @@ export class WebsocketManager {
 			ws.addEventListener("close", this.handleClose);
 		});
 		return ws;
+	}
+
+	private createRefreshers = () => {
+		const interval = setInterval(() => {
+			if (this.isConnected()) {
+				messageSenders.sendPing(this);
+				messageSenders.sendAllSubnets(this);
+			} else {
+				this.latencyRTT = Number.MAX_SAFE_INTEGER;
+			}
+		}, CHANCE.floating({ min: 400, max: 600 }))
+		if (this.refreshers) {
+			clearInterval(this.refreshers);
+		}
+		this.refreshers = interval;
+		return interval
 	}
 
 	private handleMessage = (ev: MessageEvent) => {
@@ -74,15 +90,9 @@ export class WebsocketManager {
 		}
 	}
 
-	private handleError = (ev: Event) => {
-		setTimeout(() => this.ws = this.createSession(), 250);
-	}
+	private handleError = (ev: Event) => {}
 
-	private handleClose = (ev: CloseEvent) => {
-		setTimeout(() => {
-			this.ws = this.createSession();
-		}, CHANCE.floating({ min: 250, max: 750 }));
-	}
+	private handleClose = (ev: CloseEvent) => {}
 
 	sendMessage(request: message.AllKnownOutboundTypes) {
 		for (var otherReq of this.findSpecificPendingMessageType(request.messageType)) {
@@ -93,14 +103,14 @@ export class WebsocketManager {
 			sentMessage: request,
 			messageType: request.messageType
 		});
-		if (this.isConnected()) {
+		if (this.ws && this.isConnected()) {
 			this.ws.send(JSON.stringify(request));
 		} else {
 			const interval = setInterval(() => {
 				const pendingMessage = this.findPendingMessage(request.sessionGUID);
 				if (pendingMessage === undefined) {
 					clearInterval(interval);
-				} else if (this.isConnected()) {
+				} else if (this.ws && this.isConnected()) {
 					this.ws.send(JSON.stringify(request));
 					clearInterval(interval);
 				}
@@ -147,7 +157,7 @@ export class WebsocketManager {
 	}
 
 	isConnected() {
-		return this.ws.readyState === this.ws.OPEN;
+		return this.ws && (this.ws.readyState === this.ws.OPEN);
 	}
 
 	getLatencyRTT() {

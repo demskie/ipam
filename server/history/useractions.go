@@ -78,7 +78,7 @@ func (r *UserActions) GetAllUserActions() []string {
 				historySorter.allLines = append(historySorter.allLines, line)
 				historySorter.allTimes = append(historySorter.allTimes, t)
 			}
-		} else {
+		} else if len(line) > 0 {
 			log.Printf("caught an invalid userAction: '%v'\n", line)
 		}
 	}
