@@ -3,6 +3,7 @@ import { WebsocketManager } from "../WebsocketManager";
 
 export function receiveSomeSubnets(baseMsg: message.base, websocketManager: WebsocketManager) {
 	const msg = baseMsg as message.inboundSomeSubnets;
+	console.debug("received someSubnets:", msg)
 	const origReq = websocketManager.findPendingMessage(msg.sessionGUID);
 	if (origReq !== undefined) {
 		websocketManager.mainTriggers.setMainState({ subnetData: msg.subnets });

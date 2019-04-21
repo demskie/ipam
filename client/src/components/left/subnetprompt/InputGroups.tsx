@@ -49,10 +49,11 @@ export class SubnetInputGroups extends React.Component<SubnetInputGroupsProps, S
 							id={`cidr-input-${getPrefix()}`}
 							placeholder={"127.0.0.0/8"}
 							defaultValue={isCreate ? "" : this.props.selectedTreeNode.net}
-							disabled={isShow || isDelete}
+							disabled={isShow || isModify || isDelete}
 							onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
 								if (event.target.value !== "") {
-									if (netparser.network(event.target.value) === null) {
+									const sn = event.target.value;
+									if (!netparser.network(sn) || netparser.baseAddress(sn) !== netparser.ip(sn)) {
 										return this.setState({ isValidCIDR: false });
 									}
 								}

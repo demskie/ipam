@@ -519,6 +519,11 @@ func (ipam *IPAMServer) handleModifySubnet(conn *websocket.Conn, decJSON *json.D
 	details := strings.TrimSpace(inMsg.SubnetRequest.Notes)
 	vlan := strings.TrimSpace(inMsg.SubnetRequest.Vlan)
 	oldSkeleton := ipam.subnets.GetSubnetSkeleton(network)
+	if oldSkeleton == nil {
+		s := fmt.Sprintf("could not modify '%v' as it does not exist", subnet)
+		sendGenericError(conn, s, inMsg.SessionGUID, int(DoesNotExist))
+		return
+	}
 	newSkeleton := &subnets.SubnetSkeleton{Net: subnet, Desc: desc, Details: details, Vlan: vlan, Mod: mod}
 	differences := oldSkeleton.ListDifferences(newSkeleton)
 	if differences == nil {
@@ -568,7 +573,7 @@ func (ipam *IPAMServer) handleDeleteSubnet(conn *websocket.Conn, decJSON *json.D
 	}
 	ipam.authCallbackMtx.RUnlock()
 	oldSkeleton := ipam.subnets.GetSubnetSkeleton(network)
-	if ipam.subnets.DeleteSubnet(network) != nil {
+	if oldSkeleton == nil || ipam.subnets.DeleteSubnet(network) != nil {
 		s := fmt.Sprintf("could not delete '%v' as it does not exist", subnet)
 		sendGenericError(conn, s, inMsg.SessionGUID, int(DoesNotExist))
 		return

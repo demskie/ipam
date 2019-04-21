@@ -220,7 +220,7 @@ func getDeepestParent(orig *net.IPNet, parents []*subnet) (parent *subnet) {
 
 func insertIntoSortedSubnets(slc []*subnet, sn *subnet) []*subnet {
 	index := sort.Search(len(slc), func(i int) bool {
-		return subnetmath.NetworkComesBefore(slc[i].network, sn.network)
+		return subnetmath.NetworkComesBefore(sn.network, slc[i].network)
 	})
 	slc = append(slc, &subnet{})
 	copy(slc[index+1:], slc[index:])
