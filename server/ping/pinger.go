@@ -151,18 +151,26 @@ func (p *Pinger) MarkHostsAsPending(network *net.IPNet) {
 	p.mtx.Unlock()
 }
 
+type ScanResult struct {
+	Address  string `json:"address"`
+	Latency  int    `json:"latency"`
+	Hostname string `json:"hostname"`
+	IsFresh  bool   `json:"isFresh"`
+}
+
 // GetScanResults returns a string slice of host addresses and their reachability status
-func (p *Pinger) GetScanResults(network *net.IPNet) (results [][]string) {
+func (p *Pinger) GetScanResults(network *net.IPNet) (results []ScanResult) {
 	p.mtx.RLock()
 	currentIP := subnetmath.DuplicateAddr(network.IP)
 	for network.Contains(currentIP) {
 		ipString := currentIP.String()
 		val, exists := p.data[ipString]
 		if exists {
-			results = append(results, []string{
-				ipString,
-				strconv.FormatInt(int64(val.lastLatency), 10),
-				strconv.FormatBool(val.pendingUpdate),
+			results = append(results, ScanResult{
+				Address:  ipString,
+				Latency:  val.lastLatency,
+				Hostname: "", // TODO: implement!
+				IsFresh:  val.pendingUpdate,
 			})
 		} else {
 			p.data[ipString] = result{}

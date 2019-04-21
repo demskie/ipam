@@ -2,7 +2,6 @@ package server
 
 import (
 	"log"
-	"log/syslog"
 	"net/http"
 	"net/http/pprof"
 	"sync"
@@ -17,6 +16,8 @@ import (
 	"github.com/demskie/randutil"
 
 	"github.com/gorilla/mux"
+
+	"github.com/hashicorp/go-syslog"
 )
 
 const (
@@ -25,15 +26,17 @@ const (
 
 // IPAMServer is the object used to mutate and read data
 type IPAMServer struct {
-	mutationMtx  *sync.Mutex
-	mutationChan chan MutatedData
-	subnets      *subnets.Tree
-	history      *history.UserActions
-	debug        *history.ServerLogger
-	dns          *dns.Bucket
-	pinger       *ping.Pinger
-	custom       *custom.Datastore
-	semaphore    chan struct{}
+	mutationMtx     *sync.Mutex
+	mutationChan    chan MutatedData
+	authCallbackMtx *sync.RWMutex
+	authCallback    func(user, pass string) bool
+	subnets         *subnets.Tree
+	history         *history.UserActions
+	debug           *history.ServerLogger
+	dns             *dns.Bucket
+	pinger          *ping.Pinger
+	custom          *custom.Datastore
+	semaphore       chan struct{}
 }
 
 // MutatedData contains the raw lines of the changed subnets.csv and history.txt files
@@ -46,15 +49,17 @@ type MutatedData struct {
 // NewIPAMServer returns a new server object
 func NewIPAMServer() *IPAMServer {
 	return &IPAMServer{
-		mutationMtx:  &sync.Mutex{},
-		mutationChan: nil,
-		subnets:      subnets.NewTree(),
-		history:      history.NewUserActions(),
-		debug:        history.NewServerLogger(),
-		dns:          dns.NewBucket(),
-		pinger:       ping.NewPinger(),
-		custom:       custom.NewDatastore(),
-		semaphore:    make(chan struct{}, 10000),
+		mutationMtx:     &sync.Mutex{},
+		mutationChan:    nil,
+		authCallbackMtx: &sync.RWMutex{},
+		authCallback:    func(user, pass string) bool { return true },
+		subnets:         subnets.NewTree(),
+		history:         history.NewUserActions(),
+		debug:           history.NewServerLogger(),
+		dns:             dns.NewBucket(),
+		pinger:          ping.NewPinger(),
+		custom:          custom.NewDatastore(),
+		semaphore:       make(chan struct{}, 10000),
 	}
 }
 
@@ -64,6 +69,13 @@ func (ipam *IPAMServer) signalMutation(reason string) {
 		Subnets:   ipam.ExportSubnetCSVLines(),
 		History:   ipam.history.GetAllUserActions(),
 	}
+}
+
+// SetAuthCallback is used to specify whether users are authenticated to make modifications
+func (ipam *IPAMServer) SetAuthCallback(callback func(user, pass string) bool) {
+	ipam.authCallbackMtx.Lock()
+	ipam.authCallback = callback
+	ipam.authCallbackMtx.Unlock()
 }
 
 // PingSweepSubnets will pick subnets at random and ping all nonBroadcast addresses
@@ -119,13 +131,13 @@ func startDebugServer(debug bool) {
 func (ipam *IPAMServer) startWebServer(addr, directory string) {
 	muxInsecure := mux.NewRouter()
 	muxInsecure.HandleFunc("/sync", ipam.handleWebsocketClient)
-	muxInsecure.HandleFunc("/api/subnets", ipam.handleRestfulSubnets)
-	muxInsecure.HandleFunc("/api/hosts", ipam.handleRestfulHosts)
-	muxInsecure.HandleFunc("/api/history", ipam.handleRestfulHistory)
-	muxInsecure.HandleFunc("/api/createsubnet", ipam.handleRestfulCreateSubnet)
-	muxInsecure.HandleFunc("/api/replacesubnet", ipam.handleRestfulReplaceSubnet)
-	muxInsecure.HandleFunc("/api/deletesubnet", ipam.handleRestfulDeleteSubnet)
-	muxInsecure.HandleFunc("/api/reservehost", ipam.handleRestfulReserveHost)
+	// muxInsecure.HandleFunc("/api/subnets", ipam.handleRestfulSubnets)
+	// muxInsecure.HandleFunc("/api/hosts", ipam.handleRestfulHosts)
+	// muxInsecure.HandleFunc("/api/history", ipam.handleRestfulHistory)
+	// muxInsecure.HandleFunc("/api/createsubnet", ipam.handleRestfulCreateSubnet)
+	// muxInsecure.HandleFunc("/api/replacesubnet", ipam.handleRestfulReplaceSubnet)
+	// muxInsecure.HandleFunc("/api/deletesubnet", ipam.handleRestfulDeleteSubnet)
+	// muxInsecure.HandleFunc("/api/reservehost", ipam.handleRestfulReserveHost)
 	var fs http.Dir
 	if directory == "" {
 		fs = http.Dir(".")
@@ -146,7 +158,7 @@ func (ipam *IPAMServer) startWebServer(addr, directory string) {
 
 // AddSyslogServer is used for remote logging purposes
 func (ipam *IPAMServer) AddSyslogServer(address, port string) error {
-	wr, err := syslog.Dial("tcp", address+":"+port, syslog.LOG_NOTICE, "IPAM")
+	wr, err := gsyslog.DialLogger("tcp", address+":"+port, gsyslog.LOG_INFO, "IPAM", "server")
 	if err != nil {
 		return err
 	}
