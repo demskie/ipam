@@ -43,6 +43,9 @@ export class BasicTextOverlay extends React.PureComponent<BasicTextOverlayProps,
 				messageSenders.sendDebugLog(this.props.websocket);
 				return setInterval(() => messageSenders.sendDebugLog(this.props.websocket), 1000);
 		}
+		if (this.refresher) {
+			clearInterval(this.refresher);
+		}
 	}
 
 	componentWillUnmount() {
