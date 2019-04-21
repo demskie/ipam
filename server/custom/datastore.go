@@ -108,11 +108,10 @@ func (d *Datastore) RecreateDatastore(devicesWithAddr []DeviceData, devicesWitho
 	d.mtx.Unlock()
 }
 
-// AppendCustomData returns a new string slice for sending to client
-func (d *Datastore) AppendCustomData(existingData [][]string) [][]string {
+// GetCustomData returns a new string slice for sending to client
+func (d *Datastore) GetCustomData(sliceOfAddresses []string) (results [][]string) {
 	d.mtx.RLock()
 	if len(d.structured) > 0 {
-		sliceOfAddresses := existingData[0]
 		for i, hdr := range d.headers {
 			newSlice := make([]string, 0, len(sliceOfAddresses)+1)
 			newSlice = append(newSlice, string(hdr))
@@ -124,11 +123,11 @@ func (d *Datastore) AppendCustomData(existingData [][]string) [][]string {
 					newSlice = append(newSlice, "")
 				}
 			}
-			existingData = append(existingData, newSlice)
+			results = append(results, newSlice)
 		}
 	}
 	d.mtx.RUnlock()
-	return existingData
+	return results
 }
 
 const searchLimit = 100000

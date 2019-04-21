@@ -45,6 +45,7 @@ func (ipam *IPAMServer) handleWebsocketClient(w http.ResponseWriter, r *http.Req
 		ReadBufferSize:    1024,
 		WriteBufferSize:   1024,
 		EnableCompression: true,
+		CheckOrigin:       func(r *http.Request) bool { return true },
 	}
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -249,9 +250,18 @@ type inboundSpecificHosts struct {
 	Network string `json:"network"`
 }
 
+// HostData is structured data for client side use
+type HostData struct {
+	Addresses    []string   `json:"addresses"`
+	Arecords     []string   `json:"aRecords"`
+	LastAttempts []string   `json:"lastAttempts"`
+	PingResults  []string   `json:"pingResults"`
+	CustomData   [][]string `json:"customData"`
+}
+
 type outboundSpecificHosts struct {
 	baseMessage
-	Hosts [][]string `json:"hosts"`
+	Hosts HostData `json:"hosts"`
 }
 
 func (ipam *IPAMServer) handleSpecificHosts(conn *websocket.Conn, decJSON *json.Decoder) {
@@ -277,13 +287,13 @@ func (ipam *IPAMServer) handleSpecificHosts(conn *websocket.Conn, decJSON *json.
 	outMsg := outboundSpecificHosts{}
 	outMsg.MessageType = SpecificHosts
 	outMsg.SessionGUID = inMsg.SessionGUID
-	outMsg.Hosts = [][]string{
-		sliceOfAddresses,
-		ipam.dns.GetFirstHostnameForAddresses(sliceOfAddresses),
-		ipam.pinger.GetPingTimesForAddresses(sliceOfAddresses),
-		ipam.pinger.GetPingResultsForAddresses(sliceOfAddresses),
+	outMsg.Hosts = HostData{
+		Addresses:    sliceOfAddresses,
+		Arecords:     ipam.dns.GetFirstHostnameForAddresses(sliceOfAddresses),
+		LastAttempts: ipam.pinger.GetPingTimesForAddresses(sliceOfAddresses),
+		PingResults:  ipam.pinger.GetPingResultsForAddresses(sliceOfAddresses),
+		CustomData:   ipam.custom.GetCustomData(sliceOfAddresses),
 	}
-	outMsg.Hosts = ipam.custom.AppendCustomData(outMsg.Hosts)
 	b, err := json.Marshal(outMsg)
 	if err != nil {
 		log.Printf("error encoding outgoing message to (%v)\n", remoteIP)
@@ -299,7 +309,7 @@ type inboundSomeHosts struct {
 
 type outboundSomeHosts struct {
 	baseMessage
-	Hosts [][]string `json:"hosts"`
+	Hosts HostData `json:"hosts"`
 }
 
 func (ipam *IPAMServer) handleSomeHosts(conn *websocket.Conn, decJSON *json.Decoder) {
