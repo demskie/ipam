@@ -1,12 +1,15 @@
 package server
 
 import (
+	"crypto/tls"
 	"log"
 	"net/http"
 	"net/http/pprof"
 	"sync"
 	"time"
 
+	"github.com/davecgh/go-spew/spew"
+	"github.com/demskie/archive"
 	"github.com/demskie/ipam/server/custom"
 	"github.com/demskie/ipam/server/dns"
 	"github.com/demskie/ipam/server/history"
@@ -28,6 +31,7 @@ const (
 type IPAMServer struct {
 	mutationMtx     *sync.Mutex
 	mutationChan    chan MutatedData
+	demoModeBool    bool
 	authCallbackMtx *sync.RWMutex
 	authCallback    func(user, pass string) bool
 	subnets         *subnets.Tree
@@ -51,8 +55,9 @@ func NewIPAMServer() *IPAMServer {
 	return &IPAMServer{
 		mutationMtx:     &sync.Mutex{},
 		mutationChan:    nil,
+		demoModeBool:    false,
 		authCallbackMtx: &sync.RWMutex{},
-		authCallback:    func(user, pass string) bool { return true },
+		authCallback:    func(user, pass string) bool { return false },
 		subnets:         subnets.NewTree(),
 		history:         history.NewUserActions(),
 		debug:           history.NewServerLogger(),
@@ -71,6 +76,13 @@ func (ipam *IPAMServer) signalMutation(reason string) {
 	}
 }
 
+// EnableDemoMode is used to fake ping results for demonstration purposes
+func (ipam *IPAMServer) EnableDemoMode() {
+	ipam.mutationMtx.Lock()
+	ipam.demoModeBool = true
+	ipam.mutationMtx.Unlock()
+}
+
 // SetAuthCallback is used to specify whether users are authenticated to make modifications
 func (ipam *IPAMServer) SetAuthCallback(callback func(user, pass string) bool) {
 	ipam.authCallbackMtx.Lock()
@@ -85,13 +97,18 @@ func (ipam *IPAMServer) PingSweepSubnets(pingsPerSecond, pingerGoroutineCount in
 	for {
 		subnet := ipam.subnets.GetRandomNetwork(rnum)
 		if subnet != nil {
-			ipam.pinger.ScanNetwork(subnet)
+			if !ipam.demoModeBool {
+				ipam.pinger.ScanNetwork(subnet)
+			} else {
+				ipam.pinger.ScanPretendNetwork(subnet)
+			}
 		}
+		time.Sleep(128 * time.Millisecond)
 	}
 }
 
 // ServeAndReceiveChan will start the HTTP Webserver and stream results back to the caller
-func (ipam *IPAMServer) ServeAndReceiveChan(addr string, directory string, debug bool) chan MutatedData {
+func (ipam *IPAMServer) ServeAndReceiveChan(directory, crtPath, keyPath string, debug bool) chan MutatedData {
 	if ipam.mutationChan != nil {
 		return ipam.mutationChan
 	}
@@ -100,7 +117,7 @@ func (ipam *IPAMServer) ServeAndReceiveChan(addr string, directory string, debug
 	ipam.mutationChan = make(chan MutatedData, 1)
 	go func() {
 		go startDebugServer(debug)
-		ipam.startWebServer(addr, directory)
+		ipam.startWebServer(directory, crtPath, keyPath)
 		close(ipam.mutationChan)
 	}()
 	return ipam.mutationChan
@@ -128,25 +145,62 @@ func startDebugServer(debug bool) {
 	}
 }
 
-func (ipam *IPAMServer) startWebServer(addr, directory string) {
+func (ipam *IPAMServer) startWebServer(publicDir, crtPath, keyPath string) {
+	if publicDir == "" {
+		publicDir = "."
+	}
+	if crtPath != "" || keyPath != "" {
+		// use httpMux to avoid leaking default handlers
+		muxSecure := http.NewServeMux()
+
+		// recurse through all static web content and create compressed copies
+		fileList, err := archive.CompressWebserverFiles(publicDir)
+		if err != nil {
+			log.Printf("unable to compress static webserver files because: %v\n", err)
+		}
+		log.Println("compressed the following:", spew.Sdump(fileList))
+
+		// attach custom HTTP handlers
+		muxSecure.HandleFunc("/sync", ipam.handleWebsocketClient)
+
+		// serve static files (preferring archived versions)
+		muxSecure.Handle("/", archive.FileServer(http.Dir(publicDir)))
+
+		// tying the following http server parameters to the handlers associated with muxSecure
+		srvSecure := &http.Server{
+			ReadTimeout:  5 * time.Second,
+			WriteTimeout: 30 * time.Second,
+			IdleTimeout:  60 * time.Second,
+			Addr:         ":443",
+			Handler:      muxSecure,
+			TLSConfig: &tls.Config{
+				MinVersion:               tls.VersionTLS12,
+				CurvePreferences:         []tls.CurveID{tls.CurveP521, tls.CurveP384, tls.CurveP256},
+				PreferServerCipherSuites: true,
+				CipherSuites: []uint16{
+					tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+					tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+					tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
+					tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,
+					tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+					tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+				},
+			},
+			TLSNextProto: nil,
+		}
+
+		// serve HTTPS requests with config defined above
+		// NOTE: this should block indefinitely
+		log.Fatal(srvSecure.ListenAndServeTLS(crtPath, keyPath))
+	}
+
+	// serving HTTP just in case
 	muxInsecure := mux.NewRouter()
 	muxInsecure.HandleFunc("/sync", ipam.handleWebsocketClient)
-	// muxInsecure.HandleFunc("/api/subnets", ipam.handleRestfulSubnets)
-	// muxInsecure.HandleFunc("/api/hosts", ipam.handleRestfulHosts)
-	// muxInsecure.HandleFunc("/api/history", ipam.handleRestfulHistory)
-	// muxInsecure.HandleFunc("/api/createsubnet", ipam.handleRestfulCreateSubnet)
-	// muxInsecure.HandleFunc("/api/replacesubnet", ipam.handleRestfulReplaceSubnet)
-	// muxInsecure.HandleFunc("/api/deletesubnet", ipam.handleRestfulDeleteSubnet)
-	// muxInsecure.HandleFunc("/api/reservehost", ipam.handleRestfulReserveHost)
-	var fs http.Dir
-	if directory == "" {
-		fs = http.Dir(".")
-	} else {
-		fs = http.Dir(directory)
-	}
-	muxInsecure.PathPrefix("/").Handler(http.FileServer(fs))
+
+	muxInsecure.PathPrefix("/").Handler(http.FileServer(http.Dir(publicDir)))
 	srvInsecure := &http.Server{
-		Addr:         addr,
+		Addr:         ":80",
 		Handler:      muxInsecure,
 		ReadTimeout:  60 * time.Second,
 		WriteTimeout: 60 * time.Second,

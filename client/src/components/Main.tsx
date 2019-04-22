@@ -1,8 +1,12 @@
 import React from "react";
 
-import _ from "lodash-es";
+import { debounce } from "lodash-es";
 import Sidebar from "react-sidebar";
 import { Toaster, Position, Intent, Colors } from "@blueprintjs/core";
+
+import * as idb from "idb-keyval";
+
+import netparser from "netparser";
 
 import { UAParser } from "ua-parser-js";
 export const parser = new UAParser();
@@ -38,16 +42,18 @@ export const notifications = Toaster.create({
 export class MainState {
 	readonly websocket: WebsocketManager;
 
+	demoMode = false;
+
 	sidebarOpen = false;
 	sidebarDocked = false;
 
+	scannerPopupOpen = false;
+
 	darkMode = isOSX || isMobile || isTablet;
 	allowNotifications = true;
-	cacheLogin = true;
+	cacheLogin = false;
 
 	emptySearchField = true;
-	lastTransmittedSearchQuery = "";
-	lastReceivedSearchResult = "";
 
 	subnetData = [] as Subnet[];
 	selectedTreeNode = {} as Subnet;
@@ -61,6 +67,7 @@ export class MainState {
 	debugData = [] as string[];
 
 	scanTargets = [] as ScanTarget[];
+	selectedScanTarget = "";
 
 	basicTextOverlayMode = BasicTextOverlayMode.CLOSED;
 	basicTextOverlayWidth = 0;
@@ -77,11 +84,26 @@ export class Main extends React.Component<{}, MainState> {
 	state = new MainState();
 
 	componentDidMount() {
-		window.addEventListener("resize", _.debounce(this.updateDimensions, 1000));
+		this.getDarkMode().then(darkMode =>
+			this.setState({ darkMode }, () => idb.set("darkMode", darkMode ? "true" : "false"))
+		);
+		window.addEventListener("resize", debounce(this.updateDimensions, 1000));
 		this.updateDimensions();
 		this.watchForOutdatedCache();
 		this.displaySidebarOnce();
 		this.attachTriggers();
+		setTimeout(() => this.createInitialScanTargets(), 2500);
+	}
+
+	async getDarkMode() {
+		const val = (await idb.get("darkMode")) as string | undefined;
+		console.log("darkMode:", val);
+		if (val === undefined) {
+			return isOSX || isMobile || isTablet;
+		} else if (val === "true") {
+			return true;
+		}
+		return false;
 	}
 
 	updateDimensions = () => {
@@ -132,6 +154,21 @@ export class Main extends React.Component<{}, MainState> {
 		}
 	};
 
+	createInitialScanTargets() {
+		// BUG: this is a hack
+		const subnets = [
+			"10.0.0.0/24",
+			"10.1.0.0/24",
+			"10.2.0.0/24",
+			"192.168.0.0/24",
+			"192.168.1.0/24",
+			"192.168.2.0/24"
+		];
+		for (var subnet of subnets) {
+			this.state.triggers.startScanning(subnet);
+		}
+	}
+
 	render() {
 		return (
 			<React.Fragment>
@@ -159,6 +196,7 @@ export class Main extends React.Component<{}, MainState> {
 							<Top {...this.state} />
 							<Right
 								darkMode={this.state.darkMode}
+								demoMode={this.state.demoMode}
 								hostData={this.state.hostData}
 								hostDetailsWidth={this.state.hostDetailsWidth}
 								hostDetailsHeight={this.state.hostDetailsHeight}
@@ -175,8 +213,15 @@ export class Main extends React.Component<{}, MainState> {
 		this.state.triggers.setMainState = newState => {
 			this.setState(newState);
 		};
+		this.state.triggers.enableDemoMode = () => {
+			if (!this.state.demoMode) {
+				this.setState({ demoMode: true });
+			}
+		};
 		this.state.triggers.toggleDarkMode = () => {
-			this.setState({ darkMode: !this.state.darkMode });
+			this.setState({ darkMode: !this.state.darkMode }, () => {
+				idb.set("darkMode", this.state.darkMode ? "true" : "false");
+			});
 		};
 		this.state.triggers.toggleNotifications = () => {
 			this.setState({ allowNotifications: !this.state.allowNotifications });
@@ -192,7 +237,9 @@ export class Main extends React.Component<{}, MainState> {
 			}
 		};
 		this.state.triggers.selectTreeNode = node => {
-			this.setState({ selectedTreeNode: node });
+			this.setState({ selectedTreeNode: node }, () => {
+				messageSenders.sendSpecificHosts(node.net, this.state.websocket);
+			});
 		};
 		this.state.triggers.setRootSubnetPromptMode = mode => {
 			this.setState({ rootSubnetPromptMode: mode });
@@ -216,6 +263,7 @@ export class Main extends React.Component<{}, MainState> {
 			this.setState({ basicTextOverlayMode: mode });
 		};
 		this.state.triggers.startScanning = net => {
+			if (!netparser.network(net) || netparser.baseAddress(net) !== netparser.ip(net)) return;
 			for (var t of this.state.scanTargets) {
 				if (t.target === net) return;
 			}
@@ -228,7 +276,11 @@ export class Main extends React.Component<{}, MainState> {
 				messageSenders.sendManualPingScan(net, this.state.websocket);
 			});
 		};
+		this.state.triggers.getScanTargets = () => {
+			return [...this.state.scanTargets];
+		};
 		this.state.triggers.updateScanTarget = (net, results) => {
+			console.log(this.state.scanTargets);
 			const arr = [...this.state.scanTargets];
 			for (var i = 0; i < arr.length; i++) {
 				if (arr[i].target === net) {
@@ -238,11 +290,24 @@ export class Main extends React.Component<{}, MainState> {
 				}
 			}
 		};
+		this.state.triggers.searchFieldIsEmpty = () => {
+			return this.state.emptySearchField;
+		};
+		this.state.triggers.selectScanTarget = target => {
+			this.setState({ selectedScanTarget: target });
+		};
+		this.state.triggers.openScannerPopup = () => {
+			this.setState({ scannerPopupOpen: true });
+		};
+		this.state.triggers.closeScannerPopup = () => {
+			this.setState({ scannerPopupOpen: false });
+		};
 	};
 }
 
 export interface MainTriggers {
 	setMainState: React.Component<{}, MainState>["setState"];
+	enableDemoMode: () => void;
 	toggleDarkMode: () => void;
 	toggleNotifications: () => void;
 	toggleLoginCache: () => void;
@@ -256,5 +321,22 @@ export interface MainTriggers {
 	deleteSubnet: (subnetRequest: SubnetRequest) => void;
 	setBasicTextOverlayMode: (mode: BasicTextOverlayMode) => void;
 	startScanning: (net: string) => void;
+	getScanTargets: () => ScanTarget[];
 	updateScanTarget: (net: string, entries: ScanEntry[]) => void;
+	searchFieldIsEmpty: () => boolean;
+	selectScanTarget: (target: string) => void;
+	openScannerPopup: () => void;
+	closeScannerPopup: () => void;
+}
+
+// this is for debugMode
+const fakeHostnameMap = new Map() as Map<string, string>;
+
+export function getFakeHostname(address: string) {
+	let val = fakeHostnameMap.get(address);
+	if (!val) {
+		val = `${CHANCE.animal()}-${CHANCE.city()}.${window.location.host.split(":")[0]}`;
+		fakeHostnameMap.set(address, val);
+	}
+	return val;
 }

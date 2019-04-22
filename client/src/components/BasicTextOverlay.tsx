@@ -7,8 +7,9 @@ import TabContent from "rc-tabs/lib/TabContent";
 import ScrollableInkTabBar from "rc-tabs/lib/ScrollableInkTabBar";
 
 import { TabList } from "./advancedprompt/TabList";
-import { MainState as BasicTextOverlayProps, CHANCE } from "./Main";
+import { MainState as BasicTextOverlayProps, CHANCE, getFakeHostname } from "./Main";
 import { messageSenders } from "./websocket/MessageHandlers";
+import { ScanTarget } from "./websocket/messagehandlers/ManualPingScan";
 
 interface BasicTextOverlayState {}
 
@@ -54,15 +55,44 @@ export class BasicTextOverlay extends React.PureComponent<BasicTextOverlayProps,
 		}
 	}
 
-	render() {
-		const overlayWidth = this.props.basicTextOverlayWidth;
-		const overlayHeight = this.props.basicTextOverlayHeight;
-		const panelWidth = this.props.basicTextOverlayWidth - 40;
-		const panelHeight = this.props.basicTextOverlayHeight;
+	scanTargetToString(scanTarget: ScanTarget) {
+		const result = [] as string[];
+		for (var entry of scanTarget.entries) {
+			let s = "\u00A0\u00A0\u00A0\u00A0" + entry.address;
+			s += "\u00A0\u00A0\u00A0\u00A0";
+			s += "\u00A0\u00A0\u00A0\u00A0";
+			if (entry.latency === -1) {
+				s += "pendingScan";
+			} else {
+				s += entry.latency > 0 ? `${entry.latency}ms` : "unreachable";
+			}
+			if (this.props.demoMode) {
+				entry.hostname = getFakeHostname(entry.address);
+			}
+			while (s.length < 42) s += "\u00A0";
+			s += "\u00A0\u00A0" + entry.hostname;
+			result.push(s);
+		}
+		return result;
+	}
 
-		var header = "";
-		var someStrings = [] as string[];
-		var headerContent = undefined as undefined | JSX.Element;
+	scanTargetsToTabPanes(scanTargets: ScanTarget[]) {
+		const result = [] as JSX.Element[];
+		for (var scanTarget of scanTargets) {
+			result.push(<TabPane tab={scanTarget.target} key={scanTarget.target} />);
+		}
+		return result;
+	}
+
+	render() {
+		let overlayWidth = this.props.basicTextOverlayWidth;
+		let overlayHeight = this.props.basicTextOverlayHeight;
+		let panelWidth = this.props.basicTextOverlayWidth - 40;
+		let panelHeight = this.props.basicTextOverlayHeight;
+
+		let header = "";
+		let someStrings = [] as string[];
+		let headerContent = undefined as undefined | JSX.Element;
 
 		if (this.props.basicTextOverlayMode === BasicTextOverlayMode.HISTORY) {
 			header = "Commit Log";
@@ -72,38 +102,33 @@ export class BasicTextOverlay extends React.PureComponent<BasicTextOverlayProps,
 			someStrings = this.props.debugData;
 		} else if (this.props.basicTextOverlayMode === BasicTextOverlayMode.PINGSWEEP) {
 			header = "Network Scanner Results";
-			someStrings = this.props.debugData;
-			headerContent = (
-				<Tabs
-					defaultActiveKey="2"
-					onChange={(key: string) => console.log(key)}
-					renderTabBar={() => <ScrollableInkTabBar />}
-					renderTabContent={() => <TabContent />}
-				>
-					<TabPane tab={CHANCE.ip()} key="1" />
-					<TabPane tab={CHANCE.ip()} key="2" />
-					<TabPane tab={CHANCE.ip()} key="3" />
-					<TabPane tab={CHANCE.ip()} key="4" />
-					<TabPane tab={CHANCE.ip()} key="5" />
-					<TabPane tab={CHANCE.ip()} key="6" />
-					<TabPane tab={CHANCE.ip()} key="7" />
-					<TabPane tab={CHANCE.ip()} key="8" />
-					<TabPane tab={CHANCE.ip()} key="9" />
-					<TabPane tab={CHANCE.ip()} key="10" />
-					<TabPane tab={CHANCE.ip()} key="11" />
-					<TabPane tab={CHANCE.ipv6()} key="12" />
-					<TabPane tab={CHANCE.ipv6()} key="13" />
-					<TabPane tab={CHANCE.ipv6()} key="14" />
-					<TabPane tab={CHANCE.ipv6()} key="15" />
-					<TabPane tab={CHANCE.ipv6()} key="16" />
-					<TabPane tab={CHANCE.ipv6()} key="17" />
-					<TabPane tab={CHANCE.ipv6()} key="18" />
-					<TabPane tab={CHANCE.ipv6()} key="19" />
-					<TabPane tab={CHANCE.ipv6()} key="20" />
-				</Tabs>
-			);
+			someStrings = ["nothing to see here"];
+			overlayWidth = 650;
+			panelWidth = overlayWidth - 40;
+			let selectedScanTarget = this.props.scanTargets.length > 0 ? this.props.scanTargets[0].target : "";
+			for (var scanTarget of this.props.scanTargets) {
+				if (scanTarget.target === this.props.selectedScanTarget) {
+					selectedScanTarget = scanTarget.target;
+					someStrings = this.scanTargetToString(scanTarget);
+					break;
+				}
+				if (scanTarget.target === selectedScanTarget) {
+					someStrings = this.scanTargetToString(scanTarget);
+				}
+			}
+			if (true || selectedScanTarget !== "") {
+				headerContent = (
+					<Tabs
+						defaultActiveKey={selectedScanTarget}
+						onChange={(key: string) => this.props.triggers.selectScanTarget(key)}
+						renderTabBar={() => <ScrollableInkTabBar />}
+						renderTabContent={() => <TabContent />}
+					>
+						{this.scanTargetsToTabPanes(this.props.scanTargets)}
+					</Tabs>
+				);
+			}
 		}
-
 		return (
 			<div id="basicTextOverlay">
 				<Dialog

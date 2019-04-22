@@ -119,13 +119,17 @@ func (ipam *IPAMServer) handleWebsocketClient(w http.ResponseWriter, r *http.Req
 	}
 }
 
-type outboundPing baseMessage
+type outboundPing struct {
+	baseMessage
+	DemoMode bool `json:"demoMode"`
+}
 
 func (ipam *IPAMServer) handlePing(conn *websocket.Conn, guid string) {
-	b, err := json.Marshal(outboundPing{
-		MessageType: Ping,
-		SessionGUID: guid,
-	})
+	outMsg := outboundPing{}
+	outMsg.MessageType = Ping
+	outMsg.SessionGUID = guid
+	outMsg.DemoMode = ipam.demoModeBool
+	b, err := json.Marshal(outMsg)
 	if err != nil {
 		remoteIP, _, _ := net.SplitHostPort(conn.RemoteAddr().String())
 		log.Printf("error encoding outgoing Ping to (%v)\n", remoteIP)
@@ -411,7 +415,11 @@ func (ipam *IPAMServer) handleManualPingScan(conn *websocket.Conn, decJSON *json
 	ipam.pinger.MarkHostsAsPending(network)
 	ipam.semaphore <- struct{}{}
 	go func() {
-		ipam.pinger.ScanNetwork(network)
+		if !ipam.demoModeBool {
+			ipam.pinger.ScanNetwork(network)
+		} else {
+			ipam.pinger.ScanPretendNetwork(network)
+		}
 		<-ipam.semaphore
 	}()
 	outMsg := outboundManualPingScan{}

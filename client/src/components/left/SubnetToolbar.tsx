@@ -73,7 +73,11 @@ export class SubnetToolbar extends React.PureComponent<SubnetToolbarProps, Subne
 						icon="satellite"
 						text="Scan"
 						disabled={Object.keys(this.props.selectedTreeNode).length === 0}
-						onClick={() => this.props.triggers.startScanning(this.props.selectedTreeNode.net)}
+						onClick={() => {
+							this.props.triggers.openScannerPopup();
+							const selectedNode = this.props.selectedTreeNode.net;
+							setTimeout(() => this.props.triggers.startScanning(selectedNode), 250);
+						}}
 					/>
 				</NavbarGroup>
 			</Navbar>

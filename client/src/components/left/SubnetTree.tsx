@@ -8,6 +8,7 @@ var lastClickedNodeID = "foobar";
 var lastClickedTime = Date.now();
 
 interface SubnetTreeState {
+	revision: number;
 	expandedNodeIDs: string[];
 }
 
@@ -21,10 +22,19 @@ export interface Subnet extends ITreeNode {
 	vlan: string;
 }
 
+let shouldAutoExpand = true;
+
 export class SubnetTree extends React.Component<SubnetTreeProps, SubnetTreeState> {
 	state = {
-		expandedNodeIDs: []
+		revision: 0,
+		expandedNodeIDs: [] as string[]
 	};
+
+	componentDidUpdate(nextProps: SubnetTreeProps) {
+		if (this.props.subnetData !== nextProps.subnetData) {
+			this.setState({ revision: this.state.revision + 1 });
+		}
+	}
 
 	generateLabel = (net: string, desc: string, vlan: string) => {
 		const ogNet = net;
@@ -49,6 +59,10 @@ export class SubnetTree extends React.Component<SubnetTreeProps, SubnetTreeState
 			newNode.label = this.generateLabel(newNode.net, newNode.desc, newNode.vlan);
 			if (newNode.id === this.props.selectedTreeNode.id) {
 				newNode.isSelected = true;
+			}
+			if (shouldAutoExpand) {
+				newNode.isExpanded = true;
+				this.state.expandedNodeIDs.push(newNode.id);
 			}
 			for (let j in this.state.expandedNodeIDs) {
 				if (newNode.id === `${this.state.expandedNodeIDs[j]}`) {
@@ -109,7 +123,6 @@ export class SubnetTree extends React.Component<SubnetTreeProps, SubnetTreeState
 		this.setState({
 			expandedNodeIDs: newExpandedNodeIDs
 		});
-		console.log(newExpandedNodeIDs);
 	};
 
 	handleNodeExpand = (node: ITreeNode) => {
@@ -120,7 +133,6 @@ export class SubnetTree extends React.Component<SubnetTreeProps, SubnetTreeState
 		this.setState({
 			expandedNodeIDs: [node.id, ...this.state.expandedNodeIDs]
 		});
-		console.log([node.id, ...this.state.expandedNodeIDs]);
 	};
 
 	componentDidMount = () => {
@@ -148,10 +160,9 @@ export class SubnetTree extends React.Component<SubnetTreeProps, SubnetTreeState
 					className: this.props.darkMode ? "bp3-dark" : "",
 					onClick: () => {
 						setTimeout(() => {
-							this.props.triggers.startScanning(this.props.selectedTreeNode.net);
-							//this.props.handleUserAction({
-							//	action: "showAdvancedOverlay"
-							//});
+							this.props.triggers.openScannerPopup();
+							const selectedNode = this.props.selectedTreeNode.net;
+							setTimeout(() => this.props.triggers.startScanning(selectedNode), 250);
 						}, 500);
 					},
 					intent: Intent.PRIMARY,
@@ -192,7 +203,13 @@ export class SubnetTree extends React.Component<SubnetTreeProps, SubnetTreeState
 			>
 				<Tree
 					className={this.props.darkMode ? "bp3-dark" : "light-mode-background-color-third"}
-					contents={this.constructTreeNodes(this.props.subnetData)}
+					contents={(() => {
+						const nodes = this.constructTreeNodes(this.props.subnetData);
+						if (this.state.revision > 0 && shouldAutoExpand) {
+							shouldAutoExpand = false;
+						}
+						return nodes;
+					})()}
 					onNodeClick={this.handleNodeClick}
 					onNodeCollapse={this.handleNodeCollapse}
 					onNodeContextMenu={this.handleNodeClick}

@@ -23,6 +23,12 @@ func main() {
 		log.Fatalf("unable to get current working directory > %v\n", err)
 	}
 
+	// stop the pinger from actually pinging since public users can't be trusted :)
+	ipam.EnableDemoMode()
+
+	// don't require authentication from users
+	ipam.SetAuthCallback(func(user, pass string) bool { return true })
+
 	// import the subnets.csv file
 	subnetsFilePath := filepath.Join(cwd, "subnets.csv")
 	subnetsBytes, err := ioutil.ReadFile(subnetsFilePath)
@@ -43,7 +49,7 @@ func main() {
 	go ipam.PingSweepSubnets(pingsPerSecond, goroutineCount)
 
 	// on every user action receive a new string slice that has all subnets and history so far
-	for mutatedData := range ipam.ServeAndReceiveChan(":80", "client/build/", true) {
+	for mutatedData := range ipam.ServeAndReceiveChan("client/build/", "", "", false) {
 		// overwrite existing subnets.csv
 		subnetsBytes = []byte(strings.Join(mutatedData.Subnets, ""))
 		err = ioutil.WriteFile(subnetsFilePath, subnetsBytes, 0644)

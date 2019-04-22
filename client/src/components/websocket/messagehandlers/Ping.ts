@@ -5,6 +5,9 @@ export function receivePing(baseMsg: message.base, websocketManager: WebsocketMa
 	const msg = baseMsg as message.inboundPing;
 	const origReq = websocketManager.findPendingMessage(msg.sessionGUID);
 	if (origReq !== undefined) {
+		if (msg.demoMode) {
+			websocketManager.mainTriggers.enableDemoMode()
+		}
 		websocketManager.updateLatencyRTT(origReq.creationTime);
 	}
 }

@@ -15,17 +15,22 @@ import {
 	PopoverInteractionKind,
 	Switch,
 	ButtonGroup,
-	AnchorButton
+	AnchorButton,
+	Intent
 } from "@blueprintjs/core";
+
+import netparser from "netparser";
 
 import { MainState as TopProps, rootElement } from "./Main";
 import { BasicTextOverlayMode } from "./BasicTextOverlay";
+import { getScanTargetPercentage } from "./websocket/messagehandlers/ManualPingScan";
 
 class TopState {
 	clientWidth = rootElement.clientWidth;
 	fullscreenDisabled = false;
 	fullscreenAlertIsOpen = false;
 	latency = 1000;
+	isValidCIDR = true;
 }
 
 export class Top extends React.Component<TopProps, TopState> {
@@ -54,6 +59,33 @@ export class Top extends React.Component<TopProps, TopState> {
 			});
 		}
 	};
+
+	getScannerButtons() {
+		const buttons = [] as React.ReactNode[];
+		for (var scanTarget of this.props.scanTargets) {
+			const percentNormal = getScanTargetPercentage(scanTarget);
+			buttons.push(
+				<Button
+					key={scanTarget.target}
+					style={{ display: "block", padding: "15px", paddingTop: "7px", margin: "13px" }}
+					onClick={() => {
+						this.props.triggers.setBasicTextOverlayMode(BasicTextOverlayMode.PINGSWEEP);
+					}}
+				>
+					<span style={{ paddingBottom: "5px", display: "inline-block", width: "100%", textAlign: "center" }}>
+						{scanTarget.target}
+					</span>
+					<div
+						className={percentNormal < 1.0 ? "bp3-progress-bar" : "bp3-progress-bar bp3-no-stripes bp3-no-animation"}
+						style={{ width: "300px" }}
+					>
+						<div className="bp3-progress-meter" style={{ width: `${Math.floor(percentNormal * 100)}%` }} />
+					</div>
+				</Button>
+			);
+		}
+		return buttons;
+	}
 
 	render() {
 		return (
@@ -106,74 +138,56 @@ export class Top extends React.Component<TopProps, TopState> {
 							<Popover
 								interactionKind={PopoverInteractionKind.CLICK}
 								position={"bottom"}
+								isOpen={this.props.scannerPopupOpen}
+								onInteraction={nextOpenState => {
+									if (nextOpenState) this.props.triggers.openScannerPopup();
+								}}
+								onClose={() => this.props.triggers.closeScannerPopup()}
 								content={
 									<Menu>
-										<Button
-											style={{ display: "block", padding: "15px", paddingTop: "7px", margin: "13px" }}
-											onClick={() => {
-												this.props.triggers.setBasicTextOverlayMode(BasicTextOverlayMode.PINGSWEEP);
-											}}
-										>
-											<span
-												style={{ paddingBottom: "5px", display: "inline-block", width: "100%", textAlign: "center" }}
+										<div style={{ display: "flex" }}>
+											<InputGroup
+												id={"scanner-input"}
+												placeholder={"192.168.5.0/24"}
+												style={{
+													width: "230px",
+													marginLeft: "15px",
+													marginTop: "5px",
+													marginRight: "10px",
+													marginBottom: "5px"
+												}}
+												onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+													if (event.target.value !== "") {
+														const sn = event.target.value;
+														if (!netparser.network(sn) || netparser.baseAddress(sn) !== netparser.ip(sn)) {
+															return this.setState({ isValidCIDR: false });
+														}
+													}
+													this.setState({ isValidCIDR: true });
+												}}
+												intent={this.state.isValidCIDR ? Intent.NONE : Intent.DANGER}
+											/>
+											<Button
+												id={"scannerInputButton"}
+												icon="satellite"
+												style={{ width: "90px", marginTop: "5px", marginRight: "15px", marginBottom: "5px" }}
+												onClick={() =>
+													this.props.triggers.startScanning(
+														(document.getElementById("scanner-input") as HTMLInputElement).value
+													)
+												}
 											>
-												{"255.255.255.255/24"}
-											</span>
-											<div className="bp3-progress-bar" style={{ width: "300px" }}>
-												<div className="bp3-progress-meter" style={{ width: "25%" }} />
-											</div>
-										</Button>
-										<Button
-											style={{ display: "block", padding: "15px", paddingTop: "7px", margin: "13px" }}
-											onClick={() => {
-												this.props.triggers.setBasicTextOverlayMode(BasicTextOverlayMode.PINGSWEEP);
-											}}
-										>
-											<span
-												style={{ paddingBottom: "5px", display: "inline-block", width: "100%", textAlign: "center" }}
-											>
-												{"255.255.255.255/24"}
-											</span>
-											<div className="bp3-progress-bar" style={{ width: "300px" }}>
-												<div className="bp3-progress-meter" style={{ width: "50%" }} />
-											</div>
-										</Button>
-										<Button
-											style={{ display: "block", padding: "15px", paddingTop: "7px", margin: "13px" }}
-											onClick={() => {
-												this.props.triggers.setBasicTextOverlayMode(BasicTextOverlayMode.PINGSWEEP);
-											}}
-										>
-											<span
-												style={{ paddingBottom: "5px", display: "inline-block", width: "100%", textAlign: "center" }}
-											>
-												{"255.255.255.255/24"}
-											</span>
-											<div className="bp3-progress-bar" style={{ width: "300px" }}>
-												<div className="bp3-progress-meter" style={{ width: "50%" }} />
-											</div>
-										</Button>
-										<Button
-											style={{ display: "block", padding: "15px", paddingTop: "7px", margin: "13px" }}
-											onClick={() => {
-												this.props.triggers.setBasicTextOverlayMode(BasicTextOverlayMode.PINGSWEEP);
-											}}
-										>
-											<span
-												style={{ paddingBottom: "5px", display: "inline-block", width: "100%", textAlign: "center" }}
-											>
-												{"255.255.255.255/24"}
-											</span>
-											<div className="bp3-progress-bar" style={{ width: "300px" }}>
-												<div className="bp3-progress-meter" style={{ width: "75%" }} />
-											</div>
-										</Button>
+												{"Scan"}
+											</Button>
+										</div>
+										{this.getScannerButtons()}
 									</Menu>
 								}
 								target={<Button icon="geosearch">{this.state.clientWidth >= 866 ? "Scanner" : ""}</Button>}
 							/>
-
-							<Button icon="diagram-tree">{this.state.clientWidth >= 801 ? "Visualization" : ""}</Button>
+							<Button icon="code" onClick={() => window.open("https://github.com/demskie/ipam")}>
+								{this.state.clientWidth >= 801 ? "Source" : ""}
+							</Button>
 							<Popover
 								interactionKind={PopoverInteractionKind.CLICK}
 								position={"bottom"}
@@ -188,12 +202,14 @@ export class Top extends React.Component<TopProps, TopState> {
 										<Switch
 											label="Notifications"
 											checked={this.props.allowNotifications}
+											disabled={true}
 											alignIndicator={Alignment.RIGHT}
 											onChange={this.props.triggers.toggleNotifications}
 										/>
 										<Switch
 											label="Save Login"
 											checked={this.props.cacheLogin}
+											disabled={true}
 											alignIndicator={Alignment.RIGHT}
 											onChange={this.props.triggers.toggleLoginCache}
 										/>

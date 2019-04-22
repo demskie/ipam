@@ -1,8 +1,8 @@
-import React from "react";
 import { MainTriggers, CHANCE } from "../Main";
 import * as message from "./MessageTypes";
 import { messageReceivers, messageSenders } from "./MessageHandlers";
 import { isObject } from "util";
+import { getScanTargetPercentage } from "./messagehandlers/ManualPingScan";
 
 interface pendingRequest {
 	creationTime: number;
@@ -13,7 +13,8 @@ interface pendingRequest {
 export class WebsocketManager {
 	readonly mainTriggers: MainTriggers;
 	private ws?: WebSocket;
-	private refreshers: NodeJS.Timeout;
+	private backgroundTasks: NodeJS.Timeout;
+	private scannerTask: NodeJS.Timeout;
 	private user = "";
 	private pass = "";
 	private latencyRTT = Number.MAX_SAFE_INTEGER;
@@ -22,11 +23,13 @@ export class WebsocketManager {
 	constructor(triggers: MainTriggers) {
 		this.mainTriggers = triggers;
 		this.ws = this.createSession();
-		this.refreshers = this.createRefreshers()
+		this.backgroundTasks = this.createBackgroundTasks()
+		this.scannerTask = this.createScannerTask()
 		setInterval(() => {
 			if (!this.isConnected()) {
 				this.ws = this.createSession()
-				this.refreshers = this.createRefreshers()
+				this.backgroundTasks = this.createBackgroundTasks()
+				this.scannerTask = this.createScannerTask()
 			}
 		}, CHANCE.floating({ min: 750, max: 1250}))
 	}
@@ -45,7 +48,7 @@ export class WebsocketManager {
 		return ws;
 	}
 
-	private createRefreshers = () => {
+	private createBackgroundTasks = () => {
 		const interval = setInterval(() => {
 			if (this.isConnected()) {
 				messageSenders.sendPing(this);
@@ -53,11 +56,25 @@ export class WebsocketManager {
 			} else {
 				this.latencyRTT = Number.MAX_SAFE_INTEGER;
 			}
-		}, CHANCE.floating({ min: 400, max: 600 }))
-		if (this.refreshers) {
-			clearInterval(this.refreshers);
-		}
-		this.refreshers = interval;
+		}, CHANCE.floating({ min: 3000, max: 3250 }))
+		if (this.backgroundTasks) clearInterval(this.backgroundTasks);
+		this.backgroundTasks = interval;
+		return interval
+	}
+
+	private createScannerTask = () => {
+		const interval = setInterval(() => {
+			if (this.isConnected()) {
+				const scanTargets = this.mainTriggers.getScanTargets()
+				for (var scanTarget of scanTargets) {
+					if (getScanTargetPercentage(scanTarget) < 1) {
+						messageSenders.sendManualPingScan(scanTarget.target, this)
+					}
+				}
+			}
+		}, CHANCE.floating({ min: 750, max: 1000 }))
+		if (this.scannerTask) clearInterval(this.scannerTask);
+		this.scannerTask = interval;
 		return interval
 	}
 

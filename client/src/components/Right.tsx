@@ -1,5 +1,6 @@
 import React from "react";
 import { Cell, Column, Table, RenderMode } from "@blueprintjs/table";
+import { getFakeHostname } from "./Main";
 
 const addressWidth = 150;
 const aRecordWidth = 260;
@@ -17,6 +18,7 @@ export interface HostData {
 
 interface RightProps {
 	darkMode: boolean;
+	demoMode: boolean;
 	hostData: HostData;
 	hostDetailsWidth: number;
 	hostDetailsHeight: number;
@@ -34,14 +36,14 @@ export class Right extends React.PureComponent<RightProps, RightState> {
 	};
 
 	columnWidthArray = () => {
-		if (this.props.hostData.customData.length > 0) {
+		if (this.props.hostData.customData && this.props.hostData.customData.length > 0) {
 			const widthArray = [addressWidth, aRecordWidth, pingResultWidth, lastAttemptWidth];
 			this.props.hostData.customData.forEach(() => {
 				widthArray.push(extraDataWidth);
 			});
 			return widthArray;
 		}
-		const width = this.props.hostDetailsWidth / 4;
+		const width = (this.props.hostDetailsWidth - 25) / 4;
 		return [width, width, width, width];
 	};
 
@@ -61,7 +63,10 @@ export class Right extends React.PureComponent<RightProps, RightState> {
 
 	aRecordRenderer = (rowIndex: number) => {
 		if (this.props.hostData.aRecords.length > rowIndex) {
-			const value = this.props.hostData.aRecords[rowIndex];
+			let value = this.props.hostData.aRecords[rowIndex];
+			if (this.props.demoMode) {
+				value = getFakeHostname(this.props.hostData.addresses[rowIndex]);
+			}
 			return (
 				<Cell key={`aRecord#:${rowIndex}`} tooltip={value}>
 					<React.Fragment>

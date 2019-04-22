@@ -6,7 +6,9 @@ export function receiveAllSubnets(baseMsg: message.base, websocketManager: Webso
 	console.debug("received allSubnets:", msg)
 	const origReq = websocketManager.findPendingMessage(msg.sessionGUID);
 	if (origReq !== undefined) {
-		websocketManager.mainTriggers.setMainState({ subnetData: msg.subnets });
+		if (websocketManager.mainTriggers.searchFieldIsEmpty()) {
+			websocketManager.mainTriggers.setMainState({ subnetData: msg.subnets });
+		}
 		websocketManager.removePendingMessage(origReq.sentMessage.sessionGUID);
 	}
 }

@@ -49,6 +49,7 @@ export interface outboundPing extends base {
 export interface inboundPing extends base {
 	messageType: kind.Ping;
 	sessionGUID: string;
+	demoMode: boolean;
 }
 
 export interface inboundGenericError extends base {
