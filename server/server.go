@@ -20,7 +20,7 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/hashicorp/go-syslog"
+	gsyslog "github.com/hashicorp/go-syslog"
 )
 
 const (
