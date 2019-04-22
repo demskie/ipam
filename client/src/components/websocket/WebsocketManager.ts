@@ -23,22 +23,22 @@ export class WebsocketManager {
 	constructor(triggers: MainTriggers) {
 		this.mainTriggers = triggers;
 		this.ws = this.createSession();
-		this.backgroundTasks = this.createBackgroundTasks()
-		this.scannerTask = this.createScannerTask()
+		this.backgroundTasks = this.createBackgroundTasks();
+		this.scannerTask = this.createScannerTask();
 		setInterval(() => {
 			if (!this.isConnected()) {
-				this.ws = this.createSession()
-				this.backgroundTasks = this.createBackgroundTasks()
-				this.scannerTask = this.createScannerTask()
+				this.ws = this.createSession();
+				this.backgroundTasks = this.createBackgroundTasks();
+				this.scannerTask = this.createScannerTask();
 			}
-		}, CHANCE.floating({ min: 750, max: 1250}))
+		}, CHANCE.floating({ min: 750, max: 1250 }));
 	}
 
 	private createSession() {
 		const wsPrefix = window.location.protocol === "https:" ? "wss://" : "ws://";
-		const wsHost = window.location.host.split(":")[0]
+		const wsHost = window.location.host.split(":")[0];
 		const wsURL = `${wsPrefix}${wsHost}/sync`;
-		console.log(`opening new websocket session: '${wsURL}'`)
+		console.log(`opening new websocket session: '${wsURL}'`);
 		const ws = new WebSocket(wsURL);
 		ws.addEventListener("open", () => {
 			ws.addEventListener("message", this.handleMessage);
@@ -56,60 +56,73 @@ export class WebsocketManager {
 			} else {
 				this.latencyRTT = Number.MAX_SAFE_INTEGER;
 			}
-		}, CHANCE.floating({ min: 3000, max: 3250 }))
+		}, CHANCE.floating({ min: 3000, max: 3250 }));
 		if (this.backgroundTasks) clearInterval(this.backgroundTasks);
 		this.backgroundTasks = interval;
-		return interval
-	}
+		return interval;
+	};
 
 	private createScannerTask = () => {
 		const interval = setInterval(() => {
 			if (this.isConnected()) {
-				const scanTargets = this.mainTriggers.getScanTargets()
+				const scanTargets = this.mainTriggers.getScanTargets();
 				for (var scanTarget of scanTargets) {
 					if (getScanTargetPercentage(scanTarget) < 1) {
-						messageSenders.sendManualPingScan(scanTarget.target, this)
+						messageSenders.sendManualPingScan(scanTarget.target, this);
 					}
 				}
 			}
-		}, CHANCE.floating({ min: 750, max: 1000 }))
+		}, CHANCE.floating({ min: 750, max: 1000 }));
 		if (this.scannerTask) clearInterval(this.scannerTask);
 		this.scannerTask = interval;
-		return interval
-	}
+		return interval;
+	};
 
 	private handleMessage = (ev: MessageEvent) => {
 		const baseMsg = JSON.parse(ev.data) as message.base;
 		if (!isObject(baseMsg) || typeof baseMsg.messageType !== "number") {
 			console.error("received an invalid message:", baseMsg);
-		} else if (baseMsg.messageType === message.kind.Ping) {
-			messageReceivers.receivePing(baseMsg, this);
-		} else if (baseMsg.messageType === message.kind.GenericError) {
-			messageReceivers.receiveGenericError(baseMsg, this);
-		} else if (baseMsg.messageType === message.kind.GenericInfo) {
-			messageReceivers.receiveGenericInfo(baseMsg);
-		} else if (baseMsg.messageType === message.kind.AllSubnets) {
-			messageReceivers.receiveAllSubnets(baseMsg, this);
-		} else if (baseMsg.messageType === message.kind.SomeSubnets) {
-			messageReceivers.receiveSomeSubnets(baseMsg, this);
-		} else if (baseMsg.messageType === message.kind.SomeHosts) {
-			messageReceivers.receiveSomeHosts(baseMsg, this);
-		} else if (baseMsg.messageType === message.kind.SpecificHosts) {
-			messageReceivers.receiveSpecificHosts(baseMsg, this);
-		} else if (baseMsg.messageType === message.kind.History) {
-			messageReceivers.receiveHistory(baseMsg, this);
-		} else if (baseMsg.messageType === message.kind.DebugLog) {
-			messageReceivers.receiveDebugLog(baseMsg, this);
-		} else if (baseMsg.messageType === message.kind.ManualPingScan) {
-			messageReceivers.receiveManualPingScan(baseMsg, this);
 		} else {
-			console.error(`received an invalid messageType: '${baseMsg.messageType}'`);
+			switch (baseMsg.messageType) {
+				case message.kind.Ping:
+					messageReceivers.receivePing(baseMsg, this);
+					break;
+				case message.kind.GenericError:
+					messageReceivers.receiveGenericError(baseMsg, this);
+					break;
+				case message.kind.GenericInfo:
+					messageReceivers.receiveGenericInfo(baseMsg);
+					break;
+				case message.kind.AllSubnets:
+					messageReceivers.receiveAllSubnets(baseMsg, this);
+					break;
+				case message.kind.SomeSubnets:
+					messageReceivers.receiveSomeSubnets(baseMsg, this);
+					break;
+				case message.kind.SomeHosts:
+					messageReceivers.receiveSomeHosts(baseMsg, this);
+					break;
+				case message.kind.SpecificHosts:
+					messageReceivers.receiveSpecificHosts(baseMsg, this);
+					break;
+				case message.kind.History:
+					messageReceivers.receiveHistory(baseMsg, this);
+					break;
+				case message.kind.DebugLog:
+					messageReceivers.receiveDebugLog(baseMsg, this);
+					break;
+				case message.kind.ManualPingScan:
+					messageReceivers.receiveManualPingScan(baseMsg, this);
+					break;
+				default:
+					console.error(`received an invalid messageType: '${baseMsg.messageType}'`);
+			}
 		}
-	}
+	};
 
-	private handleError = (ev: Event) => {}
+	private handleError = (ev: Event) => {};
 
-	private handleClose = (ev: CloseEvent) => {}
+	private handleClose = (ev: CloseEvent) => {};
 
 	sendMessage(request: message.AllKnownOutboundTypes) {
 		for (var otherReq of this.findSpecificPendingMessageType(request.messageType)) {
@@ -174,7 +187,7 @@ export class WebsocketManager {
 	}
 
 	isConnected() {
-		return this.ws && (this.ws.readyState === this.ws.OPEN);
+		return this.ws && this.ws.readyState === this.ws.OPEN;
 	}
 
 	getLatencyRTT() {
