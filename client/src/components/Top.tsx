@@ -69,6 +69,8 @@ export class Top extends React.Component<TopProps, TopState> {
 					key={scanTarget.target}
 					style={{ display: "block", padding: "15px", paddingTop: "7px", margin: "13px" }}
 					onClick={() => {
+						this.props.triggers.closeScannerPopup();
+						this.props.triggers.selectScanTarget(scanTarget.target);
 						this.props.triggers.setBasicTextOverlayMode(BasicTextOverlayMode.PINGSWEEP);
 					}}
 				>
