@@ -284,9 +284,14 @@ func (ipam *IPAMServer) handleSpecificHosts(conn *websocket.Conn, decJSON *json.
 	log.Printf("(%v) has requested specificHosts for '%v'\n", remoteIP, network.String())
 	sliceOfAddresses := []string{}
 	currentIP := subnetmath.DuplicateAddr(network.IP)
+	i := 0
 	for network.Contains(currentIP) {
+		if i > 1e5 {
+			break
+		}
 		sliceOfAddresses = append(sliceOfAddresses, currentIP.String())
 		currentIP = subnetmath.NextAddr(currentIP)
+		i++
 	}
 	outMsg := outboundSpecificHosts{}
 	outMsg.MessageType = SpecificHosts
