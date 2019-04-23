@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"net/http/pprof"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -146,25 +147,24 @@ func startDebugServer(debug bool) {
 }
 
 func (ipam *IPAMServer) startWebServer(publicDir, crtPath, keyPath string) {
-	if publicDir == "" {
-		publicDir = "."
-	}
-	if crtPath != "" || keyPath != "" {
-		// use httpMux to avoid leaking default handlers
-		muxSecure := http.NewServeMux()
+	publicDir = filepath.Clean(publicDir)
 
-		// recurse through all static web content and create compressed copies
-		fileList, err := archive.CompressWebserverFiles(publicDir)
-		if err != nil {
-			log.Printf("unable to compress static webserver files because: %v\n", err)
-		}
-		log.Println("compressed the following:", spew.Sdump(fileList))
+	// recurse through all static web content and create compressed copies
+	fileList, err := archive.CompressWebserverFiles(publicDir)
+	if err != nil {
+		log.Printf("unable to compress static webserver files because: %v\n", err)
+	}
+	log.Println("compressed the following:", spew.Sdump(fileList))
+
+	if crtPath != "" && keyPath != "" {
+		// use httpMux to avoid leaking default handlers
+		muxSecure := mux.NewRouter()
 
 		// attach custom HTTP handlers
 		muxSecure.HandleFunc("/sync", ipam.handleWebsocketClient)
 
 		// serve static files (preferring archived versions)
-		muxSecure.Handle("/", archive.FileServer(http.Dir(publicDir)))
+		muxSecure.PathPrefix("/").Handler(archive.FileServer(http.Dir(publicDir)))
 
 		// tying the following http server parameters to the handlers associated with muxSecure
 		srvSecure := &http.Server{
@@ -196,9 +196,14 @@ func (ipam *IPAMServer) startWebServer(publicDir, crtPath, keyPath string) {
 
 	// serving HTTP just in case
 	muxInsecure := mux.NewRouter()
+
+	// attach custom HTTP handlers
 	muxInsecure.HandleFunc("/sync", ipam.handleWebsocketClient)
 
-	muxInsecure.PathPrefix("/").Handler(http.FileServer(http.Dir(publicDir)))
+	// serve static files (preferring archived versions)
+	muxInsecure.PathPrefix("/").Handler(archive.FileServer(http.Dir(publicDir)))
+
+	// tying the following http server parameters to the handlers associated with muxInsecure
 	srvInsecure := &http.Server{
 		Addr:         ":80",
 		Handler:      muxInsecure,
