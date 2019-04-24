@@ -108,6 +108,16 @@ func (ipam *IPAMServer) PingSweepSubnets(pingsPerSecond, pingerGoroutineCount in
 	}
 }
 
+// AddSyslogServer is used for remote logging purposes
+func (ipam *IPAMServer) AddSyslogServer(address, port string) error {
+	wr, err := gsyslog.DialLogger("tcp", address+":"+port, gsyslog.LOG_INFO, "IPAM", "server")
+	if err != nil {
+		return err
+	}
+	ipam.debug.AddIOWriter(wr)
+	return nil
+}
+
 // ServeAndReceiveChan will start the HTTP Webserver and stream results back to the caller
 func (ipam *IPAMServer) ServeAndReceiveChan(directory, crtPath, keyPath string, debug bool) chan MutatedData {
 	if ipam.mutationChan != nil {
@@ -117,36 +127,19 @@ func (ipam *IPAMServer) ServeAndReceiveChan(directory, crtPath, keyPath string, 
 	defer ipam.mutationMtx.Unlock()
 	ipam.mutationChan = make(chan MutatedData, 1)
 	go func() {
-		go startDebugServer(debug)
-		ipam.startWebServer(directory, crtPath, keyPath)
+		ipam.startWebServer(debug, directory, crtPath, keyPath)
 		close(ipam.mutationChan)
 	}()
 	return ipam.mutationChan
 }
 
-func startDebugServer(debug bool) {
+func (ipam *IPAMServer) startWebServer(debug bool, publicDir, crtPath, keyPath string) {
+	// conditionally start debug server
 	if debug {
-		profmux := http.NewServeMux()
-		profmux.HandleFunc("/debug/pprof/", pprof.Index)
-		profmux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
-		profmux.HandleFunc("/debug/pprof/profile", pprof.Profile)
-		profmux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
-		profmux.HandleFunc("/debug/pprof/trace", pprof.Trace)
-		profmux.Handle("/debug/pprof/block", pprof.Handler("block"))
-		profmux.Handle("/debug/pprof/goroutine", pprof.Handler("goroutine"))
-		profmux.Handle("/debug/pprof/heap", pprof.Handler("heap"))
-		profmux.Handle("/debug/pprof/threadcreate", pprof.Handler("threadcreate"))
-		profmux.Handle("/debug/pprof/mutex", pprof.Handler("mutex"))
-		srvProf := &http.Server{
-			Addr:    ":8080",
-			Handler: profmux,
-		}
-		errServeInsecure := srvProf.ListenAndServe()
-		log.Println("DebugListenAndServe:", errServeInsecure)
+		go startDebugServer()
 	}
-}
 
-func (ipam *IPAMServer) startWebServer(publicDir, crtPath, keyPath string) {
+	// modify filepaths to match the environment's preferred filepath seperator
 	publicDir = filepath.Clean(publicDir)
 
 	// recurse through all static web content and create compressed copies
@@ -156,45 +149,86 @@ func (ipam *IPAMServer) startWebServer(publicDir, crtPath, keyPath string) {
 	}
 	log.Println("compressed the following:", spew.Sdump(fileList))
 
+	// conditionally start secure server
 	if crtPath != "" && keyPath != "" {
-		// use httpMux to avoid leaking default handlers
-		muxSecure := mux.NewRouter()
+		startSecureServer(publicDir, crtPath, keyPath, ipam)
+		go startInsecureRedirectServer()
+	} else {
+		startInsecureServer(publicDir, ipam)
+	}
+}
 
-		// attach custom HTTP handlers
-		muxSecure.HandleFunc("/sync", ipam.handleWebsocketClient)
+func startDebugServer() {
+	profmux := http.NewServeMux()
+	profmux.HandleFunc("/debug/pprof/", pprof.Index)
+	profmux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+	profmux.HandleFunc("/debug/pprof/profile", pprof.Profile)
+	profmux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+	profmux.HandleFunc("/debug/pprof/trace", pprof.Trace)
+	profmux.Handle("/debug/pprof/block", pprof.Handler("block"))
+	profmux.Handle("/debug/pprof/goroutine", pprof.Handler("goroutine"))
+	profmux.Handle("/debug/pprof/heap", pprof.Handler("heap"))
+	profmux.Handle("/debug/pprof/threadcreate", pprof.Handler("threadcreate"))
+	profmux.Handle("/debug/pprof/mutex", pprof.Handler("mutex"))
+	srvProf := &http.Server{
+		Addr:    ":8080",
+		Handler: profmux,
+	}
+	errServeInsecure := srvProf.ListenAndServe()
+	log.Fatal("startDebugServer: ", errServeInsecure)
+}
 
-		// serve static files (preferring archived versions)
-		muxSecure.PathPrefix("/").Handler(archive.FileServer(http.Dir(publicDir)))
+func startSecureServer(publicDir, crtPath, keyPath string, ipam *IPAMServer) {
+	publicDir = filepath.Clean(publicDir)
+	crtPath = filepath.Clean(crtPath)
+	keyPath = filepath.Clean(keyPath)
 
-		// tying the following http server parameters to the handlers associated with muxSecure
-		srvSecure := &http.Server{
-			ReadTimeout:  5 * time.Second,
-			WriteTimeout: 30 * time.Second,
-			IdleTimeout:  60 * time.Second,
-			Addr:         ":443",
-			Handler:      muxSecure,
-			TLSConfig: &tls.Config{
-				MinVersion:               tls.VersionTLS12,
-				CurvePreferences:         []tls.CurveID{tls.CurveP521, tls.CurveP384, tls.CurveP256},
-				PreferServerCipherSuites: true,
-				CipherSuites: []uint16{
-					tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
-					tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
-					tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
-					tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,
-					tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
-					tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
-				},
+	// use httpMux to avoid leaking default handlers
+	muxSecure := mux.NewRouter()
+
+	// attach custom HTTP handlers
+	muxSecure.HandleFunc("/sync", ipam.handleWebsocketClient)
+
+	// serve static files (preferring archived versions)
+	muxSecure.PathPrefix("/").Handler(archive.FileServer(http.Dir(publicDir)))
+
+	// tying the following http server parameters to the handlers associated with muxSecure
+	srvSecure := &http.Server{
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 30 * time.Second,
+		IdleTimeout:  60 * time.Second,
+		Addr:         ":443",
+		Handler:      muxSecure,
+		TLSConfig: &tls.Config{
+			MinVersion:               tls.VersionTLS12,
+			CurvePreferences:         []tls.CurveID{tls.CurveP521, tls.CurveP384, tls.CurveP256},
+			PreferServerCipherSuites: true,
+			CipherSuites: []uint16{
+				tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
+				tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,
+				tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+				tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
 			},
-			TLSNextProto: nil,
-		}
-
-		// serve HTTPS requests with config defined above
-		// NOTE: this should block indefinitely
-		log.Fatal(srvSecure.ListenAndServeTLS(crtPath, keyPath))
+		},
+		TLSNextProto: nil,
 	}
 
-	// serving HTTP just in case
+	// serve HTTPS requests with config defined above
+	log.Fatal("startSecureServer: ", srvSecure.ListenAndServeTLS(crtPath, keyPath))
+}
+
+func startInsecureRedirectServer() {
+	log.Fatal("startInsecureRedirectServer: ",
+		http.ListenAndServe(":80", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			http.Redirect(w, r, "https://"+r.Host+r.URL.String(), http.StatusMovedPermanently)
+		})),
+	)
+}
+
+func startInsecureServer(publicDir string, ipam *IPAMServer) {
+	// serving HTTP instead of HTTPS
 	muxInsecure := mux.NewRouter()
 
 	// attach custom HTTP handlers
@@ -213,14 +247,4 @@ func (ipam *IPAMServer) startWebServer(publicDir, crtPath, keyPath string) {
 	}
 	errServeInsecure := srvInsecure.ListenAndServe()
 	log.Fatal("ListenAndServe:", errServeInsecure)
-}
-
-// AddSyslogServer is used for remote logging purposes
-func (ipam *IPAMServer) AddSyslogServer(address, port string) error {
-	wr, err := gsyslog.DialLogger("tcp", address+":"+port, gsyslog.LOG_INFO, "IPAM", "server")
-	if err != nil {
-		return err
-	}
-	ipam.debug.AddIOWriter(wr)
-	return nil
 }
