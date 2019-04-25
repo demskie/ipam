@@ -75,7 +75,7 @@ func (r *UserActions) GetAllUserActions() []string {
 		if len(line) >= 19 {
 			t, err := time.Parse(defaultTimeLayout, line[:19])
 			if err == nil {
-				historySorter.allLines = append(historySorter.allLines, line)
+				historySorter.allLines = append(historySorter.allLines, line+"\n")
 				historySorter.allTimes = append(historySorter.allTimes, t)
 			}
 		} else if len(line) > 0 {
