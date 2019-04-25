@@ -28,7 +28,6 @@ const (
 	GenericError
 	GenericInfo
 	AllSubnets
-	SomeSubnets
 	SpecificHosts
 	SomeHosts
 	History
@@ -95,8 +94,6 @@ func (ipam *IPAMServer) handleWebsocketClient(w http.ResponseWriter, r *http.Req
 			log.Printf("received invalid requestType (GenericInfo) from (%v)\n", remoteIP)
 		case AllSubnets:
 			ipam.handleAllSubnets(conn, inMsg.SessionGUID)
-		case SomeSubnets:
-			ipam.handleSomeSubnets(conn, decJSON)
 		case SpecificHosts:
 			ipam.handleSpecificHosts(conn, decJSON)
 		case SomeHosts:
@@ -202,48 +199,6 @@ func (ipam *IPAMServer) handleAllSubnets(conn *websocket.Conn, guid string) {
 	if err != nil {
 		remoteIP, _, _ := net.SplitHostPort(conn.RemoteAddr().String())
 		log.Printf("error encoding outgoing AllSubnets to (%v)\n", remoteIP)
-	} else {
-		conn.WriteMessage(websocket.TextMessage, b)
-	}
-}
-
-type inboundSomeSubnets struct {
-	baseMessage
-	Filter string `json:"filter"`
-}
-
-type outboundSomeSubnets struct {
-	baseMessage
-	Subnets []subnets.SubnetJSON `json:"subnets"`
-}
-
-func (ipam *IPAMServer) handleSomeSubnets(conn *websocket.Conn, decJSON *json.Decoder) {
-	remoteIP, _, _ := net.SplitHostPort(conn.RemoteAddr().String())
-	inMsg := inboundSomeSubnets{}
-	err := decJSON.Decode(&inMsg)
-	if err != nil {
-		log.Printf("error decoding incoming message from (%v)\n", remoteIP)
-		return
-	}
-	inMsg.Filter = strings.TrimSpace(inMsg.Filter)
-	inMsg.Filter = strings.ToLower(inMsg.Filter)
-	if inMsg.Filter == "" {
-		log.Printf("(%v) has sent an empty search query\n", remoteIP)
-		return
-	}
-	log.Printf("(%v) has requested someSubnets matching '%v'\n", remoteIP, inMsg.Filter)
-	outMsg := outboundSomeSubnets{}
-	outMsg.MessageType = SomeSubnets
-	outMsg.SessionGUID = inMsg.SessionGUID
-	timeoutChan := make(chan struct{}, 0)
-	go func() {
-		time.Sleep(5 * time.Second)
-		close(timeoutChan)
-	}()
-	outMsg.Subnets = ipam.searchSubnetData(inMsg.Filter, timeoutChan)
-	b, err := json.Marshal(outMsg)
-	if err != nil {
-		log.Printf("error encoding outgoing message to (%v)\n", remoteIP)
 	} else {
 		conn.WriteMessage(websocket.TextMessage, b)
 	}

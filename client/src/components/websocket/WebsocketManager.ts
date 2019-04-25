@@ -96,9 +96,6 @@ export class WebsocketManager {
 				case message.kind.AllSubnets:
 					messageReceivers.receiveAllSubnets(baseMsg, this);
 					break;
-				case message.kind.SomeSubnets:
-					messageReceivers.receiveSomeSubnets(baseMsg, this);
-					break;
 				case message.kind.SomeHosts:
 					messageReceivers.receiveSomeHosts(baseMsg, this);
 					break;

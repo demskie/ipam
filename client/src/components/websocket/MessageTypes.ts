@@ -7,7 +7,6 @@ export enum kind {
 	GenericError,
 	GenericInfo,
 	AllSubnets,
-	SomeSubnets,
 	SpecificHosts,
 	SomeHosts,
 	History,
@@ -72,18 +71,6 @@ export interface outboundAllSubnets extends base {
 
 export interface inboundAllSubnets extends base {
 	messageType: kind.AllSubnets;
-	sessionGUID: string;
-	subnets: Subnet[];
-}
-
-export interface outboundSomeSubnets extends base {
-	messageType: kind.SomeSubnets;
-	sessionGUID: string;
-	filter: string;
-}
-
-export interface inboundSomeSubnets extends base {
-	messageType: kind.SomeSubnets;
 	sessionGUID: string;
 	subnets: Subnet[];
 }
@@ -167,7 +154,6 @@ export interface outboundDeleteSubnet extends base {
 export type AllKnownOutboundTypes =
 	| outboundPing
 	| outboundAllSubnets
-	| outboundSomeSubnets
 	| outboundSpecificHosts
 	| outboundSomeHosts
 	| outboundHistory
