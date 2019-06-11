@@ -39,7 +39,7 @@ func NewPinger() (ping *Pinger) {
 type result struct {
 	lastLatency     int
 	lastUpdateTime  time.Time
-	lastRequestTime time.Time
+	isInRequestChan bool
 }
 
 // ScanNetwork will inform the backgroundScanner to look at these IPs next
@@ -48,7 +48,15 @@ func (p *Pinger) ScanNetwork(network *net.IPNet) {
 	i := 0
 	currentIP := subnetmath.DuplicateAddr(network.IP)
 	for network.Contains(currentIP) {
-		p.requestChan <- currentIP.String()
+		p.mtx.Lock()
+		lastResult, exists := p.data[currentIP.String()]
+		if exists && !lastResult.isInRequestChan &&
+			time.Since(lastResult.lastUpdateTime) > 3*time.Minute+10*time.Second {
+			lastResult.isInRequestChan = true
+			p.data[currentIP.String()] = lastResult
+			p.requestChan <- currentIP.String()
+		}
+		p.mtx.Unlock()
 		currentIP = subnetmath.NextAddr(currentIP)
 		if i > 1e5 {
 			break
@@ -75,6 +83,7 @@ func (p *Pinger) ScanPretendNetwork(network *net.IPNet) {
 				pingData.lastLatency = math.MinInt32
 			}
 			pingData.lastUpdateTime = time.Now()
+			pingData.isInRequestChan = false
 			p.data[currentIP.String()] = pingData
 		}
 		p.mtx.Unlock()
@@ -113,22 +122,22 @@ func (p *Pinger) InitializeBackgroundPinger(maxPingsPerSecond, goroutineCount in
 	workers.Execute(func(threadNum int) {
 		for ipString := range p.requestChan {
 			p.mtx.RLock()
-			pingData := p.data[ipString]
-			if time.Since(pingData.lastUpdateTime) > 2*time.Minute {
-				p.mtx.RUnlock()
+			pingData, exists := p.data[ipString]
+			p.mtx.RUnlock()
+			if !exists || time.Since(pingData.lastUpdateTime) > 2*time.Minute {
 				start := time.Now()
 				reachable, _ := ping(ipString) // TODO: provide ternary results
-				p.mtx.Lock()
-				pingData = p.data[ipString]
 				if reachable {
 					pingData.lastLatency = 1 + int(time.Since(start)/time.Millisecond)
 				} else {
 					pingData.lastLatency = math.MinInt32
 				}
 				pingData.lastUpdateTime = time.Now()
-				p.data[ipString] = pingData
-				p.mtx.Unlock()
 			}
+			pingData.isInRequestChan = false
+			p.mtx.Lock()
+			p.data[ipString] = pingData
+			p.mtx.Unlock()
 			<-time.NewTimer(interval).C
 		}
 	})
@@ -166,38 +175,12 @@ func (p *Pinger) GetPingTimesForAddresses(addresses []string) []string {
 	return results
 }
 
-// MarkHostsAsPending will sweep through all hosts in a subnet and mark them as pending update
-func (p *Pinger) MarkHostsAsPending(network *net.IPNet) {
-	p.mtx.Lock()
-	defer p.mtx.Unlock()
-	var i int
-	currentIP := subnetmath.DuplicateAddr(network.IP)
-	for network.Contains(currentIP) {
-		ipString := currentIP.String()
-		val, exists := p.data[ipString]
-		if exists {
-			if time.Since(val.lastRequestTime) < 2*time.Minute {
-				val.lastRequestTime = time.Now()
-				p.data[ipString] = val
-			}
-		} else {
-			p.data[ipString] = result{
-				lastLatency:     -1,
-				lastRequestTime: time.Now(),
-			}
-		}
-		currentIP = subnetmath.NextAddr(currentIP)
-		i++
-	}
-}
-
 // ScanResult is used by the client side to display reachability info
 type ScanResult struct {
-	Address       string `json:"address"`
-	Latency       int    `json:"latency"`
-	Hostname      string `json:"hostname"`
-	LastRequested int    `json:"lastRequested"`
-	LastUpdated   int    `json:"lastUpdated"`
+	Address         string `json:"address"`
+	Latency         int    `json:"latency"`
+	Hostname        string `json:"hostname"`
+	TimeSinceUpdate int    `json:"timeSinceUpdate"`
 }
 
 // GetScanResults returns a string slice of host addresses and their reachability status
@@ -206,29 +189,27 @@ func (p *Pinger) GetScanResults(network *net.IPNet) (results []ScanResult) {
 	currentIP := subnetmath.DuplicateAddr(network.IP)
 	i := 0
 	for network.Contains(currentIP) {
-		if i > 1e5 {
-			break
-		}
 		ipString := currentIP.String()
 		val, exists := p.data[ipString]
 		if exists {
 			results = append(results, ScanResult{
-				Address:       ipString,
-				Latency:       val.lastLatency,
-				Hostname:      "", // TODO: implement!
-				LastRequested: int(time.Since(val.lastRequestTime) / time.Millisecond),
-				LastUpdated:   int(time.Since(val.lastUpdateTime) / time.Millisecond),
+				Address:         ipString,
+				Latency:         val.lastLatency,
+				Hostname:        "", // TODO: implement!
+				TimeSinceUpdate: int(time.Since(val.lastUpdateTime) / time.Millisecond),
 			})
 		} else {
 			results = append(results, ScanResult{
-				Address:       ipString,
-				Latency:       math.MinInt32,
-				Hostname:      "",
-				LastRequested: math.MaxInt32,
-				LastUpdated:   math.MaxInt32,
+				Address:         ipString,
+				Latency:         math.MinInt32,
+				Hostname:        "",
+				TimeSinceUpdate: math.MaxInt32,
 			})
 		}
 		currentIP = subnetmath.NextAddr(currentIP)
+		if i > 1e5 {
+			break
+		}
 		i++
 	}
 	p.mtx.RUnlock()

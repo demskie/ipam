@@ -124,7 +124,8 @@ export interface inboundDebugLog extends base {
 export interface outboundManualPingScan extends base {
 	messageType: kind.ManualPingScan;
 	sessionGUID: string;
-	network: string;
+	aggregate: string;
+	networks: string[];
 }
 
 export interface inboundManualPingScan extends base {

@@ -2,7 +2,7 @@ import { MainTriggers, CHANCE } from "../Main";
 import * as message from "./MessageTypes";
 import { messageReceivers, messageSenders } from "./MessageHandlers";
 import { isObject } from "util";
-import { getScanTargetPercentage } from "./messagehandlers/ManualPingScan";
+import { getScanTargetPercentage, getUnscannedNetworks } from "./messagehandlers/ManualPingScan";
 
 interface pendingRequest {
 	creationTime: number;
@@ -68,7 +68,8 @@ export class WebsocketManager {
 				const scanTargets = this.mainTriggers.getScanTargets();
 				for (var scanTarget of scanTargets) {
 					if (getScanTargetPercentage(scanTarget) < 1) {
-						messageSenders.sendManualPingScan(scanTarget.target, this);
+						const unscanned = getUnscannedNetworks(scanTarget);
+						messageSenders.sendManualPingScan(scanTarget.target, unscanned, this);
 					}
 				}
 			}

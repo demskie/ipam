@@ -23,7 +23,13 @@ import { WebsocketManager } from "./websocket/WebsocketManager";
 import { Subnet } from "./left/SubnetTree";
 import { SubnetRequest } from "./websocket/MessageTypes";
 import { messageSenders } from "./websocket/MessageHandlers";
-import { ScanTarget, createStaleEntries, ScanEntry } from "./websocket/messagehandlers/ManualPingScan";
+
+import {
+	ScanTarget,
+	ScanEntry,
+	createStaleEntries,
+	getMergedEntries
+} from "./websocket/messagehandlers/ManualPingScan";
 
 export const rootElement = document.getElementById("root") as HTMLElement;
 const sidebarWidth = 530;
@@ -263,7 +269,8 @@ export class Main extends React.Component<{}, MainState> {
 			this.setState({ basicTextOverlayMode: mode });
 		};
 		this.state.triggers.startScanning = net => {
-			if (!netparser.network(net) || netparser.baseAddress(net) !== netparser.ip(net)) return;
+			net = netparser.network(net) as string;
+			if (!net || netparser.baseAddress(net) !== netparser.ip(net)) return;
 			for (var t of this.state.scanTargets) {
 				if (t.target === net) return;
 			}
@@ -273,20 +280,19 @@ export class Main extends React.Component<{}, MainState> {
 			} as ScanTarget;
 			const arr = [st, ...this.state.scanTargets.slice(0, 7)];
 			this.setState({ scanTargets: arr }, () => {
-				messageSenders.sendManualPingScan(net, this.state.websocket);
+				messageSenders.sendManualPingScan(net, null, this.state.websocket);
 			});
 		};
 		this.state.triggers.getScanTargets = () => {
 			return [...this.state.scanTargets];
 		};
-		this.state.triggers.updateScanTarget = (net, results) => {
+		this.state.triggers.updateScanTarget = (aggregate, newEntries) => {
 			console.log(this.state.scanTargets);
-			const arr = [...this.state.scanTargets];
-			for (var i = 0; i < arr.length; i++) {
-				if (arr[i].target === net) {
-					arr[i].entries = results;
-					this.setState({ scanTargets: arr });
-					return;
+			const scanTargets = [...this.state.scanTargets];
+			for (var i = 0; i < scanTargets.length; i++) {
+				if (scanTargets[i].target === aggregate) {
+					scanTargets[i].entries = getMergedEntries(scanTargets[i].entries, newEntries);
+					this.setState({ scanTargets: scanTargets });
 				}
 			}
 		};

@@ -351,7 +351,7 @@ func (ipam *IPAMServer) handleDebugLog(conn *websocket.Conn, guid string) {
 
 type inboundManualPingScan struct {
 	baseMessage
-	Network string `json:"network"`
+	Networks []string `json:"networks"`
 }
 
 type outboundManualPingScan struct {
@@ -367,25 +367,34 @@ func (ipam *IPAMServer) handleManualPingScan(conn *websocket.Conn, decJSON *json
 		log.Printf("error decoding manualPingScan request from (%v)\n", remoteIP)
 		return
 	}
-	network := subnetmath.ParseNetworkCIDR(inMsg.Network)
-	if network == nil {
-		log.Printf("received an invalid manualPingScan query '%v' from (%v)\n", inMsg.Network, remoteIP)
+	var networks []*net.IPNet
+	for _, netString := range inMsg.Networks {
+		network := subnetmath.ParseNetworkCIDR(netString)
+		if network != nil {
+			networks = append(networks, network)
+		}
+	}
+	if networks == nil {
+		log.Printf("received an invalid manualPingScan 'Networks' query from (%v)\n", remoteIP)
 		return
 	}
-	ipam.pinger.MarkHostsAsPending(network)
-	ipam.semaphore <- struct{}{}
 	go func() {
-		if !ipam.demoModeBool {
-			ipam.pinger.ScanNetwork(network)
-		} else {
-			ipam.pinger.ScanPretendNetwork(network)
+		for _, network := range networks {
+			ipam.semaphore <- struct{}{}
+			if !ipam.demoModeBool {
+				ipam.pinger.ScanNetwork(network)
+			} else {
+				ipam.pinger.ScanPretendNetwork(network)
+			}
+			<-ipam.semaphore
 		}
-		<-ipam.semaphore
 	}()
 	outMsg := outboundManualPingScan{}
 	outMsg.MessageType = ManualPingScan
 	outMsg.SessionGUID = inMsg.SessionGUID
-	outMsg.Results = ipam.pinger.GetScanResults(network)
+	for _, network := range networks {
+		outMsg.Results = append(outMsg.Results, ipam.pinger.GetScanResults(network)...)
+	}
 	b, err := json.Marshal(outMsg)
 	if err != nil {
 		remoteIP, _, _ := net.SplitHostPort(conn.RemoteAddr().String())
