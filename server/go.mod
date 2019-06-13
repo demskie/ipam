@@ -1,5 +1,7 @@
 module github.com/demskie/ipam/server
 
+go 1.12
+
 require (
 	github.com/davecgh/go-spew v1.1.1
 	github.com/demskie/archive v1.0.0
