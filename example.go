@@ -6,6 +6,10 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"net/http"
+	"fmt"
+	"io"
+	"time"
 
 	"github.com/demskie/ipam/server"
 )
@@ -23,7 +27,14 @@ func main() {
 		log.Fatalf("unable to get current working directory > %v\n", err)
 	}
 
-	// stop the pinger from actually pinging since public users can't be trusted :)
+	// creating a custom http handler as an example
+	ipam.AttachCustomHandler("/healthcheck", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		io.WriteString(w, fmt.Sprintf("UnixNanoClock: %v", time.Now().UnixNano()))
+	})
+
+	// stop the pinger from actually pinging
 	ipam.EnableDemoMode()
 
 	// don't require authentication from users
@@ -52,9 +63,10 @@ func main() {
 	for mutatedData := range ipam.ServeAndReceiveChan("client/build/", "", "", false) {
 		// overwrite existing subnets.csv
 		subnetsBytes = []byte(strings.Join(mutatedData.Subnets, ""))
-		err = ioutil.WriteFile(subnetsFilePath, subnetsBytes, 0644)
+		ioutil.WriteFile(subnetsFilePath, subnetsBytes, 0644)
+		
 		// overwrite existing history.txt
 		historyBytes = []byte(strings.Join(mutatedData.History, ""))
-		err = ioutil.WriteFile(historyFilePath, historyBytes, 0644)
+		ioutil.WriteFile(historyFilePath, historyBytes, 0644)
 	}
 }

@@ -41,6 +41,7 @@ type IPAMServer struct {
 	dns             *dns.Bucket
 	pinger          *ping.Pinger
 	custom          *custom.Datastore
+	httpRouter      *mux.Router
 	semaphore       chan struct{}
 }
 
@@ -65,6 +66,7 @@ func NewIPAMServer() *IPAMServer {
 		dns:             dns.NewBucket(),
 		pinger:          ping.NewPinger(),
 		custom:          custom.NewDatastore(),
+		httpRouter:      mux.NewRouter(),
 		semaphore:       make(chan struct{}, 10000),
 	}
 }
@@ -80,15 +82,15 @@ func (ipam *IPAMServer) signalMutation(reason string) {
 // EnableDemoMode is used to fake ping results for demonstration purposes
 func (ipam *IPAMServer) EnableDemoMode() {
 	ipam.mutationMtx.Lock()
+	defer ipam.mutationMtx.Unlock()
 	ipam.demoModeBool = true
-	ipam.mutationMtx.Unlock()
 }
 
 // SetAuthCallback is used to specify whether users are authenticated to make modifications
 func (ipam *IPAMServer) SetAuthCallback(callback func(user, pass string) bool) {
 	ipam.authCallbackMtx.Lock()
+	defer ipam.authCallbackMtx.Unlock()
 	ipam.authCallback = callback
-	ipam.authCallbackMtx.Unlock()
 }
 
 // PingSweepSubnets will pick subnets at random and ping all nonBroadcast addresses
@@ -116,6 +118,13 @@ func (ipam *IPAMServer) AddSyslogServer(address, port string) error {
 	}
 	ipam.debug.AddIOWriter(wr)
 	return nil
+}
+
+// AttachCustomHandler is used to append custom handlers to the HTTP server
+func (ipam *IPAMServer) AttachCustomHandler(path string, handler func(w http.ResponseWriter, r *http.Request)) {
+	ipam.mutationMtx.Lock()
+	defer ipam.mutationMtx.Unlock()
+	ipam.httpRouter.HandleFunc(path, handler)
 }
 
 // ServeAndReceiveChan will start the HTTP Webserver and stream results back to the caller
@@ -151,8 +160,8 @@ func (ipam *IPAMServer) startWebServer(debug bool, publicDir, crtPath, keyPath s
 
 	// conditionally start secure server
 	if crtPath != "" && keyPath != "" {
-		startSecureServer(publicDir, crtPath, keyPath, ipam)
 		go startInsecureRedirectServer()
+		startSecureServer(publicDir, crtPath, keyPath, ipam)
 	} else {
 		startInsecureServer(publicDir, ipam)
 	}
@@ -175,47 +184,31 @@ func startDebugServer() {
 		Handler: profmux,
 	}
 	errServeInsecure := srvProf.ListenAndServe()
-	log.Fatal("startDebugServer: ", errServeInsecure)
+	log.Printf("startDebugServer: %v\n", errServeInsecure)
 }
 
 func startSecureServer(publicDir, crtPath, keyPath string, ipam *IPAMServer) {
 	publicDir = filepath.Clean(publicDir)
 	crtPath = filepath.Clean(crtPath)
 	keyPath = filepath.Clean(keyPath)
-
-	// use httpMux to avoid leaking default handlers
-	muxSecure := mux.NewRouter()
-
-	// attach custom HTTP handlers
-	muxSecure.HandleFunc("/sync", ipam.handleWebsocketClient)
-
-	// serve static files (preferring archived versions)
-	muxSecure.PathPrefix("/").Handler(archive.FileServer(http.Dir(publicDir)))
-
-	// tying the following http server parameters to the handlers associated with muxSecure
+	ipam.mutationMtx.Lock()
+	ipam.httpRouter.HandleFunc("/sync", ipam.handleWebsocketClient)
+	ipam.httpRouter.PathPrefix("/").Handler(archive.FileServer(http.Dir(publicDir)))
+	ipam.mutationMtx.Unlock()
 	srvSecure := &http.Server{
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 30 * time.Second,
 		IdleTimeout:  60 * time.Second,
 		Addr:         ":443",
-		Handler:      muxSecure,
+		Handler:      ipam.httpRouter,
 		TLSConfig: &tls.Config{
 			MinVersion:               tls.VersionTLS12,
 			CurvePreferences:         []tls.CurveID{tls.CurveP521, tls.CurveP384, tls.CurveP256},
 			PreferServerCipherSuites: true,
-			CipherSuites: []uint16{
-				tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
-				tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
-				tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
-				tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,
-				tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
-				tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
-			},
+			CipherSuites:             nil, // use default
 		},
 		TLSNextProto: nil,
 	}
-
-	// serve HTTPS requests with config defined above
 	log.Fatal("startSecureServer: ", srvSecure.ListenAndServeTLS(crtPath, keyPath))
 }
 
@@ -228,23 +221,17 @@ func startInsecureRedirectServer() {
 }
 
 func startInsecureServer(publicDir string, ipam *IPAMServer) {
-	// serving HTTP instead of HTTPS
-	muxInsecure := mux.NewRouter()
-
-	// attach custom HTTP handlers
-	muxInsecure.HandleFunc("/sync", ipam.handleWebsocketClient)
-
-	// serve static files (preferring archived versions)
-	muxInsecure.PathPrefix("/").Handler(archive.FileServer(http.Dir(publicDir)))
-
-	// tying the following http server parameters to the handlers associated with muxInsecure
+	publicDir = filepath.Clean(publicDir)
+	ipam.mutationMtx.Lock()
+	ipam.httpRouter.HandleFunc("/sync", ipam.handleWebsocketClient)
+	ipam.httpRouter.PathPrefix("/").Handler(archive.FileServer(http.Dir(publicDir)))
+	ipam.mutationMtx.Unlock()
 	srvInsecure := &http.Server{
 		Addr:         ":80",
-		Handler:      muxInsecure,
+		Handler:      ipam.httpRouter,
 		ReadTimeout:  60 * time.Second,
 		WriteTimeout: 60 * time.Second,
 		IdleTimeout:  60 * time.Second,
 	}
-	errServeInsecure := srvInsecure.ListenAndServe()
-	log.Fatal("ListenAndServe:", errServeInsecure)
+	log.Fatal("ListenAndServe: ", srvInsecure.ListenAndServe())
 }
