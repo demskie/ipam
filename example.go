@@ -1,14 +1,14 @@
 package main
 
 import (
+	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
-	"net/http"
-	"fmt"
-	"io"
 	"time"
 
 	"github.com/demskie/ipam/server"
@@ -28,7 +28,7 @@ func main() {
 	}
 
 	// creating a custom http handler as an example
-	ipam.AttachCustomHandler("/healthcheck", func(w http.ResponseWriter, r *http.Request) {
+	ipam.AttachCustomHandlerFunc("/healthcheck", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
 		io.WriteString(w, fmt.Sprintf("UnixNanoClock: %v", time.Now().UnixNano()))
@@ -64,7 +64,7 @@ func main() {
 		// overwrite existing subnets.csv
 		subnetsBytes = []byte(strings.Join(mutatedData.Subnets, ""))
 		ioutil.WriteFile(subnetsFilePath, subnetsBytes, 0644)
-		
+
 		// overwrite existing history.txt
 		historyBytes = []byte(strings.Join(mutatedData.History, ""))
 		ioutil.WriteFile(historyFilePath, historyBytes, 0644)
