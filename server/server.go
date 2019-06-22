@@ -121,10 +121,17 @@ func (ipam *IPAMServer) AddSyslogServer(address, port string) error {
 }
 
 // AttachCustomHandler is used to append custom handlers to the HTTP server
-func (ipam *IPAMServer) AttachCustomHandler(path string, handler func(w http.ResponseWriter, r *http.Request)) {
+func (ipam *IPAMServer) AttachCustomHandler(path string, handler http.Handler) {
 	ipam.mutationMtx.Lock()
 	defer ipam.mutationMtx.Unlock()
-	ipam.httpRouter.HandleFunc(path, handler)
+	ipam.httpRouter.Handle(path, handler)
+}
+
+// AttachCustomHandlerFunc is used to append custom handlers to the HTTP server
+func (ipam *IPAMServer) AttachCustomHandlerFunc(path string, handlerFunc func(w http.ResponseWriter, r *http.Request)) {
+	ipam.mutationMtx.Lock()
+	defer ipam.mutationMtx.Unlock()
+	ipam.httpRouter.HandleFunc(path, handlerFunc)
 }
 
 // ServeAndReceiveChan will start the HTTP Webserver and stream results back to the caller
