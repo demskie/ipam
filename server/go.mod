@@ -8,13 +8,13 @@ require (
 	github.com/demskie/randutil v1.0.0
 	github.com/demskie/simplesync v1.0.0
 	github.com/demskie/subnetmath v1.0.0
-	github.com/gorilla/mux v1.7.1
+	github.com/gorilla/mux v1.7.2
 	github.com/gorilla/websocket v1.4.0
 	github.com/hashicorp/go-syslog v1.0.0
-	github.com/miekg/dns v1.1.8
-	golang.org/x/crypto v0.0.0-20190424203555-c05e17bb3b2d // indirect
-	golang.org/x/net v0.0.0-20190424112056-4829fb13d2c6
-	golang.org/x/sys v0.0.0-20190424175732-18eb32c0e2f0 // indirect
-	golang.org/x/text v0.3.1 // indirect
-	golang.org/x/tools v0.0.0-20190425001055-9e44c1c40307 // indirect
+	github.com/miekg/dns v1.1.14
+	golang.org/x/crypto v0.0.0-20190621222207-cc06ce4a13d4 // indirect
+	golang.org/x/net v0.0.0-20190620200207-3b0461eec859
+	golang.org/x/sys v0.0.0-20190624142023-c5567b49c5d0 // indirect
+	golang.org/x/text v0.3.2 // indirect
+	golang.org/x/tools v0.0.0-20190624190245-7f2218787638 // indirect
 )
