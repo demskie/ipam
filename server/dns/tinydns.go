@@ -1,14 +1,18 @@
 package dns
 
 import (
+	"bufio"
+	"io"
 	"strings"
 )
 
 // ParseTinyDNS imports lines of strings formatted with TinyDNS syntax
-func (b *Bucket) ParseTinyDNS(lines []string) (processed, skipped int) {
+func (b *Bucket) ParseTinyDNS(r io.Reader) (processed, skipped int) {
 	b.mtx.Lock()
 	defer b.mtx.Unlock()
-	for _, line := range lines {
+	scanner := bufio.NewScanner(r)
+	for scanner.Scan() {
+		line := scanner.Text()
 		if len(line) == 0 {
 			skipped++
 			continue

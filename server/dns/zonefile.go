@@ -3,17 +3,18 @@ package dns
 import (
 	"bufio"
 	"bytes"
-	"os"
+	"io"
 	"strings"
 
 	miekgdns "github.com/miekg/dns"
 )
 
 // ParseZoneFile will import the forward records from a BIND zonefile
-func (b *Bucket) ParseZoneFile(f *os.File, origin, filename string) (processed, skipped int) {
-	scanner := bufio.NewScanner(f)
-	var lastHostname string
+func (b *Bucket) ParseZoneFile(r io.Reader, origin, filename string) (processed, skipped int) {
 	b.mtx.Lock()
+	defer b.mtx.Unlock()
+	scanner := bufio.NewScanner(r)
+	var lastHostname string
 	for scanner.Scan() {
 		tokenChan := miekgdns.ParseZone(bytes.NewReader(scanner.Bytes()), origin, filename)
 		for token := range tokenChan {
@@ -49,6 +50,5 @@ func (b *Bucket) ParseZoneFile(f *os.File, origin, filename string) (processed, 
 			}
 		}
 	}
-	b.mtx.Unlock()
 	return processed, skipped
 }
