@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"os"
 	"strings"
 
 	"github.com/demskie/ipam/server/custom"
@@ -56,16 +55,6 @@ func (ipam *IPAMServer) IngestSubnetCSVLines(csvlines []string) error {
 // IngestUserHistory is a wrapper around the OverwriteUserHistory method defined in ipam/server/history
 func (ipam *IPAMServer) IngestUserHistory(history []string) {
 	ipam.history.OverwriteUserHistory(history)
-}
-
-// IngestTinyDNSLines is a wrapper around the ParseTinyDNS method defined in ipam/server/dns
-func (ipam *IPAMServer) IngestTinyDNSLines(dnslines []string) (processed, skipped int) {
-	return ipam.dns.ParseTinyDNS(dnslines)
-}
-
-// IngestZoneFile is a wrapper around the ParseZoneFile method defined in ipam/server/dns
-func (ipam *IPAMServer) IngestZoneFile(zonefile *os.File, origin string) (processed, skipped int) {
-	return ipam.dns.ParseZoneFile(zonefile, origin, zonefile.Name())
 }
 
 // IngestNewBucket is a wrapper around the Swap method defined in ipam/server/history
