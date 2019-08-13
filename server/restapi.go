@@ -31,7 +31,7 @@ func (ipam *IPAMServer) handleRestfulSubnets(w http.ResponseWriter, r *http.Requ
 //		--data '{"subnet":"192.168.0.0/24"}' \
 //		http://localhost/api/hosts | python -m json.tool
 
-func (ipam *IPAMServer) handleRestfulHosts(w http.ResponseWriter, r *http.Request) {
+func (ipam *IPAMServer) handleRestfulSpecificHosts(w http.ResponseWriter, r *http.Request) {
 	remoteIP, _, _ := net.SplitHostPort(r.RemoteAddr)
 	type incomingJSON struct {
 		Subnet string `json:"subnet"`
@@ -116,6 +116,8 @@ func (ipam *IPAMServer) handleRestfulHistory(w http.ResponseWriter, r *http.Requ
 func (ipam *IPAMServer) handleRestfulCreateSubnet(w http.ResponseWriter, r *http.Request) {
 	remoteIP, _, _ := net.SplitHostPort(r.RemoteAddr)
 	type incomingJSON struct {
+		User        string `json:"user"`
+		Pass        string `json:"pass"`
 		Subnet      string `json:"subnet"`
 		Description string `json:"description"`
 		Details     string `json:"details"`
@@ -130,6 +132,13 @@ func (ipam *IPAMServer) handleRestfulCreateSubnet(w http.ResponseWriter, r *http
 		return
 	}
 	defer r.Body.Close()
+	ipam.authCallbackMtx.RLock()
+	if ipam.authCallback(inMsg.User, inMsg.Pass) == false {
+		s := fmt.Sprintf("could not create subnet '%v' due to auth failure", inMsg.Subnet)
+		http.Error(w, s, http.StatusUnauthorized)
+		return
+	}
+	ipam.authCallbackMtx.RUnlock()
 	newSkeleton := &subnets.SubnetSkeleton{
 		Net:     inMsg.Subnet,
 		Desc:    inMsg.Description,
@@ -156,6 +165,8 @@ func (ipam *IPAMServer) handleRestfulCreateSubnet(w http.ResponseWriter, r *http
 func (ipam *IPAMServer) handleRestfulReplaceSubnet(w http.ResponseWriter, r *http.Request) {
 	remoteIP, _, _ := net.SplitHostPort(r.RemoteAddr)
 	type incomingJSON struct {
+		User        string `json:"user"`
+		Pass        string `json:"pass"`
 		Subnet      string `json:"subnet"`
 		Description string `json:"description"`
 		Details     string `json:"details"`
@@ -170,6 +181,13 @@ func (ipam *IPAMServer) handleRestfulReplaceSubnet(w http.ResponseWriter, r *htt
 		return
 	}
 	defer r.Body.Close()
+	ipam.authCallbackMtx.RLock()
+	if ipam.authCallback(inMsg.User, inMsg.Pass) == false {
+		s := fmt.Sprintf("could not reserve subnet '%v' due to auth failure", inMsg.Subnet)
+		http.Error(w, s, http.StatusUnauthorized)
+		return
+	}
+	ipam.authCallbackMtx.RUnlock()
 	network := subnetmath.ParseNetworkCIDR(inMsg.Subnet)
 	oldSkeleton := ipam.subnets.GetSubnetSkeleton(network)
 	newSkeleton := &subnets.SubnetSkeleton{
@@ -205,6 +223,8 @@ func (ipam *IPAMServer) handleRestfulReplaceSubnet(w http.ResponseWriter, r *htt
 func (ipam *IPAMServer) handleRestfulDeleteSubnet(w http.ResponseWriter, r *http.Request) {
 	remoteIP, _, _ := net.SplitHostPort(r.RemoteAddr)
 	type incomingJSON struct {
+		User   string `json:"user"`
+		Pass   string `json:"pass"`
 		Subnet string `json:"subnet"`
 	}
 	var inMsg incomingJSON
@@ -216,6 +236,13 @@ func (ipam *IPAMServer) handleRestfulDeleteSubnet(w http.ResponseWriter, r *http
 		return
 	}
 	defer r.Body.Close()
+	ipam.authCallbackMtx.RLock()
+	if ipam.authCallback(inMsg.User, inMsg.Pass) == false {
+		s := fmt.Sprintf("could not delete '%v' due to auth failure", inMsg.Subnet)
+		http.Error(w, s, http.StatusUnauthorized)
+		return
+	}
+	ipam.authCallbackMtx.RUnlock()
 	network := subnetmath.ParseNetworkCIDR(inMsg.Subnet)
 	oldSkeleton := ipam.subnets.GetSubnetSkeleton(network)
 	if network == nil || ipam.subnets.DeleteSubnet(network) != nil {
@@ -235,6 +262,8 @@ func (ipam *IPAMServer) handleRestfulDeleteSubnet(w http.ResponseWriter, r *http
 func (ipam *IPAMServer) handleRestfulReserveHost(w http.ResponseWriter, r *http.Request) {
 	remoteIP, _, _ := net.SplitHostPort(r.RemoteAddr)
 	type incomingJSON struct {
+		User        string `json:"user"`
+		Pass        string `json:"pass"`
 		Subnet      string `json:"subnet"`
 		Description string `json:"description"`
 		Details     string `json:"details"`
@@ -248,6 +277,13 @@ func (ipam *IPAMServer) handleRestfulReserveHost(w http.ResponseWriter, r *http.
 		return
 	}
 	defer r.Body.Close()
+	ipam.authCallbackMtx.RLock()
+	if ipam.authCallback(inMsg.User, inMsg.Pass) == false {
+		s := fmt.Sprintf("could not reserve host in '%v' due to auth failure", inMsg.Subnet)
+		http.Error(w, s, http.StatusUnauthorized)
+		return
+	}
+	ipam.authCallbackMtx.RUnlock()
 	network := subnetmath.ParseNetworkCIDR(inMsg.Subnet)
 	if network == nil {
 		http.Error(w, fmt.Sprintf("'%v' is not a valid subnet", inMsg.Subnet), http.StatusBadRequest)
@@ -274,4 +310,58 @@ func (ipam *IPAMServer) handleRestfulReserveHost(w http.ResponseWriter, r *http.
 	msg := ipam.history.RecordUserAction(remoteIP, "reserving host", slc)
 	ipam.signalMutation(msg)
 	io.WriteString(w, host)
+}
+
+// curl --header "Content-Type: application/json" --request POST \
+// 		--data '{"supernet":"10.128.0.0/16", "subnetCIDR":24, "description":"MyThingy", "details":"jira123456789"}' \
+// 		http://localhost/api/reservesubnet
+
+func (ipam *IPAMServer) handleRestfulReserveSubnet(w http.ResponseWriter, r *http.Request) {
+	remoteIP, _, _ := net.SplitHostPort(r.RemoteAddr)
+	type incomingJSON struct {
+		User        string `json:"user"`
+		Pass        string `json:"pass"`
+		Supernet    string `json:"supernet"`
+		SubnetCIDR  int    `json:"subnetCIDR"`
+		Description string `json:"description"`
+		Details     string `json:"details"`
+		Vlan        string `json:"vlan"`
+	}
+	var inMsg incomingJSON
+	err := json.NewDecoder(r.Body).Decode(&inMsg)
+	if err != nil {
+		log.Println(remoteIP, "sent an invalid request -", err.Error())
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	defer r.Body.Close()
+	ipam.authCallbackMtx.RLock()
+	if ipam.authCallback(inMsg.User, inMsg.Pass) == false {
+		s := fmt.Sprintf("could not reserve subnet of '%v' due to auth failure", inMsg.Supernet)
+		http.Error(w, s, http.StatusUnauthorized)
+		return
+	}
+	ipam.authCallbackMtx.RUnlock()
+	supernet := subnetmath.ParseNetworkCIDR(inMsg.Supernet)
+	if supernet == nil {
+		http.Error(w, fmt.Sprintf("'%v' is not a valid supernet", inMsg.Supernet), http.StatusBadRequest)
+		return
+	} else if ipam.subnets.GetSubnetSkeleton(supernet) == nil {
+		http.Error(w, fmt.Sprintf("'%v' does not exist", supernet), http.StatusBadRequest)
+		return
+	}
+	subnet, err := ipam.subnets.CreateAvailableSubnet(supernet, inMsg.Description, inMsg.Details, inMsg.Vlan, inMsg.SubnetCIDR)
+	if err != nil {
+		log.Println(remoteIP, "request failed because", err.Error())
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	slc := []string{
+		fmt.Sprintf("net='%s'", subnet),
+		fmt.Sprintf("desc='%v'", inMsg.Description),
+		fmt.Sprintf("details='%v'", inMsg.Details),
+	}
+	msg := ipam.history.RecordUserAction(remoteIP, "reserving subnet", slc)
+	ipam.signalMutation(msg)
+	io.WriteString(w, subnet)
 }

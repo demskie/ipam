@@ -9,7 +9,7 @@ require (
 	github.com/demskie/simplesync v1.0.0
 	github.com/demskie/subnetmath v1.0.0
 	github.com/google/go-cmp v0.3.0 // indirect
-	github.com/gorilla/mux v1.7.2
+	github.com/gorilla/mux v1.7.3
 	github.com/gorilla/websocket v1.4.0
 	github.com/hashicorp/go-syslog v1.0.0
 	github.com/miekg/dns v1.1.14

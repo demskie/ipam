@@ -139,6 +139,7 @@ export class Top extends React.Component<TopProps, TopState> {
 						<ButtonGroup minimal={false} onMouseEnter={() => {}}>
 							<Popover
 								interactionKind={PopoverInteractionKind.CLICK}
+								disabled={false}
 								position={"bottom"}
 								isOpen={this.props.scannerPopupOpen}
 								onInteraction={nextOpenState => {
@@ -187,7 +188,10 @@ export class Top extends React.Component<TopProps, TopState> {
 								}
 								target={<Button icon="geosearch">{this.state.clientWidth >= 866 ? "Scanner" : ""}</Button>}
 							/>
-							<Button icon="code" onClick={() => window.open("https://github.com/demskie/ipam")}>
+							<Button
+								icon="code"
+								onClick={() => window.open(`${window.location.protocol}//${window.location.host}/source`)}
+							>
 								{this.state.clientWidth >= 801 ? "Source" : ""}
 							</Button>
 							<Popover

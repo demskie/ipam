@@ -34,6 +34,11 @@ func main() {
 		io.WriteString(w, fmt.Sprintf("UnixNanoClock: %v", time.Now().UnixNano()))
 	})
 
+	// redirect to github source
+	ipam.AttachCustomHandlerFunc("/source", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "https://github.com/demskie/ipam", 301)
+	})
+
 	// stop the pinger from actually pinging
 	ipam.EnableDemoMode()
 

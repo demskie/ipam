@@ -199,12 +199,20 @@ func startSecureServer(publicDir, crtPath, keyPath string, ipam *IPAMServer) {
 	crtPath = filepath.Clean(crtPath)
 	keyPath = filepath.Clean(keyPath)
 	ipam.mutationMtx.Lock()
+	ipam.httpRouter.HandleFunc("/api/subnets", ipam.handleRestfulSubnets)
+	ipam.httpRouter.HandleFunc("/api/hosts", ipam.handleRestfulSpecificHosts)
+	ipam.httpRouter.HandleFunc("/api/history", ipam.handleRestfulHistory)
+	ipam.httpRouter.HandleFunc("/api/createsubnet", ipam.handleRestfulCreateSubnet)
+	ipam.httpRouter.HandleFunc("/api/replacesubnet", ipam.handleRestfulReplaceSubnet)
+	ipam.httpRouter.HandleFunc("/api/deletesubnet", ipam.handleRestfulDeleteSubnet)
+	ipam.httpRouter.HandleFunc("/api/reservehost", ipam.handleRestfulReserveHost)
+	ipam.httpRouter.HandleFunc("/api/reservesubnet", ipam.handleRestfulReserveSubnet)
 	ipam.httpRouter.HandleFunc("/sync", ipam.handleWebsocketClient)
 	ipam.httpRouter.PathPrefix("/").Handler(archive.FileServer(http.Dir(publicDir)))
 	ipam.mutationMtx.Unlock()
 	srvSecure := &http.Server{
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 30 * time.Second,
+		ReadTimeout:  60 * time.Second,
+		WriteTimeout: 60 * time.Second,
 		IdleTimeout:  60 * time.Second,
 		Addr:         ":443",
 		Handler:      ipam.httpRouter,
@@ -230,6 +238,15 @@ func startInsecureRedirectServer() {
 func startInsecureServer(publicDir string, ipam *IPAMServer) {
 	publicDir = filepath.Clean(publicDir)
 	ipam.mutationMtx.Lock()
+	ipam.httpRouter.HandleFunc("/source", ipam.handleRestfulSubnets)
+	ipam.httpRouter.HandleFunc("/api/subnets", ipam.handleRestfulSubnets)
+	ipam.httpRouter.HandleFunc("/api/hosts", ipam.handleRestfulSpecificHosts)
+	ipam.httpRouter.HandleFunc("/api/history", ipam.handleRestfulHistory)
+	ipam.httpRouter.HandleFunc("/api/createsubnet", ipam.handleRestfulCreateSubnet)
+	ipam.httpRouter.HandleFunc("/api/replacesubnet", ipam.handleRestfulReplaceSubnet)
+	ipam.httpRouter.HandleFunc("/api/deletesubnet", ipam.handleRestfulDeleteSubnet)
+	ipam.httpRouter.HandleFunc("/api/reservehost", ipam.handleRestfulReserveHost)
+	ipam.httpRouter.HandleFunc("/api/reservesubnet", ipam.handleRestfulReserveSubnet)
 	ipam.httpRouter.HandleFunc("/sync", ipam.handleWebsocketClient)
 	ipam.httpRouter.PathPrefix("/").Handler(archive.FileServer(http.Dir(publicDir)))
 	ipam.mutationMtx.Unlock()
